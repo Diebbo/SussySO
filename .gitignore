@@ -1,5 +1,9 @@
-# Xcode
-#
+# extra folders
+uriscv
+backup
+riscv-gnu-toolchain
+
+
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
 ## User settings
