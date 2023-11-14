@@ -5,6 +5,12 @@
 clonare la seguente directory dovre preferite (dopo il download occuperà circa 20Gb)
 
 
+### Pacchetti Debian (DA SCARICARE PRIMA DI RISCV TOOLCHAIN DIEBBO INCATENATO)
+
+```bash
+sudo apt install git build-essential libc6 cmake libelf-dev libboost-dev libboost-program-options-dev libsigc++-2.0-dev gcc-riscv64-unknown-elf
+```
+
 ### RISCV Toolchain
 (operazioni molto lente ~1 oretta per clonare e un'altra per compilare), nel frattempo potete eseguire le operazioni elencate sotto
 ```bash
@@ -13,12 +19,6 @@ sudo apt-get install autoconf automake autotools-dev curl python3 python3-pip li
 cd riscv-gnu-toolchain
 ./configure --prefix=/opt/riscv --with-arch=rv32gc --with-abi=ilp32d
 sudo make linux
-```
-
-### Pacchetti Debian
-
-```bash
-sudo apt install git build-essential libc6 cmake libelf-dev libboost-dev libboost-program-options-dev libsigc++-2.0-dev gcc-riscv64-unknown-elf
 ```
 
 ### Compilare e installare l'emulatore
