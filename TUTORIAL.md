@@ -2,8 +2,11 @@
 
 ## Dependencies
 
-### RISCV Toolchain
+clonare la seguente directory dovre preferite (dopo il download occuperà circa 20Gb)
 
+
+### RISCV Toolchain
+(operazioni molto lente ~1 oretta per clonare e un'altra per compilare), nel frattempo potete eseguire le operazioni elencate sotto
 ```bash
 git clone https://github.com/riscv/riscv-gnu-toolchain
 sudo apt-get install autoconf automake autotools-dev curl python3 python3-pip libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev ninja-build git cmake libglib2.0-dev
@@ -19,16 +22,27 @@ sudo apt install git build-essential libc6 cmake libelf-dev libboost-dev libboos
 ```
 
 ### Compilare e installare l'emulatore
-```bash 
+- scaricare il file uriscv.tar.gz dal sito del prof
+- estrarlo
+- e poi ...
+```bash
+cd uriscv
 mkdir -p build && cd build
 cmake .. && make && sudo make install 
 ```
 
 ### Eseguire il progetto sull'emulatore
+#### Da eseguire solo nel momento in cui sia stato installato e compilato anche il toolchain
 Posizionarsi nella cartella con l'eseguibile `kernel` ed eseguire il seguente comando:
 ```bash
 uriscv-cli --config ./config_machine.json
 ```
+_Nota_
+per trovare l'eseguibile utilizzare il comando (nella directory principale)
+```
+find . -type f -name kernel
+```
+
 
 #### Troubleshooting
 - se i comandi della toolchain non si trovano dopo l'installazione, aggiurnare la variabile d'ambiente `PATH` aggiungendo `/opt/riscv/bin`
