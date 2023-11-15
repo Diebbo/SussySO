@@ -33,10 +33,16 @@ cmake .. && make && sudo make install
 
 ### Eseguire il progetto sull'emulatore
 #### Da eseguire solo nel momento in cui sia stato installato e compilato anche il toolchain
+Dopo aver compilato il progetto (con il lavoro svolto, non il nostro caso), spostarsi nella cartella base "SussyOS" e poi compilare con.
+~~~
+cd path/to/SussyOS
+make
+~~~
 Posizionarsi nella cartella con l'eseguibile `kernel` ed eseguire il seguente comando:
 ```bash
 uriscv-cli --config ./config_machine.json
 ```
+
 _Nota_
 per trovare l'eseguibile utilizzare il comando (nella directory principale)
 ```
