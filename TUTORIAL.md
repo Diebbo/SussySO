@@ -38,7 +38,7 @@ Dopo aver compilato il progetto (con il lavoro svolto, non il nostro caso), spos
 cd path/to/SussyOS
 make
 ~~~
-Posizionarsi nella cartella con l'eseguibile `kernel` ed eseguire il seguente comando:
+Posizionarsi nella cartella con l'eseguibile `kernel` ed eseguire il seguente comando [[prima di cercare la cartella del kernel bisogna implemntare completamente il progetto, puttana maiala]]:
 ```bash
 uriscv-cli --config ./config_machine.json
 ```
