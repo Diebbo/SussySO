@@ -306,14 +306,13 @@ int main(void) {
     pushMessage(&qm, n);
     if (headMessage(&qm) != n)
         adderrbuf("pushMessage failed   ");
-    freeMsg(n);
     addokbuf("pushMessage ok   \n");
     n = allocMsg();
     insertMessage(&qm, n);
-    if (container_of(list_next(&qm), msg_t, m_list) != n)
-        adderrbuf("insertMessage   ");
-    freeMsg(n);
+    if (container_of(list_prev(&qm), msg_t, m_list) != n)
+        adderrbuf("insertMessage failed  ");
     addokbuf("insertMessage ok   \n");
+    p = allocPcb();
     m = allocMsg();
     m->m_sender = p;
     insertMessage(&qm, m);
