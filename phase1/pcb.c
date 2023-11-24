@@ -11,18 +11,18 @@ void initPcbs() {
     for (int i = 0; i < MAXPROC; ++i) {
         INIT_LIST_HEAD(&pcbTable[i].p_list);
 
-        // Reset PCB fields to initial values:
-        // Initializing p_child, p_sib, msg_inbox as an empty list
-        // Resetting processor state, cpu time, process ID to 0
-        // Resetting p_supportStruct to NULL
-        pcbTable[i].p_parent = NULL;
-        INIT_LIST_HEAD(&pcbTable[i].p_child); 
-        INIT_LIST_HEAD(&pcbTable[i].p_sib);   
+        // Reset PCB fields to initial values:                              //## forse da togliere le righe consec barrate:
+        // Initializing p_child, p_sib, msg_inbox as an empty list          //
+        // Resetting processor state, cpu time, process ID to 0             //
+        // Resetting p_supportStruct to NULL                                //
+        pcbTable[i].p_parent = NULL;                                        //
+        INIT_LIST_HEAD(&pcbTable[i].p_child);                               //
+        INIT_LIST_HEAD(&pcbTable[i].p_sib);                                 //
         pcbTable[i].p_s = 0;                                                //##ERRORE: dice che asseganre 0 a state_t no bueno
-        pcbTable[i].p_time = 0;         
-        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);  
-        pcbTable[i].p_supportStruct = NULL;      
-        pcbTable[i].p_pid = 0;                   
+        pcbTable[i].p_time = 0;                                             //
+        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);                             //
+        pcbTable[i].p_supportStruct = NULL;                                 //
+        pcbTable[i].p_pid = 0;                                              //## fino qui
 
         list_add(&pcbTable[i].p_list, &pcbFree_h);
     }  
@@ -58,7 +58,7 @@ pcb_t *allocPcb() {                                                         //##
     INIT_LIST_HEAD(&p->p_child); 
     INIT_LIST_HEAD(&p->p_sib);   
     p->p_time = 0;
-    p->p_time = 0;
+    p->p_time = 0;                                                          //Ma zio pera Diebbo hai tolto p_s??
     INIT_LIST_HEAD(&p->msg_inbox); 
     p->p_supportStruct = NULL;
     p->p_pid = 0;
