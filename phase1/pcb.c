@@ -11,34 +11,44 @@ void initPcbs() {
     for (int i = 0; i < MAXPROC; ++i) {
         INIT_LIST_HEAD(&pcbTable[i].p_list);
 
-        // Reset PCB fields to initial values:                              //## forse da togliere le righe consec barrate:
-        // Initializing p_child, p_sib, msg_inbox as an empty list          //
-        // Resetting processor state, cpu time, process ID to 0             //
-        // Resetting p_supportStruct to NULL                                //
-        pcbTable[i].p_parent = NULL;                                        //
-        INIT_LIST_HEAD(&pcbTable[i].p_child);                               //
-        INIT_LIST_HEAD(&pcbTable[i].p_sib);                                 //
-        pcbTable[i].p_s = 0;                                                //##ERRORE: dice che asseganre 0 a state_t no bueno
-        pcbTable[i].p_time = 0;                                             //
-        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);                             //
-        pcbTable[i].p_supportStruct = NULL;                                 //
-        pcbTable[i].p_pid = 0;                                              //## fino qui
+        // Reset PCB fields to initial values:                              
+        // Initializing p_child, p_sib, msg_inbox as an empty list          
+        // Resetting processor state, cpu time, process ID to 0             
+        // Resetting p_supportStruct to NULL                                
+        pcbTable[i].p_parent = NULL;                                        
+        INIT_LIST_HEAD(&pcbTable[i].p_child);                               
+        INIT_LIST_HEAD(&pcbTable[i].p_sib);      
+
+        // init null state of the cpu
+        pcbTable[i].p_s.entry_hi = 0;
+        pcbTable[i].p_s.cause = 0;
+        pcbTable[i].p_s.status = 0;
+        pcbTable[i].p_s.pc_epc = 0;
+        pcbTable[i].p_s.mie = 0;
+
+        for(int i = 0; i < STATE_GPR_LEN; i++) {
+            pcbTable[i].p_s.gpr[i] = 0;
+        }
+
+        pcbTable[i].p_time = 0;                                             
+        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);                             
+        pcbTable[i].p_supportStruct = NULL;                                 
+        pcbTable[i].p_pid = 0;                                              
 
         list_add(&pcbTable[i].p_list, &pcbFree_h);
     }  
 }
 
 void freePcb(pcb_t *p) {
-    // Initialize the list head of the PCB being freed 
-    INIT_LIST_HEAD(p);                                                      //##BISOGNA SEMPRE INIZIALIZZARE? -> NO ERRORI!!
-                                                                            //poichè così creo nuovo elemento 'nodo'
-    if (list_empty(&pcbFree_h)) {                                           //##aggiunto & poichè mismatch altrimenti
+    if (list_empty(&pcbFree_h)) {                                           
         // If the free list is empty, add the PCB directly as the head
-        list_add(p, &pcbFree_h);
-    } else {
-        // Add the PCB to the tail of the existing free list
-        list_add_tail(p, &pcbFree_h);
+        // zio pera magari la inizializzerei sta coda se vuota @Axelredx
+        INIT_LIST_HEAD(&pcbFree_h);
     }
+    
+    // Add the PCB to the tail of the existing free list
+    list_add_tail(&p->p_list, &pcbFree_h);
+    
 
 }
 
@@ -61,7 +71,7 @@ pcb_t *allocPcb() {                                                         //##
     p->p_time = 0;                                                          //Ma zio pera Diebbo hai tolto p_s??
     INIT_LIST_HEAD(&p->msg_inbox); 
     p->p_supportStruct = NULL;
-    p->p_pid = 0;
+    p->p_pid = next_pid++;
 
     // Update p_list for the allocated PCB
     INIT_LIST_HEAD(&p->p_list);                                            //## zio pera questo è importante!!
@@ -70,7 +80,7 @@ pcb_t *allocPcb() {                                                         //##
 }
 
 void mkEmptyProcQ(struct list_head *head) {
-    INIT_LIST_HEAD(head);                                                  //## possibile che basti una semplice inizializzaz?!    
+    INIT_LIST_HEAD(head);     
 }
 
 int emptyProcQ(struct list_head *head) {
