@@ -1,0 +1,49 @@
+[!] TERM (0) `Don't Panic.`
+[!] TERM (0) `p2 started correctly`
+[!] TERM (0) `p2 get pid successfully`
+[!] TERM (0) `p2 is OK`
+[!] TERM (0) `p1 knows p2 ended`
+[!] TERM (0) `p3 started correctly`
+[!] TERM (0) `p3 - CLOCKWAIT OK`
+[!] TERM (0) `p3 - CPU time correctly maintained`
+[!] TERM (0) `p1 knows p3 ended`
+[!] TERM (0) `hp_p1 starts`
+[!] TERM (0) `hp_p2 starts`
+[!] TERM (0) `first incarnation of p4 starts`
+[!] TERM (0) `second incarnation of p4 starts`
+[!] TERM (0) `p4 is OK`
+[!] TERM (0) `p1 knows p4's first incarnation ended`
+[!] TERM (0) `p1 knows p4's second incarnation ended`
+[!] TERM (0) `p5 starts`
+[!] TERM (0) `p6 starts`
+[!] TERM (0) `p7 starts`
+[!] TERM (0) `p8 starts`
+[!] TERM (0) `Bus Error (as expected): Access non-existent memory`
+[!] TERM (0) `p8 ok`
+[!] TERM (0) `p5a starts`
+[!] TERM (0) `check p8 root and leaf`
+[!] TERM (0) `memory management trap`
+[!] TERM (0) `p8root starts`
+[!] TERM (0) `Correct Support Structure Address`
+[!] TERM (0) `child1 starts`
+[!] TERM (0) `child2 starts`
+[!] TERM (0) `Address Error (as expected): non-kuseg access w/KU=1`
+[!] TERM (0) `leaf process (1) starts`
+[!] TERM (0) `leaf process (2) starts`
+[!] TERM (0) `leaf process (3) starts`
+[!] TERM (0) `leaf process (4) starts`
+[!] TERM (0) `p5sys enter`
+[!] TERM (0) `High level SYS call from kernel mode process`
+[!] TERM (0) `p5 ok`
+[!] TERM (0) `p8root starts`
+[!] TERM (0) `child1 starts`
+[!] TERM (0) `child2 starts`
+[!] TERM (0) `leaf process (1) starts`
+[!] TERM (0) `leaf process (2) starts`
+[!] TERM (0) `leaf process (3) starts`
+[!] TERM (0) `leaf process (4) starts`
+[!] TERM (0) `p9 starts`
+[!] TERM (0) `p10 starts`
+[!] TERM (0) `p9 and p10 ok`
+[!] TERM (0) `A towel, it says, is about the most massively useful thing an interstellar hitchhiker can have.`
+[!] TERM (0) `System halted `

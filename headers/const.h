@@ -9,19 +9,6 @@
 
 #include <uriscv/const.h>
 
-#define MSTATUS_MIE_MASK 0x8
-#define MSTATUS_MPP_MASK 0x1800
-#define MIE_MTIE_MASK 0x40
-#define MIP_MTIP_MASK 0x40
-#define MIE_ALL 0xFFFFFFFF
-
-#define MSTATUS_MPIE_BIT 7
-#define MSTATUS_MIE_BIT 3
-#define MSTATUS_MPRV_BIT 17
-#define MSTATUS_MPP_BIT 11
-#define MSTATUS_MPP_M 0x1800
-#define MSTATUS_MPP_U 0x0000
-
 /* Number of semaphore's device */
 #define SEMDEVLEN 49
 #define RECVD    5
@@ -58,19 +45,17 @@
 
 #define ANYMESSAGE 0
 #define MSGNOGOOD -1
+#define DEST_NOT_EXIST -2
 #define SENDMESSAGE -1
 #define RECEIVEMESSAGE -2
 
-#define CREATEPROCESS -1
-#define TERMPROCESS   -2
-#define PASSEREN      -3
-#define VERHOGEN      -4
-#define DOIO          -5
-#define GETTIME       -6
-#define CLOCKWAIT     -7
-#define GETSUPPORTPTR -8
-#define GETPROCESSID  -9
-#define YIELD         -10
+#define CREATEPROCESS 1
+#define TERMPROCESS   2
+#define DOIO          3
+#define GETTIME       4
+#define CLOCKWAIT     5
+#define GETSUPPORTPTR 6
+#define GETPROCESSID  7
 
 /* Status register constants */
 #define ALLOFF      0x00000000
@@ -80,6 +65,31 @@
 #define IMON        0x0000FF00
 #define TEBITON     0x08000000
 #define DISABLEINTS 0xFFFFFFFE
+
+#define IL_TIMER 3
+#define IL_CPUTIMER 7
+
+#define IL_IPI 16
+#define IL_DISK 17
+#define IL_FLASH 18
+#define IL_ETHERNET 19
+#define IL_PRINTER 20
+#define IL_TERMINAL 21
+
+#define MSTATUS_MIE_MASK 0x8
+#define MSTATUS_MPIE_MASK 0x80
+#define MSTATUS_MPP_MASK 0x1800
+#define MIE_MTIE_MASK 0x40
+#define MIP_MTIP_MASK 0x40
+#define MIE_ALL 0xFFFFFFFF
+
+#define MSTATUS_MPIE_BIT 7
+#define MSTATUS_MIE_BIT 3
+#define MSTATUS_MPRV_BIT 17
+#define MSTATUS_MPP_BIT 11
+#define MSTATUS_MPP_M 0x1800
+#define MSTATUS_MPP_U 0x0000
+#define MSTATUS_MPP_MASK 0x1800
 
 /* Cause register constants */
 #define GETEXECCODE    0x0000007C
@@ -175,7 +185,7 @@
 #define USERPGTBLSIZE MAXPAGES
 #define OSFRAMES      32
 
-#define FLASHPOOLSTART (RAMSTART + (OSFRAMES * PAGESIZE))
+// #define FLASHPOOLSTART (RAMSTART + (OSFRAMES * PAGESIZE))
 #define DISKPOOLSTART  (FLASHPOOLSTART + (DEVPERINT * PAGESIZE))
 #define FRAMEPOOLSTART (DISKPOOLSTART + (DEVPERINT * PAGESIZE))
 
@@ -191,14 +201,12 @@
  * As requested by chapter 3.4 exception 0 we call the interrupt of the first device
  * that we find "on" / "running" / "of which we get 1 from this function"
 */
-#define CAUSE_IP_GET(cause, il_no) \
-    ((cause) &                     \
-     (1 << ((il_no) + 8))) // performs a bit shift based on the parameters
+#define CAUSE_IP_GET(cause, il_no) ((cause) & (1 << ((il_no) + 8))) // performs a bit shift based on the parameters
 
-#define NRSEMAPHORES 49 /* Numero semafori devices + pseudo clock */
-#define NSUPPSEM                                                \
-    48 /* Numero di semafori devices per il livello di supporto \
-        */
+
+#define NRSEMAPHORES 49         /* Numero semafori devices + pseudo clock */
+#define NSUPPSEM 48 		/* Numero di semafori devices per il livello di supporto */
+
 
 #define DISKBACK     1
 #define FLASHBACK    0
