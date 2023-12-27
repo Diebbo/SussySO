@@ -1,15 +1,15 @@
 CC=gcc
-CFLAGS=-I headers -I phase1/headers
-DEPS = headers/*.h phase1/headers/*.h
-OBJ = $(patsubst %.c, %.o, $(wildcard src/*.c))
+CFLAGS=-I ../headers -I ../phase1/headers -I include
+SRC = $(wildcard src/*.c)
+OBJ = $(SRC:.c=.o) $(wildcard phase1/*.o)
+DEP = $(OBJ:.o=.d)
 
-%.o: %.c $(DEPS)
-    $(CC) -c -o $@ $< $(CFLAGS)
+-include $(DEP)
 
-myprogram: $(OBJ)
-    $(CC) -o $@ $^ $(CFLAGS)
+phase2: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS)
 
 .PHONY: clean
 
 clean:
-    rm -f $(OBJ) myprogram
+	rm -f $(OBJ) phase2 $(DEP)
