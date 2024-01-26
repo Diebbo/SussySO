@@ -5,6 +5,7 @@ riscv-gnu-toolchain
 .vscode
 kernel
 *.uriscv
+*.tar.gz
 
 # c
 *.o
