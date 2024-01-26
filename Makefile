@@ -17,7 +17,7 @@ PROJECT_HEADERS = \
 
 # Compiler options
 CFLAGS_LANG = -ffreestanding -static -nostartfiles -nostdlib -Werror -ansi
-CFLAGS = $(CFLAGS_LANG) -I $(URISCV_INCLUDE_DIR) $(HEADERS) -ggdb -Wall -O0 -std=gnu99 -march=rv32imfd -mabi=ilp32d
+CFLAGS = $(CFLAGS_LANG) -I $(URISCV_INCLUDE_DIR)  -ggdb -Wall -O0 -std=gnu99 -march=rv32imfd -mabi=ilp32d
 
 # Linker options
 LDFLAGS = -G 0 -nostdlib -T $(URISCV_DATA_DIR)/uriscvcore.ldscript
