@@ -4,7 +4,8 @@
 int main(int argc, char *argv[])
 {
     // 1. Initialize the nucleus
-    // initKernel();
+    initKernel();
+    int a  = 3;
     
     return 0;
 }
