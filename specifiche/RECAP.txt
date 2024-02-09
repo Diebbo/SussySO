@@ -1,0 +1,209 @@
+//RECAPPONE:
+
+/*HEADERS*/
+//
+//* const.h:
+    emaphore-related constants:
+        SEMDEVLEN: Number of semaphore's devices.
+        RECVD: Special code for receiving messages.
+
+    Hardware & Software constants:
+        PAGESIZE: Page size in bytes.
+        WORDLEN: Word size in bytes.
+
+    Memory-related constants:
+        Various memory addresses (RAMBASEADDR, RAMBASESIZE, TODLOADDR, INTERVALTMR, TIMESCALEADDR).
+        Segmentation constants (KSEG0, KSEG1, KSEG2, KUSEG, RAMSTART, BIOSDATAPAGE, PASSUPVECTOR).
+
+    Exceptions-related constants:
+        Exception types (PGFAULTEXCEPT, GENERALEXCEPT).
+        Additional constants related to exceptions.
+        
+    Additional Constants:
+        Various constants related to process management and system calls (MAXPROC, MAXMESSAGES, ANYMESSAGE, MSGNOGOOD, DEST_NOT_EXIST, etc.).
+
+    Status Register Constants:
+        Constants related to the status register (ALLOFF, USERPON, IEPON, IECON, IMON, TEBITON, DISABLEINTS).
+
+    Cause Register Constants:
+        Constants related to the cause register (GETEXECCODE, CLEAREXECCODE, LOCALTIMERINT, TIMERINTERRUPT, DISKINTERRUPT, etc.).
+
+    EntryLO Register Constants:
+        Constants related to the EntryLO register (DIRTYON, VALIDON, GLOBALON).
+
+    EntryHI Register Constants:
+        Constants related to the EntryHI register (GETPAGENO, GETSHAREFLAG, VPNSHIFT, ASIDSHIFT, SHAREDSEGFLAG).
+
+    Index Register Constants:
+        Constants related to the Index register (PRESENTFLAG).
+    
+    Device Register Constants:
+        Constants related to device registers (DEV0ON, DEV1ON, ..., DEV7ON).
+    
+    Utility Constants:
+        Various utility constants (ON, OFF, OK, NOPROC, BYTELENGTH, etc.).
+
+    Other Constants:
+        Various constants related to timing, process management, and system parameters.
+
+    Function Macro:
+        CAUSE_IP_GET: A macro that extracts the interrupt pending bits from the CAUSE register.
+    
+    Miscellaneous Constants:
+        Constants related to semaphores, device numbers, and other system parameters.
+*/
+//
+//* listx.h:
+    Type Definitions and Macros:
+        Definition of NULL if not already defined.
+        Definition of size_tt as an alias for unsigned int.
+
+    container_of Macro:
+        A macro that returns a pointer to the structure containing a given list_head. It uses the offset of the list_head member within the structure to compute the address of the structure.
+
+    offsetof Macro:
+        A macro that returns the offset in bytes from the beginning of a structure to a specified member.
+
+    struct list_head Definition:
+        Definition of the struct list_head structure, which represents a doubly-linked list node with next and prev pointers.
+
+    List Initialization Macros:
+        LIST_HEAD_INIT: Initializes a struct list_head as an empty list.
+        LIST_HEAD: Declares and initializes a new list.
+
+    List Manipulation Functions:
+        INIT_LIST_HEAD: Initializes a list to be empty.
+        list_add: Adds a new element to the beginning of the list.
+        list_add_tail: Adds a new element to the end of the list.
+        list_del: Removes an element from the list.
+
+    List Checking Functions:
+        list_is_last: Checks if an element is the last in the list.
+        list_empty: Checks if a list is empty.
+
+    List Traversal Macros:
+        list_next: Returns the next element in the list.
+        list_prev: Returns the previous element in the list.
+
+    List Iteration Macros:
+        list_for_each: Iterates over each element in the list.
+        list_for_each_prev: Iterates over each element in reverse order.
+        list_for_each_entry: Iterates over each element in the list, treating the elements as members of a structure.
+        list_for_each_entry_reverse: Iterates over each element in reverse order, treating the elements as members of a structure.
+*/
+//
+//* types.h:
+    cpu_t and memaddr:
+        cpu_t is a type representing a signed integer used to store CPU-related information.
+        memaddr is an unsigned integer type used to represent memory addresses.
+
+    pteEntry_t Structure:
+        Represents a Page Table Entry descriptor with two fields (pte_entryHI and pte_entryLO) for storing page table information.
+
+    context_t Structure:
+        Represents the context of a process at the support level, including stack pointer (stackPtr), status, and program counter (pc).
+    
+    support_t Structure:
+        Represents the support level descriptor for a process.
+        Contains fields such as sup_asid (process ID), arrays for storing old exception states and new contexts, a private page table (sup_privatePgTbl), and a linked list (s_list).
+    
+    pcb_t Structure:
+        Represents a process control block (PCB) entry.
+        Contains fields for process queues (p_list), process tree relationships (p_parent, p_child, p_sib), process status information (p_s, p_time), a message inbox (msg_inbox), a pointer to the support struct (p_supportStruct), and a process ID (p_pid).
+    
+    msg_t Structure:
+        Represents a message entry.
+        Contains fields for message queues (m_list), the sender of the message (m_sender), and the payload of the message (m_payload).
+    
+    ssi_payload_t Structure:
+        Represents a payload structure for a System Service Interrupt (SSI).
+        Contains a service code (service_code) and a generic argument (arg).
+    
+    ssi_create_process_t Structure:
+        Represents a payload structure specifically for the SSI of creating a process.
+        Contains pointers to the state and support structures.
+    
+    ssi_do_io_t Structure:
+        Represents a payload structure specifically for the SSI of performing I/O operations.
+        Contains pointers to the command address and command value.
+*/
+
+
+/*PHASE 1*/
+//
+//* msg.c:
+    initMsgs():
+        Initializes a pool of messages (msgTable) with their corresponding list heads.
+        Adds all messages to the free list (msgFree_h).
+
+    freeMsg(msg_t m):
+        Frees a message by adding it back to the free list.
+
+    allocMsg():
+        Allocates a message from the free list.
+        Initializes the fields of the allocated message.
+        
+    mkEmptyMessageQ(struct list_head head):
+        Initializes an empty message queue represented by a linked list.
+
+    emptyMessageQ(struct list_head head):
+        Checks if a message queue is empty.
+
+    insertMessage(struct list_head head, msg_t m):
+        Inserts a message at the end of a message queue.
+
+    pushMessage(struct list_head head, msg_t m):
+        Pushes a message onto the front of a message queue.
+
+    popMessage(struct list_head head, pcb_t p_ptr):
+        Pops a message from a message queue.
+        Optionally, you can specify a sender process (pcb_t) to retrieve a message only from that sender.
+
+    headMessage(struct list_head head):
+        Returns the first message in a message queue without removing it.
+*/
+//
+//* pcb.c:
+    initPcbs():
+        Initializes a pool of PCBs (pcbTable) with their corresponding list heads.
+        Adds all PCBs to the free list (pcbFree_h).
+        Initializes each PCB with default values.
+
+    freePcb(pcb_t p):
+        Frees a PCB by adding it back to the free list.
+
+    allocPcb():
+        Allocates a PCB from the free list.
+        Initializes the fields of the allocated PCB.
+        Updates the process ID (p_pid) in a sequential manner.
+
+    mkEmptyProcQ(struct list_head head):
+        Initializes an empty process queue represented by a linked list.
+
+    emptyProcQ(struct list_head head):
+        Checks if a process queue is empty.
+
+    insertProcQ(struct list_head head, pcb_t p):
+        Inserts a PCB at the end of a process queue.
+        
+    headProcQ(struct list_head head):
+        Returns the first PCB in a process queue without removing it.
+
+    removeProcQ(struct list_head head):
+        Removes and returns the first PCB from a process queue.
+
+    outProcQ(struct list_head head, pcb_t p):
+        Removes a specific PCB from a process queue and returns it.
+
+    emptyChild(pcb_t p):
+        Checks if a process has no children.
+
+    insertChild(pcb_t prnt, pcb_t p):
+        Inserts a child PCB into the child list of a parent PCB.
+
+    removeChild(pcb_t p):
+        Removes and returns the first child PCB of a process.
+
+    outChild(pcb_t p):
+        Removes and returns a specific child PCB from the parent's child list.
+*/
