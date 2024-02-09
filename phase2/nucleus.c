@@ -1,7 +1,4 @@
 #include "./headers/nucleus.h"
-#include <uriscv/types.h>
-#include <uriscv/bios.h>
-#include <uriscv/liburiscv.h>
 
 /* GLOBAL VARIABLES*/
 int process_count; // started but not terminated processes
@@ -38,9 +35,3 @@ void initKernel(){
 	*interval_timer = PSECOND; 
 }
 
-void uTLB_RefillHandler() {
-	setENTRYHI(0x80000000);
-	setENTRYLO(0x00000000);
-	TLBWR();
-	LDST((state_t*) 0x0FFFF000);
-}

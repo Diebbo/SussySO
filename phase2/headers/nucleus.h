@@ -12,7 +12,11 @@
 
 
 // phase 2 headers
-//TODO: #include <../phase2/headers/>
+#include <uriscv/types.h>
+#include <uriscv/bios.h>
+#include <uriscv/liburiscv.h>
+
+#include "exceptions.h"
 
 
 /* GLOBAL FUNCTIONS */
