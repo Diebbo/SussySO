@@ -75,6 +75,12 @@ pcb_t *allocPcb() {
     // Update p_list for the allocated PCB
     INIT_LIST_HEAD(&p->p_list);                                            
 
+    p->p_s.entry_hi = 0;
+    p->p_s.cause = 0;
+    p->p_s.status = 0;
+    p->p_s.pc_epc = 0;
+    p->p_s.mie = 0;
+
     return p;
 }
 
