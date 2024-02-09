@@ -75,6 +75,7 @@ pcb_t *allocPcb() {
     // Update p_list for the allocated PCB
     INIT_LIST_HEAD(&p->p_list);                                            
 
+    // Reset the processor state
     p->p_s.entry_hi = 0;
     p->p_s.cause = 0;
     p->p_s.status = 0;

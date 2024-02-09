@@ -4,7 +4,8 @@
 /* GLOBAL VARIABLES*/
 int process_count = 0; // started but not terminated processes
 int soft_block_count = 0; // processes waiting for a resource
-pcb_t *ready_queue = NULL; // tail pointer to the ready state queue processes
+// pcb_t *ready_queue = NULL; 
+LIST_HEAD(ready_queue_head);// tail pointer to the ready state queue processes
 pcb_t *current_process = NULL;
 pcb_t blocked_pbs[SEMDEVLEN - 1];
 pcb_t support_blocked_pbs[SEMDEVLEN - 1]; //TODO: cambiare nome, non so a che serva
