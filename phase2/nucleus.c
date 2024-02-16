@@ -20,7 +20,7 @@ void initKernel(){
 	// TODO: set the stack pointer for the exception handler
 	
 	// initialize the nucleus data structures
-	initPcbs();
+	initPcbs(); 
 	initMsgs();
 
 	process_count = 0;
@@ -33,5 +33,14 @@ void initKernel(){
 	// load the system wide interval timer
 	int *interval_timer = (int *) INTERVALTMR;
 	*interval_timer = PSECOND; 
+
+
+	// create the first process
+	pcb_t *first_process = allocPcb();
+	first_process->p_s.status = (1 << 7) | ; // ?
+	first_process->p_supportStruct = NULL;
+	first_process->p_parent = NULL;
+	first_process->p_time = 0;
+
 }
 

@@ -50,6 +50,18 @@ typedef struct pcb_t
     struct list_head p_sib;   /* sibling list  */
 
     /* process status information */
+    /** state_t informations
+     * 
+     * s_entryHI: This field likely represents the value of the EntryHi register. In the context of MIPS architecture, the EntryHi register holds the high-order address bits of the virtual address being translated.
+     * 
+     * s_cause: This field probably corresponds to the Cause register. In MIPS, the Cause register holds information about exceptions and interrupts, indicating the cause of the most recent exception or interrupt.
+     * 
+     * s_status: This field is likely associated with the Status register. In MIPS, the Status register contains various control and status bits, including interrupt enable/disable bits and the current processor mode.
+     * 
+     * s_pc: This field likely represents the Program Counter (PC), which holds the address of the next instruction to be executed.
+     * 
+     * s_reg[STATEREGNUM]: This is an array of integers (int) representing general-purpose registers. The size of the array is defined by the constant STATEREGNUM. Each element in this array likely corresponds to a specific general-purpose register in the processor.
+    */
     state_t p_s;  /* processor state */
     cpu_t p_time; /* cpu time used by proc */
 
