@@ -1,7 +1,21 @@
 /*Implement the System Service Interface (SSI) process. 
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 
+#ifndef SSI_H
+#define SSI_H
+#include "../../headers/const.h"
+#include "../../headers/listx.h"
+#include "../../headers/types.h"
+#include "../../phase1/headers/pcb.h"
+#include "../../phase1/headers/msg.h"
+#include <uriscv/types.h>
+#include <uriscv/bios.h>
+#include <uriscv/liburiscv.h>
+#include "exceptions.h"
 
+void ssi_server();
+void SSIRequest(pcb_t* sender, int service, void* arg);
+#endif
 /*ROBE DA IMPLEMENTARE:
     [fun. name - identifiers for different system service calls (services provided by the operating system) - explaination]
 
