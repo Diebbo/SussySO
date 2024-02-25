@@ -10,9 +10,9 @@ void uTLB_RefillHandler() {
 }
 
 void exceptionHandler(){
-	//int error_cause = getCAUSE();
 	//error code from .ExcCode field of the Cause register
-	int exception_error = GETEXECCODE;
+	memaddr Cause = getCAUSE();
+	int exception_error = GETEXECCODE >> CAUSESHIFT;
  
 	/*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
     if(exception_error > 24 && exception_error <= 28) 
@@ -40,10 +40,10 @@ void SYSCALLExceptionHandler(){
 			switch (a0)
 			{
 			case SENDMESSAGE:
-				SendMSG(a1,a2,0);
+				SYSCALL(SENDMESSAGE,a1,a2,0);
 				break;
 			case RECEIVEMESSAGE:
-				RecivMSG(a1,a2,0);
+				SYSCALL(RECEIVEMESSAGE,ANYMESSAGE,a2,0);
 			default:
 				//metto trap
 				break;
