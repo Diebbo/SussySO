@@ -12,6 +12,9 @@ This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
 #include "exceptions.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 void ssi_server();
 void SSIRequest(pcb_t* sender, int service, void* arg);
