@@ -74,25 +74,33 @@ void initKernel() {
   // TODO: pid unici?!
 
   // tree structure
-	INIT_LIST_HEAD(&first_process->p_sib);
-	INIT_LIST_HEAD(&first_process->p_child);
+  INIT_LIST_HEAD(&first_process->p_sib);
+  INIT_LIST_HEAD(&first_process->p_child);
   first_process->p_parent = NULL;
 
   first_process->p_time = 0;
 
   first_process->p_supportStruct = NULL;
 
-	list_add_tail(&first_process->p_list, &ready_queue_head);
+  list_add_tail(&first_process->p_list, &ready_queue_head);
 
   process_count++;
 
   pcb_t *second_process = allocPcb();
 
-	STST(&second_process->p_s);
-	RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP
-	second_process->p_s.reg_sp -= 2 * first_process->p_s.reg_sp; 
-	second_process->p_s.pc_epc = (memaddr)test; // TODO
-	second_process->p_s.status = IECON | ALLOFF;
 
-	// tree structure
+  RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
+  second_process->p_s.reg_sp -= 2 * sizeof(pcb_t);
+  second_process->p_s.pc_epc = (memaddr)test; // TODO
+  second_process->p_s.status = IECON | ALLOFF;
+
+  INIT_LIST_HEAD(&second_process->p_sib);
+  INIT_LIST_HEAD(&second_process->p_child);
+  second_process->p_parent = NULL;
+
+  second_process->p_time = 0;
+
+  second_process->p_supportStruct = NULL;
+
+  list_add_tail(&second_process->p_list, &ready_queue_head);
 }

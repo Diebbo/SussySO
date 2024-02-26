@@ -15,8 +15,7 @@
 #include <uriscv/types.h>
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
-
-#include "exceptions.h"
+#include <uriscv/utlb.h>
 
 
 /* GLOBAL FUNCTIONS */
