@@ -1,17 +1,5 @@
 #include "./headers/nucleus.h"
 
-/* GLOBAL VARIABLES*/
-int process_count = 0;    // started but not terminated processes
-int soft_block_count = 0; // processes waiting for a resource
-// pcb_t *ready_queue = NULL;
-struct list_head
-    ready_queue_head; // tail pointer to the ready state queue processes
-pcb_t *current_process = NULL;
-struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
-struct list_head pseudoClockList;            // time list
-passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
-extern void test();
-
 void initKernel() {
 
   // populate the passup vector
@@ -31,6 +19,7 @@ void initKernel() {
     INIT_LIST_HEAD(&blockedPCBs[i]);
   }
   INIT_LIST_HEAD(&pseudoClockList);
+  current_process = NULL;
 
   // load the system wide interval timer
   int *interval_timer =
@@ -87,7 +76,6 @@ void initKernel() {
   process_count++;
 
   pcb_t *second_process = allocPcb();
-
 
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * sizeof(pcb_t);

@@ -15,7 +15,16 @@
 #include <uriscv/types.h>
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
-#include <uriscv/utlb.h>
+
+/* GLOBAL VARIABLES*/
+int process_count = 0;    // started but not terminated processes
+int soft_block_count = 0; // processes waiting for a resource
+struct list_head
+    ready_queue_head; // tail pointer to the ready state queue processes
+pcb_t *current_process;
+struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
+struct list_head pseudoClockList;            // time list
+passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
 
 
 /* GLOBAL FUNCTIONS */
