@@ -80,8 +80,9 @@ void SYSCALLExceptionHandler(){
                 break;
 			}
             // Returning from SYSCALL
-            // Increment PC by 4 to avoid an infinite loop of SYSCALLs
+            // Increment PC by 4 to avoid an infinite loop of SYSCALLs +//load back updated interrupted state 
             exception_state->pc_epc += WORDLEN;
+			LDST(exception_state);
 		}else{
         	// Process is in user mode, simulate Program Trap exception
         	// Set Cause.ExcCode to RI (Reserved Instruction)
