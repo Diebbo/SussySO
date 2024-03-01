@@ -8,9 +8,9 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 #include <uriscv/types.h>
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
-#include <../../headers/const.h>
-#include <../../headers/listx.h>
-#include <../../headers/types.h>
+#include "../../headers/const.h"
+#include "../../headers/listx.h"
+#include "../../headers/types.h"
 
 
 void TLBExceptionHandler();
