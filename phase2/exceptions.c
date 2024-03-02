@@ -2,6 +2,7 @@
 This module should also contain the provided skeleton TLB-Refill event
 handler.*/
 #include "./headers/exceptions.h"
+#include "./headers/nucleus.h"
 
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
@@ -29,15 +30,16 @@ void exceptionHandler() {
 }
 
 void SYSCALLExceptionHandler() {
-		// finding if in user or kernel mode
+	// finding if in user or kernel mode
 	state_t *exception_state = (state_t *)BIOSDATAPAGE;
 	//pcb_t *process; probabile uso migliore
 	int a0 = exception_state->reg_a0, a1 = exception_state->reg_a1,
 		a2 = exception_state->reg_a2, a3 = exception_state->reg_a3,
 		user_state = exception_state->status;
 
+	/*Kup???*/
 	if (a0 >= -2 && a0 <= -1) {
-		if (user_state == 1) { // kernel state syscall
+		if (user_state == 1) { // kernel state syscallexception_state
 			switch (a0) {
 				case SENDMESSAGE:
 					/*If the target process is in the pcbFree_h list, set the return
@@ -51,7 +53,7 @@ void SYSCALLExceptionHandler() {
 					/*on success returns/places 0 in the caller’s v0, otherwise
 							MSGNOGOOD is used to provide a meaningful error condition
 							on return*/
-					exception_state->reg_a3 = SYSCALL(SENDMESSAGE, a1, a2, 0);
+					exception_state->reg_a3 = SSYSCALL(SENDMESSAGE, a1, a2, 0);
 
 					break;
 				case RECEIVEMESSAGE:
@@ -64,6 +66,8 @@ void SYSCALLExceptionHandler() {
 					queue is empty, and the first message sent to it will wake up it and put
 					it in the Ready Queue.*/
 
+					/*This system call provides as returning value (placed in caller’s v0 in µMPS3) 
+					the identifier of the process which sent the message extracted.*/
 					exception_state->reg_a3=SYSCALL(RECEIVEMESSAGE,a1,a2,0);
 					//blocking call so 1st load state
 					LDST(exception_state);

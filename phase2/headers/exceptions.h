@@ -18,6 +18,7 @@ void exceptionHandler();
 void InterruptExceptionHandler();
 void SYSCALLExceptionHandler();
 void TrapExceptionHandler();
+int is_in_list(int pid);
 
 #endif
 

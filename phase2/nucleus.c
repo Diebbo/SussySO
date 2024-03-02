@@ -1,4 +1,6 @@
 #include "./headers/nucleus.h"
+#include "./headers/exceptions.h"
+#include "./headers/ssi.h"
 
 void initKernel() {
 
