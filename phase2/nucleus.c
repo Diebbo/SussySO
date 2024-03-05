@@ -1,22 +1,23 @@
 #include "./headers/nucleus.h"
 #include "./headers/exceptions.h"
 #include "./headers/ssi.h"
+//necessaria x fare test
+extern void test();
 
 void initKernel() {
-
+  passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
   passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; // TODO refil
-  passupvector->tlb_refill_stackPtr = KERNELSTACK; // Stacks in µMPS3 grow down
-  passupvector->exception_handler =
-      (memaddr)exceptionHandler; // TODO: our exception handler;
-  passupvector->exception_stackPtr = KERNELSTACK;
+  passupvector->tlb_refill_stackPtr = (memaddr)KERNELSTACK; // Stacks in µMPS3 grow down
+  passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
+  passupvector->exception_handler = (memaddr)exceptionHandler; // TODO: our exception handler;
 
   // initialize the nucleus data structures
   initPcbs();
   initMsgs();
 
   // Initialize other variables
-  INIT_LIST_HEAD(&ready_queue_head);
+  INIT_LIST_HEAD(&ready_queue_list);
   for (int i = 0; i < SEMDEVLEN; i++) {
     INIT_LIST_HEAD(&blockedPCBs[i]);
   }
@@ -73,7 +74,7 @@ void initKernel() {
 
   first_process->p_supportStruct = NULL;
 
-  list_add_tail(&first_process->p_list, &ready_queue_head);
+  list_add_tail(&first_process->p_list, &ready_queue_list);
 
   process_count++;
 
@@ -92,5 +93,5 @@ void initKernel() {
 
   second_process->p_supportStruct = NULL;
 
-  list_add_tail(&second_process->p_list, &ready_queue_head);
+  list_add_tail(&second_process->p_list, &ready_queue_list);
 }

@@ -14,15 +14,15 @@ void scheduler() {
 
   while (1) {
     // ready_queue_head is a shared resource => disable interrupts
-    current_process = removeProcQ(&ready_queue_head);
+    current_process = removeProcQ(&ready_queue_list);
 
     if (current_process == NULL) { // ready_queue_head is empty
       if (process_count == 1) { // TODO: && ssi is the only process, how to check?
-        HALT();
+          HALT();
       } else if (process_count > 0 && soft_block_count > 0) {
-        WAIT();
+          WAIT();
       } else { // PC > 0 soft block count = 0
-	PANIC();
+          PANIC();
       }
 
     } else {

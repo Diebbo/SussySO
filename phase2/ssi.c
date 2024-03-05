@@ -25,8 +25,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
 
     // finding if in user or kernel mode
 	state_t *exception_state = (state_t *)BIOSDATAPAGE;
-	int a0 = exception_state->reg_a0, a1 = exception_state->reg_a1,
-		a2 = exception_state->reg_a2, user_state = exception_state->status;
+	int user_state = exception_state->status;
 
     if(user_state != 1){
         //Must be in kernel mode otherwise trap!
