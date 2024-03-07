@@ -23,7 +23,7 @@ struct list_head ready_queue_list; // tail pointer to the ready state queue proc
 pcb_t *current_process;
 struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
 struct list_head pseudoClockList;            // time list
-
+struct list_head pcbFree_h; //pcb free list
 
 
 /* GLOBAL FUNCTIONS */

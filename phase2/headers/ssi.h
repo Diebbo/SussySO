@@ -17,8 +17,19 @@ This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS
 #include <sys/types.h>
 #include <sys/wait.h> 
 
+//last pid number assign to a process 
+int last_used_pid = 0;
+//SSI id (the only process to have pid = 0)
+int ssi_id = 0;   
 void SSI_function_entry_point(void);
 void SSIRequest(pcb_t* sender, int service, void* arg);
+//generate unique pid for processes
+int generate_pid();
+//When requested, this service causes a new process, said to be a progeny of the sender, to be created.
+pcb_PTR CreateProcess(pcb_t* sender, struct ssi_create_process_t * arg);
+//Return pcb_ptr of a process given the list where it is and his pid
+pcb_PTR find_process_ptr(struct list_head *target_process, int pid);
+
 #endif
 /*ROBE DA IMPLEMENTARE:
     [fun. name - identifiers for different system service calls (services provided by the operating system) - explaination]

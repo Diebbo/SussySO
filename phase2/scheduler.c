@@ -1,4 +1,5 @@
 #include "headers/scheduler.h"
+#include "headers/ssi.h"
 #include "headers/nucleus.h"
 #include <uriscv/liburiscv.h>
 
@@ -12,12 +13,12 @@ void scheduler() {
   // 6. set the timer - generate an interrupt
   // 7. repeat
 
-  while (1) {
+  while (TRUE) {
     // ready_queue_head is a shared resource => disable interrupts
     current_process = removeProcQ(&ready_queue_list);
 
     if (current_process == NULL) { // ready_queue_head is empty
-      if (process_count == 1) { // TODO: && ssi is the only process, how to check?
+      if (process_count == 1 && current_process->p_pid == ssi_id) { 
           HALT();
       } else if (process_count > 0 && soft_block_count > 0) {
           WAIT();

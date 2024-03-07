@@ -50,7 +50,7 @@ void SYSCALLExceptionHandler() {
 					if the process is awaiting for a message, then it has to be awakened
 					and put into the Ready Queue.*/
 					
-					if(is_in_list(&pcbFree_h,a2))													//non trova pcbFree_h??
+					if(is_in_list(&pcbFree_h,a2))													
 						current_process->p_s.reg_a0 = DEST_NOT_EXIST;
 					
 					//if(is_in_list(&ready_queue_list,a2))

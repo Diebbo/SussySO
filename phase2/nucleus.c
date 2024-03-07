@@ -1,3 +1,5 @@
+/*Implement the main function and export the Nucleus's global variables, such as process count, 
+soft-blocked count, blocked PCBs lists/pointers, etc.*/
 #include "./headers/nucleus.h"
 #include "./headers/exceptions.h"
 #include "./headers/ssi.h"
@@ -22,13 +24,11 @@ void initKernel() {
     INIT_LIST_HEAD(&blockedPCBs[i]);
   }
   INIT_LIST_HEAD(&pseudoClockList);
+  INIT_LIST_HEAD(&pcbFree_h);
   current_process = NULL;
 
   // load the system wide interval timer
-  int *interval_timer =
-      (int *)INTERVALTMR; // non si fa tipo LDIT(PSECOND) (visto da prog che
-                          // mandò linux master sul gruppo)?
-  *interval_timer = PSECOND;
+  LDIT(PSECOND);
 
   // init the first process
   pcb_t *first_process = allocPcb();
@@ -63,8 +63,6 @@ void initKernel() {
       IECON |
       ALLOFF; // 32 bit reg. -> 0x01 = Enable interrupts, kernel mode actv
 
-  // TODO: pid unici?!
-
   // tree structure
   INIT_LIST_HEAD(&first_process->p_sib);
   INIT_LIST_HEAD(&first_process->p_child);
@@ -76,12 +74,14 @@ void initKernel() {
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
+  first_process->p_pid = generate_pid();
+
   process_count++;
 
   pcb_t *second_process = allocPcb();
 
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
-  second_process->p_s.reg_sp -= 2 * sizeof(pcb_t);
+  second_process->p_s.reg_sp -= 2 * sizeof(pcb_t); // STST()???
   second_process->p_s.pc_epc = (memaddr)test; // TODO
   second_process->p_s.status = IECON | ALLOFF;
 
@@ -94,4 +94,8 @@ void initKernel() {
   second_process->p_supportStruct = NULL;
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
+
+  second_process->p_pid = generate_pid();
+
+  process_count++;
 }

@@ -1,21 +1,33 @@
 /*Implement the System Service Interface (SSI) process. 
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
-#include <./headers/ssi.h>
-#include <./headers/exceptions.h>
-ssi_payload_PTR ssi_p;                                      //probabile da buttare
-int ssi_id = magic_number; //SSI id                         //TODO
+#include "headers/ssi.h"
+#include "headers/exceptions.h"
 
-void SSI_function_entry_point(){                            //da sistemare ma strutt logica più o meno corretta
-    state_t *p_state = (state_t *)BIOSDATAPAGE;
-    int ssi_service = ssi_p->service_code;
-    void *ssi_arg = ssi_p->arg;
+int generate_pid(){
+    //49 = num max of pcb
+    if(last_used_pid == 40){
+        last_used_pid = 1;
+    }else{
+        last_used_pid++;
+    }
+    return last_used_pid + 1;
+}
+
+pcb_PTR find_process_ptr(struct list_head *target_process, int pid){
+    pcb_PTR tmp;
+    list_for_each_entry(tmp,target_process,p_list){
+        if(tmp->p_pid == pid) return tmp;
+    }
+}
+
+void SSI_function_entry_point(){
+    pcb_PTR process_request_ptr;
     while (TRUE){
         //receive request
-        int process_id_request = SYSCALL(RECEIVEMESSAGE,ssi_id,ssi_service,ssi_arg);
-        SSIRequest(current_process,ssi_service,ssi_arg);
-        //satysfy request and send back resoults
-        SYSCALL(SENDMESSAGE,process_id_request,ssi_service,ssi_arg);
-
+        int process_id_request = SYSCALL(RECEIVEMESSAGE,ssi_id,ANYMESSAGE,0);
+        process_request_ptr = find_process_ptr(&ready_queue_list,process_id_request);                   //situato in ready queue?
+        //satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
+        SSIRequest(process_request_ptr,process_request_ptr->p_s.reg_a2,process_request_ptr->p_s.reg_a3);
     }
 }
 
@@ -34,7 +46,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
         switch (service)
         {
         case CREATEPROCESS:
-            
+            arg = CreateProcess(sender,arg);                            //giusta fare una roba de genere per 2 tipi diversi di ritorno?
             break;
         case TERMPROCESS:
 
@@ -59,9 +71,37 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
             
             break;
         }
+        //send back resoults
+        SYSCALL(SENDMESSAGE,sender->p_pid,service,arg);
     }
+}
 
-
-
-
+pcb_PTR CreateProcess(pcb_t *sender, struct ssi_create_process_t *arg){
+    /*When requested, this service causes a new process, said to be a progeny of the sender, to be created.
+    arg should contain a pointer to a struct ssi_create_process_t (ssi_create_process_t *). Inside
+    this struct, state should contain a pointer to a processor state (state_t *). This processor state is
+    to be used as the initial state for the newly created process. The process requesting the this service
+    continues to exist and to execute. If the new process cannot be created due to lack of resources (e.g.
+    no more free PBCs), an error code of -1 (constant NOPROC) will be returned, otherwise, the pointer to
+    the new PCB will be returned.*/
+    pcb_t *new_prole = allocPcb();
+    ssi_create_process_PTR new_prole_support = arg;
+    if(process_count == MAXPROC || new_prole == NULL)
+        return NOPROC;
+    else{
+        //initialization of new prole
+        RAMTOP(new_prole->p_s.reg_sp);
+        new_prole->p_s.status = arg->state;
+        STST(&new_prole->p_s);                      //loading arg state in new_prole p_s??
+        if(arg == NULL)
+            new_prole->p_supportStruct = NULL;
+        else
+            new_prole->p_supportStruct = arg->support;
+        new_prole->p_time = 0;
+        new_prole->p_pid = generate_pid();
+        process_count++;
+        insertProcQ(new_prole,&ready_queue_list);
+        insertChild(sender,&new_prole);
+        return new_prole;
+    }
 }
