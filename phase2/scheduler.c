@@ -21,6 +21,12 @@ void scheduler() {
       if (process_count == 1 && current_process->p_pid == ssi_id) { 
           HALT();
       } else if (process_count > 0 && soft_block_count > 0) {
+        //dalle specifiche pg 4
+          /*Before executing the WAIT instruction, the Scheduler must first set the Status
+          register to enable interrupts and either disable the PLT (also through the Status register), or
+          load it with a very large value. The first interrupt that occurs after entering a Wait State should
+          not be for the PLT.
+          */
           WAIT();
       } else { // PC > 0 soft block count = 0
           PANIC();
