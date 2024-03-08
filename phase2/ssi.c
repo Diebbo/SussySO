@@ -72,7 +72,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
             break;
         }
         //send back resoults
-        SYSCALL(SENDMESSAGE,sender->p_pid,service,arg);
+        SYSCALL(SENDMESSAGE,sender->p_pid,service,(void*)arg);
     }
 }
 
@@ -87,11 +87,11 @@ pcb_PTR CreateProcess(pcb_t *sender, struct ssi_create_process_t *arg){
     pcb_t *new_prole = allocPcb();
     ssi_create_process_PTR new_prole_support = arg;
     if(process_count == MAXPROC || new_prole == NULL)
-        return NOPROC;
+        return (pcb_PTR)NOPROC;
     else{
         //initialization of new prole
         RAMTOP(new_prole->p_s.reg_sp);
-        new_prole->p_s.status = arg->state;
+        new_prole->p_s.status = arg->state->status;
         STST(&new_prole->p_s);                      //loading arg state in new_prole p_s??
         if(arg == NULL)
             new_prole->p_supportStruct = NULL;
