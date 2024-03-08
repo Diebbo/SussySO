@@ -117,25 +117,25 @@ void terminate_process(pcb_t *sender, pcb_t *target){
     if (target == NULL)
     {
         //terminate sender process but not the progeny!
-        removeChild(sender->p_parent,sender);
+        removeChild(sender->p_parent);
         removeProcQ(sender);
         //delete sender???
     }
     else if (sender == target->p_parent) {
-        TerminateProcess(sender,container_of(sender->p_child.next,pcb_t,p_sib));
-        removeChild(sender,target);
+        terminate_process(sender,container_of(sender->p_child.next,pcb_t, p_sib));
+        removeChild(sender); 
         removeProcQ(target);
         //delete target???
     }
     else {
         //target is not a progeny of sender
-        TerminateProcess(target,container_of(target->p_child.next,pcb_t,p_sib));
-        removeChild(target->p_parent,target);
+        terminate_process(target,container_of(target->p_child.next,pcb_t,p_sib));
+        removeChild(target->p_parent);//TODO: check if it's correct, serve che rimuova un figlio specifico
         removeProcQ(target);
         //delete target???
     }
 }
 
-void DoIO(){
+void do_io(){
 
 }
