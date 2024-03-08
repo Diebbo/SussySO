@@ -3,24 +3,11 @@ This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS
 
 #ifndef SSI_H
 #define SSI_H
-#include "../../headers/const.h"
-#include "../../headers/listx.h"
-#include "../../headers/types.h"
-#include "../../phase1/headers/pcb.h"
-#include "../../phase1/headers/msg.h"
-#include "../../phase2/headers/nucleus.h"
-#include <uriscv/types.h>
-#include <uriscv/bios.h>
-#include <uriscv/liburiscv.h>
-#include "exceptions.h"
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h> 
+#include "nucleus.h"
 
 //last pid number assign to a process 
 int last_used_pid = 0;
-//SSI id (the only process to have pid = 0)
-int ssi_id = 0;   
+
 void SSI_function_entry_point(void);
 void SSIRequest(pcb_t* sender, int service, void* arg);
 //generate unique pid for processes

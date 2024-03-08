@@ -16,6 +16,10 @@
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
 
+
+//SSI id (the only process to have pid = 0)
+#define ssi_id 0
+
 /* GLOBAL VARIABLES*/
 int process_count = 0;    // started but not terminated processes
 int soft_block_count = 0; // processes waiting for a resource
