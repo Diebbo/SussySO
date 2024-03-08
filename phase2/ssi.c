@@ -112,34 +112,36 @@ pcb_PTR CreateProcess(pcb_t *sender, struct ssi_create_process_t *arg) {
   }
 }
 
-void terminate_process(pcb_t *sender, pcb_t *target) {
-  /*
-  This services causes the sender process or another process to cease to exist
-  [Section 11]. In addition, recursively, all progeny of that process are
-  terminated as well. Execution of this instruction does not complete until all
-  progeny are terminated. The mnemonic constant TERMINATEPROCESS has the value
-  of 2. This service terminates the sender process if arg is NULL. Otherwise,
-  arg should be a pcb_t pointer
-  */
-  if (target == NULL) {
-    // terminate sender process but not the progeny!
-    removeChild(sender->p_parent, sender);
-    removeProcQ(sender);
-    // delete sender???
-  } else if (sender == target->p_parent) {
-    TerminateProcess(sender, container_of(sender->p_child.next, pcb_t, p_sib));
-    removeChild(sender, target);
-    removeProcQ(target);
-    // delete target???
-  } else {
-    // target is not a progeny of sender
-    TerminateProcess(target, container_of(target->p_child.next, pcb_t, p_sib));
-    removeChild(target->p_parent, target);
-    removeProcQ(target);
-    // delete target???
-  }
+void terminate_process(pcb_t *sender, pcb_t *target){
+    /*
+    This services causes the sender process or another process to cease to exist [Section 11]. In addition,
+    recursively, all progeny of that process are terminated as well. Execution of this instruction does not
+    complete until all progeny are terminated.
+    The mnemonic constant TERMINATEPROCESS has the value of 2.
+    This service terminates the sender process if arg is NULL. Otherwise, arg should be a pcb_t
+    pointer
+    */
+    if (target == NULL)
+    {
+        //terminate sender process but not the progeny!
+        removeChild(sender->p_parent);
+        removeProcQ(sender);
+        //delete sender???
+    }
+    else if (sender == target->p_parent) {
+        terminate_process(sender,container_of(sender->p_child.next,pcb_t, p_sib));
+        removeChild(sender); 
+        removeProcQ(target);
+        //delete target???
+    }
+    else {
+        //target is not a progeny of sender
+        terminate_process(target,container_of(target->p_child.next,pcb_t,p_sib));
+        removeChild(target->p_parent);//TODO: check if it's correct, serve che rimuova un figlio specifico
+        removeProcQ(target);
+        //delete target???
+    }
 }
-
 
 /*typedef struct ssi_payload_t
 {
@@ -161,5 +163,3 @@ void do_io(ssi_payload_PTR payload) {
 
     // during this phase only the print process will request the do_io service:
 
-
-}
