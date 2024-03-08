@@ -1,7 +1,6 @@
 /*Implement the System Service Interface (SSI) process. 
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 #include "headers/ssi.h"
-#include "headers/exceptions.h"
 
 int generate_pid(){
     //49 = num max of pcb
@@ -72,7 +71,7 @@ void SSIRequest(pcb_t* sender, int service, void* arg){
             break;
         }
         //send back resoults
-        SYSCALL(SENDMESSAGE,sender->p_pid,service,(void*)arg);
+        SYSCALL(SENDMESSAGE,sender->p_pid,service,(unsigned)arg);
     }
 }
 
@@ -106,7 +105,7 @@ pcb_PTR CreateProcess(pcb_t *sender, struct ssi_create_process_t *arg){
     }
 }
 
-void TerminateProcess(pcb_t *sender, pcb_t *target){
+void terminate_process(pcb_t *sender, pcb_t *target){
     /*
     This services causes the sender process or another process to cease to exist [Section 11]. In addition,
     recursively, all progeny of that process are terminated as well. Execution of this instruction does not
@@ -135,4 +134,8 @@ void TerminateProcess(pcb_t *sender, pcb_t *target){
         removeProcQ(target);
         //delete target???
     }
+}
+
+void DoIO(){
+
 }
