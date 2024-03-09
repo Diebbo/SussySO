@@ -26,8 +26,7 @@ void SSI_function_entry_point() {
   while (TRUE) {
     // receive request
     int process_id_request = SYSCALL(RECEIVEMESSAGE, ssi_id, ANYMESSAGE, 0);
-    process_request_ptr = find_process_ptr(
-        &ready_queue_list, process_id_request); // situato in ready queue?
+    process_request_ptr = find_process_ptr(&ready_queue_list, process_id_request); // situato in ready queue?
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2, (void *)process_request_ptr->p_s.reg_a3);
   }
@@ -60,7 +59,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
-
+      Wait_For_Clock(sender);
       break;
     case GETSUPPORTPTR:
 
@@ -170,11 +169,28 @@ cpu_t* Get_CPU_Time(pcb_t* sender){
   return sender->p_time;
 }
 
-void Wait_For_Clock(){
+void Wait_For_Clock(pcb_t* sender){
   /*One of the services the nucleus has to implement is the pseudo-clock, that is, a virtual device which
   sends out an interrupt (a tick) every 100 milliseconds (constant PSECOND). This interrupt will be
   translated into a message to the SSI, as for other interrupts.
   This service should allow the sender to suspend its execution until the next pseudo-clock tick. You
   need to save the list of PCBs waiting for the tick.*/
+  int tick = PSECOND;
+  cpu_t current_time;
+  cpu_t last_time;
+  //macro to read TimeOfDay clock
+  STCK(last_time);
+  STCK(current_time);
+  //send interrupt
+  SYSCALL(SENDMESSAGE,ssi_id,sender->p_pid,sender->p_s.reg_a3); //3o argomento corretto?
+  //saving proc waiting for tick
+  insertProcQ(&pseudoClockList,sender);
+  while ((current_time-last_time)%tick == 0)
+  {
+    //refresh TOD time till tick passed
+    STCK(current_time);
+  }
+  //removing from clock list cause tick passed
+  removeProcQ(&pseudoClockList);
 }
 

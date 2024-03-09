@@ -23,7 +23,7 @@ void do_io(ssi_payload_PTR);
 //This service should allow the sender to get back the accumulated processor time (in µseconds) used by the sender process.
 cpu_t* Get_CPU_Time(pcb_t* sender);
 //virtual device which sends out an interrupt (a tick) every 100 milliseconds
-void Wait_For_Clock();
+void Wait_For_Clock(pcb_t* sender);
 
 #endif
 /*ROBE DA IMPLEMENTARE:
