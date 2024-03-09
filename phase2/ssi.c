@@ -29,12 +29,11 @@ void SSI_function_entry_point() {
     process_request_ptr = find_process_ptr(
         &ready_queue_list, process_id_request); // situato in ready queue?
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
-    SSIRequest(process_request_ptr, process_request_ptr->p_s.reg_a2,
-               (void *)process_request_ptr->p_s.reg_a3);
+    SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2, (void *)process_request_ptr->p_s.reg_a3);
   }
 }
 
-void SSIRequest(pcb_t *sender, int service, void *arg) {
+void SSI_Request(pcb_t *sender, int service, void *arg) {
   /*If service does not match any of those provided by the SSI, the SSI should
   terminate the process and its progeny. Also, when a process requires a service
   to the SSI, it must wait for the answer.*/
@@ -49,17 +48,16 @@ void SSIRequest(pcb_t *sender, int service, void *arg) {
   } else {
     switch (service) {
     case CREATEPROCESS:
-      arg = CreateProcess(sender, arg); // giusta fare una roba de genere
-                                            // per 2 tipi diversi di ritorno?
+      arg = Create_Process(sender, arg); // giusta fare una roba de genere per 2 tipi diversi di ritorno?
       break;
     case TERMPROCESS:
-
+      terminate_process(sender,sender); //Vitto devi inserire tu cosa ci devi immettere nella funzione, non so se sia corretto     
       break;
     case DOIO:
       do_io((ssi_payload_t *)arg);
       break;
     case GETTIME:
-
+      arg = Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
 
@@ -80,7 +78,7 @@ void SSIRequest(pcb_t *sender, int service, void *arg) {
   }
 }
 
-pcb_PTR CreateProcess(pcb_t *sender, struct ssi_create_process_t *arg) {
+pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   /*When requested, this service causes a new process, said to be a progeny of
   the sender, to be created. arg should contain a pointer to a struct
   ssi_create_process_t (ssi_create_process_t *). Inside this struct, state
@@ -156,10 +154,27 @@ typedef struct ssi_do_io_t
     unsigned int commandValue; <----
 } ssi_do_io_t, *ssi_do_io_PTR;
 */
-void do_io(ssi_payload_PTR payload) { 
+void do_io(ssi_payload_PTR payload){
     // 1. device address -> save pcb_t on the device
     // 2. perform *commandAddr = commandValue; 
     // 3. -> rise an interrupt exception from device
 
     // during this phase only the print process will request the do_io service:
+
+}
+
+cpu_t* Get_CPU_Time(pcb_t* sender){
+  /*This service should allow the sender to get back the accumulated processor time (in µseconds) used
+  by the sender process. Hence, the Nucleus records (in the PCB: p_time) the amount of processor time
+  used by each process*/
+  return sender->p_time;
+}
+
+void Wait_For_Clock(){
+  /*One of the services the nucleus has to implement is the pseudo-clock, that is, a virtual device which
+  sends out an interrupt (a tick) every 100 milliseconds (constant PSECOND). This interrupt will be
+  translated into a message to the SSI, as for other interrupts.
+  This service should allow the sender to suspend its execution until the next pseudo-clock tick. You
+  need to save the list of PCBs waiting for the tick.*/
+}
 

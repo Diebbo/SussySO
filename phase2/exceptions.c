@@ -19,15 +19,15 @@ void exceptionHandler() {
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
 
   /*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
-  if (exception_error > 24 && exception_error <= 28)
-    TLBExceptionHandler(); // TODO
-  else if (exception_error >= 8 && exception_error < 11)
+  if (exception_error >= 24 && exception_error <= 28)
+    TLBExceptionHandler();                                              // TODO
+  else if (exception_error >= 8 && exception_error <= 11)
     SYSCALLExceptionHandler();
-  else if ((exception_error >= 0 && exception_error < 7) ||
-           (exception_error >= 11 && exception_error < 24))
-    TrapExceptionHandler(); // TODO
+  else if ((exception_error >= 0 && exception_error <= 7) ||
+           (exception_error >= 12 && exception_error <= 23))
+    TrapExceptionHandler();                                             // TODO
   else if (exception_error >= 17 && exception_error <= 21)
-    InterruptExceptionHandler(); // TODO
+    InterruptExceptionHandler();                                        // TODO
 }
 
 void SYSCALLExceptionHandler() {
