@@ -167,7 +167,17 @@ void Do_IO(pcb_t* sender, ssi_payload_t* arg){
       from the device;
     • given the device address, the SSI should free the process waiting the completion on the DoIO
       and finally, forwarding the status message to the original process.*/
-  
+    ssi_do_io_t* io_payload = arg->arg;
+    insertProcQ(&io_payload->commandAddr,sender);                                 //saving pcb_t on device?
+    *io_payload->commandAddr = io_payload->commandValue;
+    current_process = NULL;                                                       
+    /*all interrupts must be ON (how?)*/
+    /*setting the device command address to ACK (in TrapExceptionHandler?)*/
+    if(current_process == NULL)
+      Scheduler();
+    else  
+      LDST(current_process->p_s.cause);
+    SYSCALL(SENDMESSAGE,ssi_id,sender->p_pid,sender->p_s.status);  
 
 }
 

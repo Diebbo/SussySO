@@ -1,6 +1,6 @@
 #include "headers/scheduler.h"
 
-void scheduler() {
+void Scheduler() {
 
   // 1. get the first prcess
   // 2. set the timer - generate an interrupt

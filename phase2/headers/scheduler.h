@@ -3,7 +3,7 @@
 
 #include "nucleus.h"
 
-void scheduler(void);
+void Scheduler(void);
 
 
 
