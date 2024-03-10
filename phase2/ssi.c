@@ -54,10 +54,10 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Create_Process(sender, (ssi_create_process_t*)arg); // giusta fare una roba de genere per 2 tipi diversi di ritorno?
       break;
     case TERMPROCESS:
-      Terminate_Process(sender,sender); //Vitto devi inserire tu cosa ci devi immettere nella funzione, non so se sia corretto     
+      Terminate_Process(sender,(pcb_t*)arg);   
       break;
     case DOIO:
-      Do_IO(sender,(ssi_payload_t *)arg);
+      Do_IO(sender,(ssi_payload_t*)arg);
       break;
     case GETTIME:
       arg = Get_CPU_Time(sender);
@@ -239,13 +239,27 @@ int Get_Process_ID(pcb_t* sender, int arg){
 }
 
 void kill_progeny(pcb_t* sender){
-  /*if pcb is the first kill it otherwise kill it and its progeny*/
-  if(headProcQ(sender->p_parent==NULL))
+  //check if process has children
+  if(headProcQ(&sender->p_child) == NULL){
+    //check if has sib
+    if(headProcQ(&sender->p_sib) != NULL){
+      struct list_head* iter;
+      //iteration on all sib to recursevely kill progeny
+      list_for_each(iter,&sender->p_sib){
+        pcb_t* item = container_of(iter,pcb_t,p_sib);
+        kill_progeny(removeProcQ(item));
+      }
+    }
     removeProcQ(sender);
-  else{
-    pcb_t* parent_pcb = sender->p_parent;
-    removeChild(parent_pcb);
-    removeProcQ(sender);
-    kill_progeny(parent_pcb);
+  }else{
+    if(headProcQ(&sender->p_sib) != NULL){
+      struct list_head* iter;
+      list_for_each(iter,&sender->p_sib){
+        pcb_t* item = container_of(iter,pcb_t,p_sib);
+        kill_progeny(removeProcQ(item));
+      }
+    }else{
+      kill_progeny(removeProcQ(&sender->p_child));
+    }    
   }
 }
