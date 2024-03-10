@@ -4,13 +4,12 @@ SYS7, etc.).*/
 #include "headers/ssi.h"
 
 int generate_pid() {
-  // 49 = num max of pcb
-  if (last_used_pid == 40) {
-    last_used_pid = 1;
-  } else {
-    last_used_pid++;
+  // 40 = num max of pcb
+  if (last_used_pid == MAXPROC) {
+    last_used_pid = 0;
   }
-  return last_used_pid + 1;
+  last_used_pid++;
+  return last_used_pid;
 }
 
 pcb_PTR find_process_ptr(struct list_head *target_process, int pid) {
@@ -47,7 +46,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
   } else {
     switch (service) {
     case CREATEPROCESS:
-      arg = Create_Process(sender, arg); // giusta fare una roba de genere per 2 tipi diversi di ritorno?
+      arg = Create_Process(sender, (ssi_create_process_t*)arg); // giusta fare una roba de genere per 2 tipi diversi di ritorno?
       break;
     case TERMPROCESS:
       terminate_process(sender,sender); //Vitto devi inserire tu cosa ci devi immettere nella funzione, non so se sia corretto     
@@ -62,14 +61,14 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       Wait_For_Clock(sender);
       break;
     case GETSUPPORTPTR:
-
+      arg = Get_Support_Data(sender);
       break;
     case GETPROCESSID:
-
+      arg = Get_Process_ID(sender,(int)arg);
       break;
     default:
       // no match with services so must end process and progeny
-
+      kill_progeny(sender);
       break;
     }
     // send back resoults
@@ -194,3 +193,36 @@ void Wait_For_Clock(pcb_t* sender){
   removeProcQ(&pseudoClockList);
 }
 
+support_t* Get_Support_Data(pcb_t* sender){
+  /*This service should allow the sender to obtain the process’s Support Structure. Hence, this service
+  returns the value of p_supportStruct from the sender process’s PCB. If no value for p_supportStruct
+  was provided for the sender process when it was created, return NULL.*/
+  return (sender->p_supportStruct == NULL)? NULL : sender->p_supportStruct;
+}
+
+int Get_Process_ID(pcb_t* sender, int arg){
+  /*This service should allow the sender to obtain the process identifier (PID) of the sender if argument
+  is 0 or of the sender’s parent otherwise. It should return 0 as the parent identifier of the root process.*/
+  if(arg == 0)
+    return sender->p_pid;
+  else{
+    //sender parent is root
+    if(sender->p_parent->p_parent == NULL)
+      return 0;
+    else{
+      return sender->p_parent->p_pid;
+    }
+  }
+}
+
+void kill_progeny(pcb_t* sender){
+  /*if pcb is the first kill it otherwise kill it and its progeny*/
+  if(headProcQ(sender->p_parent==NULL))
+    removeProcQ(sender);
+  else{
+    pcb_t* parent_pcb = sender->p_parent;
+    removeChild(parent_pcb);
+    removeProcQ(sender);
+    kill_progeny(parent_pcb);
+  }
+}
