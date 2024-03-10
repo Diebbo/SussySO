@@ -54,10 +54,10 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Create_Process(sender, (ssi_create_process_t*)arg); // giusta fare una roba de genere per 2 tipi diversi di ritorno?
       break;
     case TERMPROCESS:
-      terminate_process(sender,sender); //Vitto devi inserire tu cosa ci devi immettere nella funzione, non so se sia corretto     
+      Terminate_Process(sender,sender); //Vitto devi inserire tu cosa ci devi immettere nella funzione, non so se sia corretto     
       break;
     case DOIO:
-      do_io((ssi_payload_t *)arg);
+      Do_IO(sender,(ssi_payload_t *)arg);
       break;
     case GETTIME:
       arg = Get_CPU_Time(sender);
@@ -113,7 +113,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   }
 }
 
-void terminate_process(pcb_t *sender, pcb_t *target){
+void Terminate_Process(pcb_t *sender, pcb_t *target){
     /*
     This services causes the sender process or another process to cease to exist [Section 11]. In addition,
     recursively, all progeny of that process are terminated as well. Execution of this instruction does not
@@ -130,39 +130,44 @@ void terminate_process(pcb_t *sender, pcb_t *target){
         //delete sender???
     }
     else if (sender == target->p_parent) {
-        terminate_process(sender,container_of(sender->p_child.next,pcb_t, p_sib));
+        Terminate_Process(sender,container_of(sender->p_child.next,pcb_t, p_sib));
         removeChild(sender); 
         removeProcQ(target);
         //delete target???
     }
     else {
         //target is not a progeny of sender
-        terminate_process(target,container_of(target->p_child.next,pcb_t,p_sib));
+        Terminate_Process(target,container_of(target->p_child.next,pcb_t,p_sib));
         removeChild(target->p_parent);//TODO: check if it's correct, serve che rimuova un figlio specifico
         removeProcQ(target);
         //delete target???
     }
 }
 
-/*typedef struct ssi_payload_t
-{
-    int service_code;
-    void *arg;
-} ssi_payload_t, *ssi_payload_PTR;
-
-
-typedef struct ssi_do_io_t
-{
-    memaddr* commandAddr;
-    unsigned int commandValue; <----
-} ssi_do_io_t, *ssi_do_io_PTR;
-*/
-void do_io(ssi_payload_PTR payload){
-    // 1. device address -> save pcb_t on the device
-    // 2. perform *commandAddr = commandValue; 
-    // 3. -> rise an interrupt exception from device
-
-    // during this phase only the print process will request the do_io service:
+void Do_IO(pcb_t* sender, ssi_payload_t* arg){
+  /*Here is the step by step execution of the kernel when a generic DoIO is requested:
+    • A process sends a request to the SSI to perform a DoIO;
+    • the process will wait for a response from the SSI;
+    • the SSI will eventually execute on the CPU to perform the DoIO;
+    • given the device address, the SSI should save the waiting pcb_t on the corresponding device;
+    • at last, the SSI will write the requested value on the device, i.e. *commandAddr = commandValue;
+      Important: This call should rise an interrupt exception from a device;
+    • the SSI will continue its execution until it blocks again;
+    • every process should now be in a blocked state as everyone is waiting for a task to end, so the
+      the scheduler should call the WAIT() function; Important: The current process must be set to
+      NULL and all interrupts must be ON;
+    • an interrupt exception should be raised by the CPU;
+    • given the cause code, the interrupt handler should understand which device triggered the TRAP;
+    • check the status and send to the device an acknowledge (setting the device command address to
+      ACK);
+    • the device sends to the SSI a message with the status of the device operation, i.e. setting the a3
+      parameter with the device address; now if the current process is NULL, return the control flow
+      to the scheduler. Otherwise, load the current process state into the CPU;
+    • the kernel will execute the send, that will free the SSI process, that will elaborate the request
+      from the device;
+    • given the device address, the SSI should free the process waiting the completion on the DoIO
+      and finally, forwarding the status message to the original process.*/
+  
 
 }
 
