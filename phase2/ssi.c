@@ -22,12 +22,17 @@ pcb_PTR find_process_ptr(struct list_head *target_process, int pid) {
 
 void SSI_function_entry_point() {
   pcb_PTR process_request_ptr;
+  msg_PTR process_request_msg;
   while (TRUE) {
     // receive request
-    int process_id_request = SYSCALL(RECEIVEMESSAGE, ssi_id, ANYMESSAGE, 0);
-    process_request_ptr = find_process_ptr(&ready_queue_list, process_id_request); // situato in ready queue?
+    int process_request_id = SYSCALL(RECEIVEMESSAGE, ssi_id, ANYMESSAGE, 0);
+    process_request_ptr = find_process_ptr(&ready_queue_list, process_request_id); // situato in ready queue?
+    //find msg payload
+    process_request_msg = headMessage(&process_request_ptr->msg_inbox);
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
-    SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2, (void *)process_request_ptr->p_s.reg_a3);
+    SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2, (void *)process_request_msg->m_payload);
+    //remove process request
+    popMessage(process_request_msg,process_request_ptr);
   }
 }
 
