@@ -207,7 +207,10 @@ support_t* Get_Support_Data(pcb_t* sender){
   /*This service should allow the sender to obtain the process’s Support Structure. Hence, this service
   returns the value of p_supportStruct from the sender process’s PCB. If no value for p_supportStruct
   was provided for the sender process when it was created, return NULL.*/
-  return (sender->p_supportStruct == NULL)? NULL : sender->p_supportStruct;
+  if (sender == NULL)
+    return NULL;
+  else
+    return sender->p_supportStruct;
 }
 
 int Get_Process_ID(pcb_t* sender, int arg){
