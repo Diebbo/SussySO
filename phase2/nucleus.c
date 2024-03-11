@@ -7,6 +7,14 @@ soft-blocked count, blocked PCBs lists/pointers, etc.*/
 extern void test();
 
 void initKernel() {
+
+  for(int i = 0; i < 6; i++){
+    for(int j = 0; j < MAXPROC; j++){
+      device_list[i][j] = NULL;
+    }
+    device_index[i] = 0;
+  }
+
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
   passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; // TODO refil

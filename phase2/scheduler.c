@@ -1,4 +1,5 @@
 #include "headers/scheduler.h"
+#include <uriscv/liburiscv.h>
 
 void Scheduler() {
 
@@ -24,6 +25,7 @@ void Scheduler() {
           load it with a very large value. The first interrupt that occurs after entering a Wait State should
           not be for the PLT.
           */
+          setSTATUS(TEBITON);
           WAIT();
       } else { // PC > 0 soft block count = 0
           PANIC();

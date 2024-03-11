@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     initKernel();
 
     // 2. scheduler
-    scheduler();
+    Scheduler();
 
 
     
