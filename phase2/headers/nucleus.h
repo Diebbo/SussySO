@@ -15,7 +15,7 @@
 #include <uriscv/types.h>
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
-
+#include <uriscv/ucode.h>
 
 //SSI id (the only process to have pid = 0)
 #define ssi_id 0

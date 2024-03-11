@@ -2,9 +2,6 @@
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
 #include "headers/ssi.h"
-#include "headers/nucleus.h"
-#include <uriscv/const.h>
-#include <uriscv/liburiscv.h>
 
 int generate_pid() {
   // 40 = num max of pcb
@@ -86,7 +83,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       break;
     }
     // send back resoults
-    SYSCALL(SENDMESSAGE, sender->p_pid, arg, 0);
+    SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned) arg, 0);
   }
 }
 

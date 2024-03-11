@@ -2,7 +2,8 @@
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
 #include "headers/interrupts.h"
-#include <uriscv/types.h>
+#include "headers/nucleus.h"
+#include <uriscv/liburiscv.h>
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -11,15 +12,15 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-void interruptHandler(pcb_PTR sender) {
+void interruptHandler(pcb_PTR caller) {
   for (int i = 3; i < 8; i++) {
     if (CAUSE_IP_GET(getCAUSE(), i) == 1) {
-      interruptHandlerNonTimer(sender, i);
+      interruptHandlerNonTimer(caller, i);
     }
   }
 }
 
-void interruptHandlerNonTimer(pcb_PTR sender, int IntlineNo) {
+void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
   /*  1. Calculate the address for this device’s device register
       2. Save off the status code from the device’s device register
       3. Acknowledge the outstanding interrupt
@@ -82,15 +83,32 @@ unsigned int recv_command;
 unsigned int transm_status;
 unsigned int transm_command;
 } termreg_t;*/
-    switch (IntlineNo) {
-        case 7:
-            termreg_t *term_reg = (termreg_t *)dev_addr_base;
-            term_reg->status = ACK; // TODO: check
-            
-    }
+  switch (IntlineNo) {
+  case 7:
+    dev_reg->status = ACK; // TODO: check
+    // send ack to ssi -> no syscall
+    msg_t *ack_msg = (msg_t *)allocMsg();
+
+    ack_msg->m_payload = (void *)dev_reg;
+    // ack_msg->m_sender = IL_TERMINAL; ??
+
+    pushMessage(&caller->msg_inbox, ack_msg);
+
+    caller->p_s.status = status;
+      // remove the process from the blocked list and insert it in the ready
+    outProcQ(&blockedPCBs, &caller->p_list);
+    insertProcQ(&ready_queue_list, &caller->p_list);
+
+      // give the process controll
+    LDST(&caller->p_s);
+    break;
+  default:
+    // error
+    break;
+  }
 }
 
-void interruptHandlerPLT(pcb_PTR sender) {
+void interruptHandlerPLT(pcb_PTR caller) {
   /* The PLT portion of the interrupt exception handler should therefore:
       •Acknowledge the PLT interrupt by loading the timer with a new value
      [Section 4.1.4-pops]. •Copy the processor state at the time of the
