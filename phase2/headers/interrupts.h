@@ -6,9 +6,9 @@ them into appropriate messages for blocked PCBs.*/
 
 #include "nucleus.h"
 
-void interrupt_handler(pcb_PTR sender);
-void non_timer_interrupt_handler(pcb_PTR sender, int IntlineNo);
-void PLT_interrupt_handler(pcb_PTR sender);
+void interruptHandler(pcb_PTR sender);
+void interruptHandlerNonTimer(pcb_PTR sender, int IntlineNo);
+void interruptHandlerPLT(pcb_PTR sender);
 
 
 

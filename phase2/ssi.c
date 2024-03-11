@@ -66,14 +66,10 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
-<<<<<<< HEAD
       arg = Do_IO(sender, (ssi_payload_t *)arg);
-=======
-      Do_IO(sender, (ssi_payload_t *)arg);
->>>>>>> 400d951d4cc259247124e6b9e0c525f4d64bd25f
       break;
     case GETTIME:
-      arg = Get_CPU_Time(sender);
+      arg = (void *)Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
@@ -82,7 +78,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Get_Support_Data(sender);
       break;
     case GETPROCESSID:
-      arg = Get_Process_ID(sender, (int)arg);
+      arg = (void *)Get_Process_ID(sender, (int)arg);
       break;
     default:
       // no match with services so must end process and progeny
