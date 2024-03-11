@@ -20,7 +20,7 @@ pcb_PTR find_process_ptr(struct list_head *target_process, int pid);
 // When requested terminate a process and his progeny
 void Terminate_Process(pcb_t *sender, pcb_t *target);
 // I/O operation
-void Do_IO(pcb_t *sender, ssi_payload_t *arg);
+void *Do_IO(pcb_t *sender, ssi_payload_t *arg);
 // This service should allow the sender to get back the accumulated processor
 // time (in µseconds) used by the sender process.
 cpu_t Get_CPU_Time(pcb_t *sender);

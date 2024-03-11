@@ -28,7 +28,8 @@ void SSI_function_entry_point() {
   msg_PTR process_request_msg;
   while (TRUE) {
     // receive request
-    int process_request_id = SYSCALL(RECEIVEMESSAGE, ssi_id, ANYMESSAGE, 0);
+    int process_request_id =
+        SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0); // payload?
     process_request_ptr = find_process_ptr(
         &ready_queue_list, process_request_id); // situato in ready queue?
     // find msg payload
@@ -65,10 +66,14 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
+<<<<<<< HEAD
       arg = Do_IO(sender, (ssi_payload_t *)arg);
+=======
+      Do_IO(sender, (ssi_payload_t *)arg);
+>>>>>>> 400d951d4cc259247124e6b9e0c525f4d64bd25f
       break;
     case GETTIME:
-      arg = (void *)Get_CPU_Time(sender);
+      arg = Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
@@ -77,7 +82,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Get_Support_Data(sender);
       break;
     case GETPROCESSID:
-      arg = (void *)Get_Process_ID(sender, (int)arg);
+      arg = Get_Process_ID(sender, (int)arg);
       break;
     default:
       // no match with services so must end process and progeny
@@ -85,7 +90,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       break;
     }
     // send back resoults
-    SYSCALL(SENDMESSAGE, sender->p_pid, service, (unsigned)arg);
+    SYSCALL(SENDMESSAGE, sender->p_pid, arg, 0);
   }
 }
 
@@ -150,7 +155,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
-void Do_IO(pcb_t *sender, ssi_payload_t *arg) {
+void *Do_IO(pcb_t *sender, ssi_payload_t *arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
     process will wait for a response from the SSI; • the SSI will eventually
@@ -188,7 +193,7 @@ void Do_IO(pcb_t *sender, ssi_payload_t *arg) {
   // sends back the status of the device operation
   void *payload;
   SYSCALL(RECEIVEMESSAGE, IL_TERMINAL, (unsigned int)payload, 0);
-  list_del(sender->p_list);
+  list_del(&sender->p_list);
   list_add_tail(&sender->p_list, &ready_queue_list);
   return payload;
 }
