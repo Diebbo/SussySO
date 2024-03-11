@@ -65,7 +65,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
-      Do_IO(sender, (ssi_payload_t *)arg);
+      arg = Do_IO(sender, (ssi_payload_t *)arg);
       break;
     case GETTIME:
       arg = (void *)Get_CPU_Time(sender);
@@ -174,20 +174,23 @@ void Do_IO(pcb_t *sender, ssi_payload_t *arg) {
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
   ssi_do_io_PTR do_io = arg->arg;
-  unsigned int device = IL_TERMINAL % 6; // per il momento sarà sempre questo
-  unsigned int device_current_index = device_free_index[device]++;
-  device_free_index[device] %= MAXPROC;
-  
-  // saving waiting pcb_t on the corresponding device
-  device_list[device][device_current_index] = sender;
-  
+  unsigned int device = IL_TERMINAL % (SEMDEVLEN - 1);
+  list_add_tail(&sender->p_list, &blockedPCBs[device]);
 
-  *do_io->commandAddr = do_io->commandValue;
-  /*setting the device command address to ACK (in TrapExceptionHandler?)*/
-  
-  int process_request_id = SYSCALL(RECEIVEMESSAGE, ssi_id, IL_TERMINAL, 0);
+  *do_io->commandAddr =
+      do_io->commandValue; // !IMPORTANT: this rise an interrupt exception from
+                           // a device
 
-  SYSCALL(SENDMESSAGE, ssi_id, sender->p_pid, sender->p_s.status);
+  // ? - SSI Continue execution
+
+  // await for interrupt handler
+  // generate a TRAP
+  // sends back the status of the device operation
+  void *payload;
+  SYSCALL(RECEIVEMESSAGE, IL_TERMINAL, (unsigned int)payload, 0);
+  list_del(sender->p_list);
+  list_add_tail(&sender->p_list, &ready_queue_list);
+  return payload;
 }
 
 cpu_t Get_CPU_Time(pcb_t *sender) {

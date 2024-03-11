@@ -30,10 +30,6 @@ struct list_head pseudoClockList;            // pcb waiting for clock tick
 struct list_head pcbFree_h; //pcb free list
 
 
-// device list -> 6 devices you can find the list in const.h IL_*
-pcb_PTR device_list[6][MAXPROC];
-int device_free_index[6]; // 6 devices
-
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
 void uTLB_RefillHandler(void);
