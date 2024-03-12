@@ -260,18 +260,22 @@ void kill_progeny(pcb_t *sender) {
       // iteration on all sib to recursevely kill progeny
       list_for_each(iter, &sender->p_sib) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
+        process_count--;
         kill_progeny(removeProcQ(item));
       }
     }
+    process_count--;
     removeProcQ(sender);
   } else {
     if (headProcQ(&sender->p_sib) != NULL) {
       struct list_head *iter;
       list_for_each(iter, &sender->p_sib) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
+        process_count--;
         kill_progeny(removeProcQ(item));
       }
     } else {
+      process_count--;
       kill_progeny(removeProcQ(&sender->p_child));
     }
   }
