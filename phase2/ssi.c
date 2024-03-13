@@ -130,18 +130,14 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     removeChild(sender->p_parent);
     removeProcQ(sender);
     // delete sender???
-  } else if (sender == target->p_parent) {
-    Terminate_Process(sender, container_of(sender->p_child.next, pcb_t, p_sib));
-    removeChild(sender);
-    removeProcQ(target);
-    // delete target???
-  } else {
-    // target is not a progeny of sender
-    Terminate_Process(target, container_of(target->p_child.next, pcb_t, p_sib));
-    removeChild(target->p_parent); // TODO: check if it's correct, serve che
-                                   // rimuova un figlio specifico
-    removeProcQ(target);
-    // delete target???
+  } 
+  else{
+    list_for_each_entry(target, &target->p_child, p_child) {
+      Terminate_Process(target, container_of(target->p_child.next, pcb_t, p_child));
+      removeChild(target->p_parent); // TODO: check if it's correct, serve che
+      removeProcQ(target);
+      // delete target???
+    }
   }
 }
 
