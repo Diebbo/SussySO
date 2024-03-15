@@ -9,7 +9,7 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  memaddr exception_error = getCAUSE();
+  memaddr exception_error = getCAUSE() << CAUSESHIFT;
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
 
@@ -28,15 +28,18 @@ void exceptionHandler() {
 void SYSCALLExceptionHandler() {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  memaddr kernel_user_state = getSTATUS() << 1;
   // pcb_t *current_process?
 
   int a0_reg = current_process->p_s.reg_a0, a1_reg = current_process->p_s.reg_a1,
-      a2_reg = current_process->p_s.reg_a2, a3_reg = current_process->p_s.reg_a3,
-      user_state = exception_state->status;
+      a2_reg = current_process->p_s.reg_a2, a3_reg = current_process->p_s.reg_a3;
+      //user_state = exception_state->statu;
+
 
   /*Kup???*/
   if (a0_reg >= -2 && a0_reg <= -1) {
-    if (user_state == 1) { // kernel state syscallexception_state
+    //check if in current process is in kernel mode
+    if (kernel_user_state == 0) {
       switch (a0_reg) {
       case SENDMESSAGE:
         /*This system call cause the transmission of a message to a specified process. This is an asynchronous
