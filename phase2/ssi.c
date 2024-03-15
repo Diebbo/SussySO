@@ -60,7 +60,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
-      arg = Do_IO(sender, (ssi_payload_t *)arg);
+      arg = DoIO(sender, (ssi_payload_t *)arg);
       break;
     case GETTIME:
       arg = (void *)Get_CPU_Time(sender);
@@ -80,7 +80,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       break;
     }
     // send back resoults
-    SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned) arg, 0);
+    SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned)arg, 0);
   }
 }
 
@@ -141,7 +141,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
-void *Do_IO(pcb_t *sender, ssi_payload_t *arg) {
+void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
     process will wait for a response from the SSI; • the SSI will eventually
@@ -178,7 +178,8 @@ void *Do_IO(pcb_t *sender, ssi_payload_t *arg) {
   // generate a TRAP
   // sends back the status of the device operation
   void *payload;
-  SYSCALL(RECEIVEMESSAGE, IL_TERMINAL, (unsigned int)payload, 0);
+  void *dev_addr;
+  SYSCALL(RECEIVEMESSAGE, IL_TERMINAL, (unsigned)payload, (unsigned) dev_addr);
   list_del(&sender->p_list);
   list_add_tail(&sender->p_list, &ready_queue_list);
   return payload;

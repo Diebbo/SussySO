@@ -99,11 +99,8 @@ unsigned int transm_command;
     pushMessage(&caller->msg_inbox, ack_msg);
 
     caller->p_s.status = status;
-      // remove the process from the blocked list and insert it in the ready
     outProcQ(&blockedPCBs, &caller->p_list);
     insertProcQ(&ready_queue_list, &caller->p_list);
-
-      // give the process controll
     LDST(&caller->p_s);
     break;
   default:
