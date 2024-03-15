@@ -12,7 +12,11 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
+
 void interruptHandler(pcb_PTR caller) {
+  if(CAUSE_IP_GET(getCAUSE(), 1) == 1){
+    interruptHandlerPLT(caller);
+  }
   for (int i = 3; i < 8; i++) {
     if (CAUSE_IP_GET(getCAUSE(), i) == 1) {
       interruptHandlerNonTimer(caller, i);
@@ -111,10 +115,15 @@ unsigned int transm_command;
 void interruptHandlerPLT(pcb_PTR caller) {
   /* The PLT portion of the interrupt exception handler should therefore:
       •Acknowledge the PLT interrupt by loading the timer with a new value
-     [Section 4.1.4-pops]. •Copy the processor state at the time of the
-     exception (located at the start of the BIOS Data Page [Section 3.2.2-pops])
-     into the Current Process’s PCB (p_s). •Place the Current Process on the
-     Ready Queue; transitioning the Current Process from the “running” state to
-     the “ready” state. •Call the Scheduler.
+      [Section 4.1.4-pops]. •Copy the processor state at the time of the
+      exception (located at the start of the BIOS Data Page [Section 3.2.2-pops])
+      into the Current Process’s PCB (p_s). •Place the Current Process on the
+      Ready Queue; transitioning the Current Process from the “running” state to
+      the “ready” state. •Call the Scheduler.
   */
+  setTIMER(TIMESLICE);
+  STST(&caller->p_s);
+  outProcQ(&blockedPCBs, &caller->p_list);
+  insertProcQ(&ready_queue_list, &caller->p_list);
+  Scheduler();
 }

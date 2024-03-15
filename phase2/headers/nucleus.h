@@ -15,7 +15,8 @@
 #include <uriscv/types.h>
 #include <uriscv/bios.h>
 #include <uriscv/liburiscv.h>
-#include <uriscv/utility.h> //ucode.h <--- da errore 'impossibile aprire il codice errore "uriscv/ucode.h" del file origine'
+#include <uriscv/utility.h> //ucode.h <--- da errore 'impossibile aprire il codice errore "uriscv/ucode.h" del file origine',
+                            // PEPPE: ho controllato è questo file non esiste nella directory uriscv
 
 //SSI id (the only process to have pid = 0)
 #define ssi_id 0

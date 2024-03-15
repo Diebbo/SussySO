@@ -4,7 +4,7 @@ them into appropriate messages for blocked PCBs.*/
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
 
-#include "nucleus.h"
+#include "scheduler.h"
 
 void interruptHandler(pcb_PTR sender);
 void interruptHandlerNonTimer(pcb_PTR sender, int IntlineNo);
