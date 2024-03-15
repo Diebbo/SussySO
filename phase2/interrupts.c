@@ -1,9 +1,7 @@
 /*Implement the device/timer interrupt exception handler. Process device/timer
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
-#include "headers/interrupts.h"
-#include "headers/nucleus.h"
-#include <uriscv/liburiscv.h>
+#include "./headers/interrupts.h"
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -12,9 +10,8 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-
 void interruptHandler(pcb_PTR caller) {
-  if(CAUSE_IP_GET(getCAUSE(), 1) == 1){
+  if (CAUSE_IP_GET(getCAUSE(), 1) == 1) {
     interruptHandlerPLT(caller);
   }
   for (int i = 3; i < 8; i++) {
@@ -76,8 +73,6 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
   int dev_addr_base = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
 
   // 2. Save off the status code from the device’s device register
-  dtpreg_t *dev_reg = (dtpreg_t *)dev_addr_base;
-  int status = dev_reg->status;
 
   // 3. Acknowledge the outstanding interrupt
   // the only device that needs to be acknowledged is the terminal ->
@@ -89,7 +84,9 @@ unsigned int transm_command;
 } termreg_t;*/
   switch (IntlineNo) {
   case 7:
-    dev_reg->status = ACK; // TODO: check
+    termreg_t *dev_reg = (termreg_t *)dev_addr_base;
+    unsigned int status = dev_reg->recv_status;
+    dev_reg->recv_status = ACK; // TODO: check
     // send ack to ssi -> no syscall
     msg_t *ack_msg = (msg_t *)allocMsg();
 
@@ -113,10 +110,10 @@ void interruptHandlerPLT(pcb_PTR caller) {
   /* The PLT portion of the interrupt exception handler should therefore:
       •Acknowledge the PLT interrupt by loading the timer with a new value
       [Section 4.1.4-pops]. •Copy the processor state at the time of the
-      exception (located at the start of the BIOS Data Page [Section 3.2.2-pops])
-      into the Current Process’s PCB (p_s). •Place the Current Process on the
-      Ready Queue; transitioning the Current Process from the “running” state to
-      the “ready” state. •Call the Scheduler.
+      exception (located at the start of the BIOS Data Page
+     [Section 3.2.2-pops]) into the Current Process’s PCB (p_s). •Place the
+     Current Process on the Ready Queue; transitioning the Current Process from
+     the “running” state to the “ready” state. •Call the Scheduler.
   */
   setTIMER(TIMESLICE);
   STST(&caller->p_s);
