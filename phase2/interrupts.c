@@ -1,7 +1,7 @@
 /*Implement the device/timer interrupt exception handler. Process device/timer
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
-#include "./headers/interrupts.h"
+#include "./headers/nucleus.h"
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices

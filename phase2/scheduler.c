@@ -1,5 +1,4 @@
-#include "headers/scheduler.h"
-#include <uriscv/liburiscv.h>
+#include "./headers/nucleus.h"
 
 void Scheduler() {
 

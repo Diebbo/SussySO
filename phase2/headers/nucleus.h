@@ -11,6 +11,10 @@
 #include "../../phase1/headers/pcb.h"
 
 // phase 2 headers
+#include "ssi.h"
+#include "scheduler.h"
+#include "interrupts.h"
+#include "exceptions.h"
 
 // uriscv headers
 #include <uriscv/aout.h>
@@ -22,9 +26,6 @@
 #include <uriscv/liburiscv.h>
 #include <uriscv/regdef.h>
 #include <uriscv/types.h>
-
-// SSI id (the only process to have pid = 0)
-#define ssi_id 0
 
 /* GLOBAL VARIABLES*/
 int process_count = 0;    // started but not terminated processes
@@ -40,14 +41,4 @@ struct list_head pcbFree_h;                  // pcb free list
 void initKernel(void);
 void uTLB_RefillHandler(void);
 
-/* EXCEPTIONS */
-
-void TLBExceptionHandler();
-void exceptionHandler();
-void InterruptExceptionHandler();
-void SYSCALLExceptionHandler();
-void TrapExceptionHandler();
-// this function serves to find if a crocess is in a specific list based on his
-// pid
-int is_in_list(struct list_head *target_process, int pid);
 #endif

@@ -1,10 +1,12 @@
-/*Implement the System Service Interface (SSI) process.
-This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
+/*Implement the System Service Interface (SSI) process. This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
 
 #ifndef SSI_H
 #define SSI_H
 #include "nucleus.h"
+
+// SSI id (the only process to have pid = 0)
+#define ssi_id 0
 
 // last pid number assigned to a process
 int last_used_pid = 0;
