@@ -1,7 +1,7 @@
 /*Implement the device/timer interrupt exception handler. Process device/timer
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
-#include "./headers/nucleus.h"
+#include "./headers/interrupts.h"
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -70,7 +70,7 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
     break;
   }
   // Interrupt line number da calcolare
-  int dev_addr_base = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
+  void *dev_addr_base = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
 
   // 2. Save off the status code from the device’s device register
 
@@ -84,9 +84,10 @@ unsigned int transm_command;
 } termreg_t;*/
   switch (IntlineNo) {
   case 7:
-    termreg_t *dev_reg = (termreg_t *)dev_addr_base;
-    unsigned int status = dev_reg->recv_status;
-    dev_reg->recv_status = ACK; // TODO: check
+    void *trasm_status = dev_addr_base + 0x8;
+    unsigned int status = *((unsigned int *)trasm_status);
+    unsigned *recv_status = dev_addr_base;
+    *recv_status = ACK;
     // send ack to ssi -> no syscall
     msg_t *ack_msg = (msg_t *)allocMsg();
 

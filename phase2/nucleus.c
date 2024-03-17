@@ -81,7 +81,7 @@ void initKernel() {
   pcb_t *second_process = allocPcb();
 
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
-  second_process->p_s.reg_sp -= 2 * sizeof(pcb_t); // STST()???
+  second_process->p_s.reg_sp -= 2 * PAGESIZE; // STST()???
   second_process->p_s.pc_epc = (memaddr)test; // TODO
   second_process->p_s.status = IECON | ALLOFF;
 

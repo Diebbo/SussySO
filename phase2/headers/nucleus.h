@@ -11,10 +11,6 @@
 #include "../../phase1/headers/pcb.h"
 
 // phase 2 headers
-#include "ssi.h"
-#include "scheduler.h"
-#include "interrupts.h"
-#include "exceptions.h"
 
 // uriscv headers
 #include <uriscv/aout.h>
@@ -40,5 +36,9 @@ struct list_head pcbFree_h;                  // pcb free list
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
 void uTLB_RefillHandler(void);
+
+/* COMMON FUNCTIONS*/
+void exceptionHandler();
+void Scheduler();
 
 #endif
