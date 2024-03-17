@@ -40,5 +40,6 @@ void uTLB_RefillHandler(void);
 /* COMMON FUNCTIONS*/
 void exceptionHandler();
 void Scheduler();
+void SSI_function_entry_point(void);
 
 #endif

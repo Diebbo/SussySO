@@ -1,5 +1,5 @@
-/*Implement the System Service Interface (SSI) process. This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
-SYS7, etc.).*/
+/*Implement the System Service Interface (SSI) process. This involves handling
+various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 
 #ifndef SSI_H
 #define SSI_H
@@ -10,7 +10,7 @@ SYS7, etc.).*/
 
 // last pid number assigned to a process
 int last_used_pid = 0;
-void SSI_function_entry_point(void);
+
 void SSI_Request(pcb_t *sender, int service, void *arg);
 // generate unique pid for processes
 int generate_pid();

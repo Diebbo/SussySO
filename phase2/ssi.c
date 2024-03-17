@@ -1,7 +1,7 @@
 /*Implement the System Service Interface (SSI) process.
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
-#include "./headers/nucleus.h"
+#include "./headers/ssi.h"
 
 int generate_pid() {
   // 40 = num max of pcb
@@ -25,12 +25,15 @@ void SSI_function_entry_point() {
   msg_PTR process_request_msg;
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
-    int process_request_id = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, NULL, 0); // payload?
-    process_request_ptr = find_process_ptr(&ready_queue_list, process_request_id); // situato in ready queue?
+    int process_request_id =
+        SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, NULL, 0); // payload?
+    process_request_ptr = find_process_ptr(
+        &ready_queue_list, process_request_id); // situato in ready queue?
     // find msg payload
     process_request_msg = headMessage(&process_request_ptr->msg_inbox);
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
-    SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,(void *)process_request_msg->m_payload);
+    SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,
+                (void *)process_request_msg->m_payload);
     // remove process request
     popMessage(process_request_msg, process_request_ptr);
   }
@@ -130,10 +133,10 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     removeChild(sender->p_parent);
     removeProcQ(sender);
     // delete sender???
-  } 
-  else{
+  } else {
     list_for_each_entry(target, &target->p_child, p_child) {
-      Terminate_Process(target, container_of(target->p_child.next, pcb_t, p_child));
+      Terminate_Process(target,
+                        container_of(target->p_child.next, pcb_t, p_child));
       removeChild(target->p_parent); // TODO: check if it's correct, serve che
       removeProcQ(target);
       // delete target???
@@ -179,7 +182,12 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
   // sends back the status of the device operation
   void *payload;
   void *dev_addr;
-  SYSCALL(RECEIVEMESSAGE, IL_TERMINAL, (unsigned)payload, (unsigned) dev_addr);
+
+  // the messagge should be the first in the list of the process
+  msg_t *msg = popMessage(&sender->msg_inbox, IL_TERMINAL);
+  payload = (void *)msg->m_payload;
+
+
   list_del(&sender->p_list);
   list_add_tail(&sender->p_list, &ready_queue_list);
   return payload;

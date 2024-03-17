@@ -38,39 +38,40 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device number you can use a switch among constants
   // DEVxON
-  int DevNo; // Device number da calcolare
+  int dev_no; // Device number da calcolare
   switch (getCAUSE() & DISKINTERRUPT & FLASHINTERRUPT & PRINTINTERRUPT &
           TERMINTERRUPT) {
   case DEV0ON:
-    DevNo = 0;
+    dev_no = 0;
     break;
   case DEV1ON:
-    DevNo = 1;
+    dev_no = 1;
     break;
   case DEV2ON:
-    DevNo = 2;
+    dev_no = 2;
     break;
   case DEV3ON:
-    DevNo = 3;
+    dev_no = 3;
     break;
   case DEV4ON:
-    DevNo = 4;
+    dev_no = 4;
     break;
   case DEV5ON:
-    DevNo = 5;
+    dev_no = 5;
     break;
   case DEV6ON:
-    DevNo = 6;
+    dev_no = 6;
     break;
   case DEV7ON:
-    DevNo = 7;
+    dev_no = 7;
     break;
   default:
     // Error
     break;
   }
   // Interrupt line number da calcolare
-  void *dev_addr_base = 0x10000054 + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
+  void *dev_addr_base =
+      (void *)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
 
@@ -91,7 +92,7 @@ unsigned int transm_command;
     // send ack to ssi -> no syscall
     msg_t *ack_msg = (msg_t *)allocMsg();
 
-    ack_msg->m_payload = (void *)dev_reg;
+    ack_msg->m_payload = (void *)dev_addr_base;
     // ack_msg->m_sender = IL_TERMINAL; ??
 
     pushMessage(&caller->msg_inbox, ack_msg);
