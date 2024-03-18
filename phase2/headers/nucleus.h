@@ -22,15 +22,20 @@
 #include <uriscv/types.h>
 
 /* GLOBAL VARIABLES*/
-int process_count = 0;    // started but not terminated processes
-int soft_block_count = 0; // processes waiting for a resource
-struct list_head
-    ready_queue_list; // tail pointer to the ready state queue processes
+// started but not terminated processes
+int process_count = 0;    
+// processes waiting for a resource
+int soft_block_count = 0; 
+// tail pointer to the ready state queue processes
+struct list_head ready_queue_list; 
 pcb_t *current_process;
 struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
-struct list_head pseudoClockList;            // pcb waiting for clock tick
-struct list_head pcbFree_h;                  // pcb free list
-
+// pcb waiting for clock tick
+struct list_head pseudoClockList;        
+// pcb free list    
+struct list_head pcbFree_h;                  
+// SSI id (the only process to have pid = 0)
+#define ssi_id 0
 // last pid number assigned to a process
 int last_used_pid = 0;
 
@@ -44,10 +49,10 @@ void TrapExceptionHandler();
 void Scheduler();
 void SSI_function_entry_point(void);
 void passUpOrDie(pcb_t *, unsigned);
-
 // generate unique pid for processes
 int generate_pid();
 
-extern void test(); //defined in p2test.c
+//defined in p2test.c
+extern void test(); 
 
 #endif

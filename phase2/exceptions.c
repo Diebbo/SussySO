@@ -155,7 +155,9 @@ void SYSCALLExceptionHandler() {
   }
 }
 
-void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
+void TrapExceptionHandler() { 
+  passUpOrDie(current_process, GENERALEXCEPT); 
+}
 
 void passUpOrDie(pcb_t *p, unsigned type) {
   if (p->p_supportStruct == NULL) {
@@ -174,9 +176,11 @@ void passUpOrDie(pcb_t *p, unsigned type) {
   p->p_supportStruct->sup_exceptState[type].status = exception_state->status;
 
   // 2nd Update the accumulated CPU time for the Current Process
-  LDCXT(p->p_supportStruct->sup_exceptContext[type].c_stackPtr,
-        p->p_supportStruct->sup_exceptContext[type].c_status,
-        p->p_supportStruct->sup_exceptContext[type].c_pc);
+  LDCXT(p->p_supportStruct->sup_exceptContext[type].stackPtr,
+        p->p_supportStruct->sup_exceptContext[type].status,
+        p->p_supportStruct->sup_exceptContext[type].pc);
 }
 
-void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
+void TLBExceptionHandler() { 
+  passUpOrDie(current_process, PGFAULTEXCEPT); 
+}

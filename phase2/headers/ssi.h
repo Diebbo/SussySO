@@ -5,8 +5,6 @@ various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 #define SSI_H
 #include "nucleus.h"
 
-// SSI id (the only process to have pid = 0)
-#define ssi_id 0
 
 void SSI_Request(pcb_t *sender, int service, void *arg);
 // When requested, this service causes a new process, said to be a progeny of
