@@ -47,9 +47,10 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
 
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  int user_state = exception_state->status;
+  //int user_state = exception_state->status;
+  memaddr kernel_user_state = getSTATUS() << 1;
 
-  if (user_state != 1) {
+  if (kernel_user_state != 1) {
     // Must be in kernel mode otherwise trap!
     TrapExceptionHandler();
   } else {
@@ -132,13 +133,14 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   if (target == NULL) {
     // terminate sender process but not the progeny!
     removeChild(sender->p_parent);
+    outChild(sender);
     removeProcQ(sender);
     // delete sender???
   } else {
     list_for_each_entry(target, &target->p_child, p_child) {
-      Terminate_Process(target,
-                        container_of(target->p_child.next, pcb_t, p_child));
+      Terminate_Process(target, container_of(target->p_child.next, pcb_t, p_child));
       removeChild(target->p_parent); // TODO: check if it's correct, serve che
+      outChild(target);
       removeProcQ(target);
       // delete target???
     }
@@ -216,11 +218,13 @@ void Wait_For_Clock(pcb_t *sender) {
   STCK(last_time);
   STCK(current_time);
   // send interrupt
-  SYSCALL(SENDMESSAGE, ssi_id, sender->p_pid,
-          sender->p_s.reg_a3); // 3o argomento corretto?
+  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0); 
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
-  while ((current_time - last_time) % tick == 0) {
+  //waiting till tick
+  while(TRUE){
+    if((current_time - last_time) % tick == 0)
+      break;
     // refresh TOD time till tick passed
     STCK(current_time);
   }
@@ -265,10 +269,12 @@ void kill_progeny(pcb_t *sender) {
       list_for_each(iter, &sender->p_sib) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
+        outChild(sender);
         kill_progeny(removeProcQ(item));
       }
     }
     process_count--;
+    outChild(sender);
     removeProcQ(sender);
   } else {
     if (headProcQ(&sender->p_sib) != NULL) {
@@ -276,10 +282,12 @@ void kill_progeny(pcb_t *sender) {
       list_for_each(iter, &sender->p_sib) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
+        outChild(sender);
         kill_progeny(removeProcQ(item));
       }
     } else {
       process_count--;
+      outChild(sender);
       kill_progeny(removeProcQ(&sender->p_child));
     }
   }
