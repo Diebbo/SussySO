@@ -174,7 +174,9 @@ void passUpOrDie(pcb_t *p, unsigned type) {
   p->p_supportStruct->sup_exceptState[type].status = exception_state->status;
 
   // 2nd Update the accumulated CPU time for the Current Process
-  LDCXT(p->p_supportStruct->sup_exceptContext[type]);
+  LDCXT(p->p_supportStruct->sup_exceptContext[type].c_stackPtr,
+        p->p_supportStruct->sup_exceptContext[type].c_status,
+        p->p_supportStruct->sup_exceptContext[type].c_pc);
 }
 
 void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
