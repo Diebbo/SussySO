@@ -33,13 +33,20 @@ struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
 struct list_head pseudoClockList;            // pcb waiting for clock tick
 struct list_head pcbFree_h;                  // pcb free list
 
+// last pid number assigned to a process
+int last_used_pid = 0;
+
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
 void uTLB_RefillHandler(void);
 
 /* COMMON FUNCTIONS*/
 void exceptionHandler();
+void TrapExceptionHandler();
 void Scheduler();
 void SSI_function_entry_point(void);
+void passUpOrDie(pcb_t *, unsigned);
 
+// generate unique pid for processes
+int generate_pid();
 #endif

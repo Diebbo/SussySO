@@ -1,18 +1,20 @@
-/*Implement the main function and export the Nucleus's global variables, such as process count, 
-soft-blocked count, blocked PCBs lists/pointers, etc.*/
+/*Implement the main function and export the Nucleus's global variables, such as
+process count, soft-blocked count, blocked PCBs lists/pointers, etc.*/
 
 #include "./headers/nucleus.h"
 
-//necessaria x fare test
+// necessaria x fare test
 extern void test();
 
 void initKernel() {
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
   passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; // TODO refil
-  passupvector->tlb_refill_stackPtr = (memaddr)KERNELSTACK; // Stacks in µMPS3 grow down
+  passupvector->tlb_refill_stackPtr =
+      (memaddr)KERNELSTACK; // Stacks in µMPS3 grow down
   passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
-  passupvector->exception_handler = (memaddr)exceptionHandler; // TODO: our exception handler;
+  passupvector->exception_handler =
+      (memaddr)exceptionHandler; 
 
   // initialize the nucleus data structures
   initPcbs();

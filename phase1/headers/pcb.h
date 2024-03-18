@@ -40,4 +40,6 @@ pcb_t *removeChild(pcb_t *p);
 no parent, return NULL; otherwise, return p.*/
 pcb_t *outChild(pcb_t *p);
 
+//this function serves to find if a crocess is in a specific list based on his pid
+int is_in_list(struct list_head *target_process, int pid);
 #endif

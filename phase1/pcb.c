@@ -4,6 +4,16 @@ static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h);            /* List of free PCBs                     */
 static int next_pid = 1;
 
+int is_in_list(struct list_head *target_process, int pid) {
+  pcb_PTR tmp;
+  list_for_each_entry(tmp, target_process, p_list) {
+    if (tmp->p_pid == pid)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+
 void initPcbs() {
     // Initialize the list head for the free PCBs                           
     INIT_LIST_HEAD(&pcbFree_h);

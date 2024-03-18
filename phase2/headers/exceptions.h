@@ -10,9 +10,6 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 void TLBExceptionHandler();
 void InterruptExceptionHandler();
 void SYSCALLExceptionHandler();
-void TrapExceptionHandler();
-//this function serves to find if a crocess is in a specific list based on his pid
-int is_in_list(struct list_head *target_process, int pid);
 
 #endif
 

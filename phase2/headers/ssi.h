@@ -8,12 +8,7 @@ various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 // SSI id (the only process to have pid = 0)
 #define ssi_id 0
 
-// last pid number assigned to a process
-int last_used_pid = 0;
-
 void SSI_Request(pcb_t *sender, int service, void *arg);
-// generate unique pid for processes
-int generate_pid();
 // When requested, this service causes a new process, said to be a progeny of
 // the sender, to be created.
 pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg);

@@ -187,7 +187,6 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
   msg_t *msg = popMessage(&sender->msg_inbox, IL_TERMINAL);
   payload = (void *)msg->m_payload;
 
-
   list_del(&sender->p_list);
   list_add_tail(&sender->p_list, &ready_queue_list);
   return payload;

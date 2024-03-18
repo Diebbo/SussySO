@@ -1,4 +1,7 @@
 #include "./headers/exceptions.h"
+#include "headers/nucleus.h"
+#include "headers/ssi.h"
+#include <uriscv/const.h>
 
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
@@ -149,11 +152,26 @@ void SYSCALLExceptionHandler() {
   }
 }
 
-int is_in_list(struct list_head *target_process, int pid) {
-  pcb_PTR tmp;
-  list_for_each_entry(tmp, target_process, p_list) {
-    if (tmp->p_pid == pid)
-      return 1;
+void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
+
+void passUpOrDie(pcb_t *p, unsigned type) {
+  if (p->p_supportStruct == NULL) {
+    // then the process and the progeny of the process must be terminated
+    Terminate_Process(p, p);
+    return;
   }
-  return 0;
+  // the process has a support structure
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  p->p_supportStruct->sup_exceptState[type] = 1; // miao miao
+  // 1st Save the processor state
+  exception_state->cause = p->p_s.cause;
+  exception_state->entry_hi = p->p_s.entry_hi;
+  // exception_state->gpr = p->p_s.gpr; //err
+  exception_state->mie = p->p_s.mie;
+  exception_state->pc_epc = p->p_s.pc_epc;
+  exception_state->status = p->p_s.status;
+  // 2nd Update the accumulated CPU time for the Current Process
+  // LDIT(p->p_time); //TODO = sez 10
+  // 3rd call the scheduler
+  Scheduler();
 }
