@@ -44,15 +44,15 @@ void initKernel(void);
 void uTLB_RefillHandler(void);
 
 /* COMMON FUNCTIONS*/
-void exceptionHandler();
-void TrapExceptionHandler();
-void Scheduler();
+void exceptionHandler(void);
+void TrapExceptionHandler(void);
+void Scheduler(void);
 void SSI_function_entry_point(void);
-void passUpOrDie(pcb_t *, unsigned);
+void passUpOrDie(pcb_t *process, unsigned value);
 // generate unique pid for processes
-int generate_pid();
+int generate_pid(void);
 
 //defined in p2test.c
-extern void test(); 
+extern void test(void); 
 
 #endif
