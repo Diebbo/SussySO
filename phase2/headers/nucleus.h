@@ -35,7 +35,7 @@ struct list_head pseudoClockList;
 // pcb free list    
 struct list_head pcbFree_h;                  
 // SSI id (the only process to have pid = 0)
-#define ssi_id 0
+#define ssi_id = 0
 // last pid number assigned to a process
 int last_used_pid = 0;
 
