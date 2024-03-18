@@ -1,6 +1,4 @@
-
 #include "../phase2/headers/nucleus.h"
-#include "../phase2/headers/scheduler.h"
 
 int main(int argc, char *argv[])
 {

@@ -3,9 +3,6 @@ process count, soft-blocked count, blocked PCBs lists/pointers, etc.*/
 
 #include "./headers/nucleus.h"
 
-// necessaria x fare test
-extern void test();
-
 void initKernel() {
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
@@ -22,7 +19,7 @@ void initKernel() {
 
   // Initialize other variables
   INIT_LIST_HEAD(&ready_queue_list);
-  for (int i = 0; i < SEMDEVLEN; i++) {
+  for (int i = 0; i < SEMDEVLEN-1; i++) {
     INIT_LIST_HEAD(&blockedPCBs[i]);
   }
   INIT_LIST_HEAD(&pseudoClockList);
@@ -60,7 +57,7 @@ void initKernel() {
      pushed [Section 3.1] and whenever an interrupted execution stream is
      restarted, the stack is popped. [Section 7.4]*/
 
-  first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; // TODO
+  first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
   first_process->p_s.status =
       IECON |
       ALLOFF; // 32 bit reg. -> 0x01 = Enable interrupts, kernel mode actv

@@ -10,8 +10,6 @@
 #include "../../phase1/headers/msg.h"
 #include "../../phase1/headers/pcb.h"
 
-// phase 2 headers
-
 // uriscv headers
 #include <uriscv/aout.h>
 #include <uriscv/arch.h>
@@ -49,4 +47,7 @@ void passUpOrDie(pcb_t *, unsigned);
 
 // generate unique pid for processes
 int generate_pid();
+
+extern void test(); //defined in p2test.c
+
 #endif

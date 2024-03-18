@@ -2,6 +2,7 @@
 #include "headers/nucleus.h"
 #include "headers/ssi.h"
 #include <uriscv/const.h>
+#include <uriscv/liburiscv.h>
 
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
@@ -18,12 +19,12 @@ void exceptionHandler() {
 
   /*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
   if (exception_error >= 24 && exception_error <= 28)
-    TLBExceptionHandler(); // TODO
+    TLBExceptionHandler();
   else if (exception_error >= 8 && exception_error <= 11)
     SYSCALLExceptionHandler();
   else if ((exception_error >= 0 && exception_error <= 7) ||
            (exception_error >= 12 && exception_error <= 23))
-    TrapExceptionHandler(); // TODO
+    TrapExceptionHandler();
   else if (exception_error >= 17 && exception_error <= 21)
     InterruptExceptionHandler(); // TODO
 }
@@ -121,6 +122,8 @@ void SYSCALLExceptionHandler() {
         Scheduler();
         break;
       default:
+        // Process is in kernel mode, simulate Program Trap exception
+        // same behavior
         TrapExceptionHandler();
         break;
       }
@@ -160,18 +163,18 @@ void passUpOrDie(pcb_t *p, unsigned type) {
     Terminate_Process(p, p);
     return;
   }
-  // the process has a support structure
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  p->p_supportStruct->sup_exceptState[type] = 1; // miao miao
+
   // 1st Save the processor state
-  exception_state->cause = p->p_s.cause;
-  exception_state->entry_hi = p->p_s.entry_hi;
-  // exception_state->gpr = p->p_s.gpr; //err
-  exception_state->mie = p->p_s.mie;
-  exception_state->pc_epc = p->p_s.pc_epc;
-  exception_state->status = p->p_s.status;
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  p->p_supportStruct->sup_exceptState[type].cause = exception_state->cause;
+  p->p_supportStruct->sup_exceptState[type].entry_hi =
+      exception_state->entry_hi;
+  p->p_supportStruct->sup_exceptState[type].mie = exception_state->mie;
+  p->p_supportStruct->sup_exceptState[type].pc_epc = exception_state->pc_epc;
+  p->p_supportStruct->sup_exceptState[type].status = exception_state->status;
+
   // 2nd Update the accumulated CPU time for the Current Process
-  // LDIT(p->p_time); //TODO = sez 10
-  // 3rd call the scheduler
-  Scheduler();
+  LDCXT(p->p_supportStruct->sup_exceptContext[type]);
 }
+
+void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
