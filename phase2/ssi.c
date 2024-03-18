@@ -2,6 +2,7 @@
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
 #include "./headers/ssi.h"
+#include "headers/nucleus.h"
 
 int generate_pid() {
   // 40 = num max of pcb
@@ -170,6 +171,7 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
   ssi_do_io_PTR do_io = arg->arg;
   unsigned int device = IL_TERMINAL % (SEMDEVLEN - 1);
   list_add_tail(&sender->p_list, &blockedPCBs[device]);
+  soft_block_count++;
 
   *do_io->commandAddr =
       do_io->commandValue; // !IMPORTANT: this rise an interrupt exception from
@@ -189,6 +191,7 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
 
   list_del(&sender->p_list);
   list_add_tail(&sender->p_list, &ready_queue_list);
+  soft_block_count--;
   return payload;
 }
 
