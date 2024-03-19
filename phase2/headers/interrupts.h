@@ -9,7 +9,7 @@ them into appropriate messages for blocked PCBs.*/
 void interruptHandler(pcb_PTR sender);
 void interruptHandlerNonTimer(pcb_PTR sender, int IntlineNo);
 void interruptHandlerPLT(pcb_PTR sender);
-
+void pseudoClockHandler(pcb_PTR sender);
 
 
 

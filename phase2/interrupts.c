@@ -14,6 +14,9 @@ void interruptHandler(pcb_PTR caller) {
   if (CAUSE_IP_GET(getCAUSE(), 1) == 1) {
     interruptHandlerPLT(caller);
   }
+  if (CAUSE_IP_GET(getCAUSE(), 2) == 1) {
+    pseudoClockHandler(caller);
+  }
   for (int i = 3; i < 8; i++) {
     if (CAUSE_IP_GET(getCAUSE(), i) == 1) {
       interruptHandlerNonTimer(caller, i);
@@ -122,4 +125,22 @@ void interruptHandlerPLT(pcb_PTR caller) {
   outProcQ(&blockedPCBs, &caller->p_list);
   insertProcQ(&ready_queue_list, &caller->p_list);
   Scheduler();
+}
+
+
+void pseudoClockHandler(pcb_PTR caller) {
+  /*
+    The Interval Timer portion of the interrupt exception handler should therefore:
+      1. Acknowledge the interrupt by loading the Interval Timer with a new value: 100 milliseconds
+        (constant PSECOND) [Section 4.1.3-pops].
+      2. Unblock all PCBs blocked waiting a Pseudo-clock tick.
+      3. Return control to the Current Process: perform a LDST on the saved exception state (located at
+        the start of the BIOS Data Page [Section 4]).
+  */
+  LDIT(PSECOND);
+  pcb_PTR pcb;
+  while ((pcb = outProcQ(&blockedPCBs, &caller->p_list)) != NULL) { //non proprio sicuro della correttezza del outProcQ, da ricontrollare
+    insertProcQ(&ready_queue_list, &pcb->p_list);
+  }
+  LDST(&caller->p_s);
 }
