@@ -193,7 +193,7 @@ static inline int list_empty(const struct list_head *head) {
 */
 static inline struct list_head *list_next(const struct list_head *current) {
   if (list_empty(current))
-    return (list_head *)NULL;
+    return NULL;
   else
     return current->next;
 }
@@ -208,7 +208,7 @@ static inline struct list_head *list_next(const struct list_head *current) {
 */
 static inline struct list_head *list_prev(const struct list_head *current) {
   if (list_empty(current))
-    return (list_head *)NULL;
+    return NULL;
   else
     return current->prev;
 }
