@@ -50,7 +50,9 @@ void Scheduler(void);
 void SSI_function_entry_point(void);
 void passUpOrDie(pcb_t *process, unsigned value);
 // generate unique pid for processes
-int generate_pid(void);
+int generatePid(void);
+// Return pcb_ptr of a process given the list where it is and his pid, NOPROC if not found
+pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 
 //defined in p2test.c
 extern void test(void); 

@@ -10,8 +10,6 @@ void SSI_Request(pcb_t *sender, int service, void *arg);
 // When requested, this service causes a new process, said to be a progeny of
 // the sender, to be created.
 pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg);
-// Return pcb_ptr of a process given the list where it is and his pid
-pcb_PTR find_process_ptr(struct list_head *target_process, int pid);
 // When requested terminate a process and his progeny
 void Terminate_Process(pcb_t *sender, pcb_t *target);
 // I/O operation

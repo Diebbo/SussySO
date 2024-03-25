@@ -4,23 +4,6 @@ SYS7, etc.).*/
 #include "./headers/ssi.h"
 #include "headers/nucleus.h"
 
-int generate_pid() {
-  // 40 = num max of pcb
-  if (last_used_pid == MAXPROC) {
-    last_used_pid = 0;
-  }
-  last_used_pid++;
-  return last_used_pid;
-}
-
-pcb_PTR find_process_ptr(struct list_head *target_process, int pid) {
-  pcb_PTR tmp;
-  list_for_each_entry(tmp, target_process, p_list) {
-    if (tmp->p_pid == pid)
-      return tmp;
-  }
-}
-
 void SSI_function_entry_point() {
   pcb_PTR process_request_ptr;
   msg_PTR process_request_msg;
@@ -28,7 +11,7 @@ void SSI_function_entry_point() {
     // receive request (asked from ssi proc; payload is temporaly not important)
     int process_request_id =
         SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, NULL, 0); // payload?
-    process_request_ptr = find_process_ptr(
+    process_request_ptr = findProcessPtr(
         &ready_queue_list, process_request_id); // situato in ready queue?
     // find msg payload
     process_request_msg = headMessage(&process_request_ptr->msg_inbox);

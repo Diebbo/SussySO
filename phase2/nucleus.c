@@ -73,7 +73,7 @@ void initKernel() {
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
-  first_process->p_pid = generate_pid();
+  first_process->p_pid = generatePid();
 
   process_count++;
 
@@ -98,3 +98,22 @@ void initKernel() {
 
   process_count++;
 }
+
+int generatePid(void) {
+  // 40 = num max of pcb
+  if (last_used_pid == MAXPROC) {
+    last_used_pid = 0;
+  }
+  last_used_pid++;
+  return last_used_pid;
+}
+
+pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
+  pcb_PTR tmp;
+  list_for_each_entry(tmp, target_process, p_list) {
+    if (tmp->p_pid == pid)
+      return tmp;
+  }
+  return NOPROC;
+}
+

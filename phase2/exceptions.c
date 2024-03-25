@@ -36,8 +36,7 @@ void SYSCALLExceptionHandler() {
 
   int a0_reg = current_process->p_s.reg_a0, // syscall number
       a1_reg = current_process->p_s.reg_a1, // dest process
-      a2_reg = current_process->p_s.reg_a2, // payload
-      a3_reg = current_process->p_s.reg_a3; // unused
+      a2_reg = current_process->p_s.reg_a2; // payload
   // user_state = exception_state->statu;
 
   /*Kup???*/
@@ -78,14 +77,29 @@ void SYSCALLExceptionHandler() {
         msg->m_payload = (unsigned)a2_reg;
         msg->m_sender = current_process;
 
-        pcb_t *dest_process = (pcb_PTR)a1_reg;
-        pushMessage(&dest_process->msg_inbox, msg);
+        int dest_process_pid = a1_reg;
+        pcb_t *dest_process = NULL;
 
-        if (is_in_list(blockedPCBs, a1_reg)) {
-          outProcQ(blockedPCBs, (pcb_PTR)a1_reg);
-          insertProcQ(&ready_queue_list, (pcb_PTR)a1_reg);
+        for (int i = 0; i < SEMDEVLEN - 1; i++) {
+          if (is_in_list(&blockedPCBs[i], dest_process_pid)) {
+            dest_process = findProcessPtr(&blockedPCBs[i], dest_process_pid);
+            outProcQ(&blockedPCBs[i], dest_process);
+            insertProcQ(&ready_queue_list, dest_process);
+            break;
+          }
         }
-        
+
+        // process not found in blockedPCBs, so check ready_queue_list
+        if (dest_process == NULL) {
+          dest_process = findProcessPtr(&ready_queue_list, dest_process_pid);
+
+          if (dest_process == NOPROC) { // not found even in ready queue
+            current_process->p_s.reg_a0 = DEST_NOT_EXIST;
+            return;
+          }
+        }
+
+        pushMessage(&dest_process->msg_inbox, msg);
         current_process->p_s.reg_a0 = 0;
         /*on success returns/places 0 in the caller’s v0, otherwise
                         MSGNOGOOD is used to provide a meaningful error
