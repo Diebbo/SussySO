@@ -15,8 +15,7 @@
  *          Modified by Luca Bassi, Gabriele Genovese on November 30, 2023
  */
 
-#include "../headers/const.h"
-#include "../headers/types.h"
+#include "headers/nucleus.h"
 #include <uriscv/liburiscv.h>
 
 typedef unsigned int devregtr;

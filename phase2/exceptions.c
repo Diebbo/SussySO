@@ -26,7 +26,7 @@ void exceptionHandler() {
            (exception_error >= 12 && exception_error <= 23))
     TrapExceptionHandler();
   else if (exception_error >= 17 && exception_error <= 21)
-    InterruptExceptionHandler(); // TODO
+    InterruptExceptionHandler();
 }
 
 void SYSCALLExceptionHandler() {
@@ -38,7 +38,7 @@ void SYSCALLExceptionHandler() {
       a1_reg = current_process->p_s.reg_a1, /* dest process */
       a2_reg = current_process->p_s.reg_a2; /* payload */
   // user_state = exception_state->statu;
-
+  msg_t *msg;
   /*Kup???*/
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
@@ -68,7 +68,7 @@ void SYSCALLExceptionHandler() {
         }
 
         // push message
-        msg_t *msg = allocMsg();
+        msg = allocMsg();
         if (msg == NULL) {
           current_process->p_s.reg_a0 = MSGNOGOOD;
           return;
@@ -80,14 +80,12 @@ void SYSCALLExceptionHandler() {
         int dest_process_pid = a1_reg;
         pcb_t *dest_process = NULL;
 
-        for (int i = 0; i < SEMDEVLEN - 1; i++) {
-          if (is_in_list(&blockedPCBs[i], dest_process_pid)) {
-            dest_process = findProcessPtr(&blockedPCBs[i], dest_process_pid);
-            outProcQ(&blockedPCBs[i], dest_process);
-            insertProcQ(&ready_queue_list, dest_process);
-            soft_block_count--;
-            break;
-          }
+        if (is_in_list(&blockedPCBs[WAITINGMSG], dest_process_pid)) {
+          dest_process = findProcessPtr(&blockedPCBs[WAITINGMSG], dest_process_pid);
+          outProcQ(&blockedPCBs[WAITINGMSG], dest_process);
+          insertProcQ(&ready_queue_list, dest_process);
+          soft_block_count--;
+          break;
         }
 
         // process not found in blockedPCBs, so check ready_queue_list
@@ -105,26 +103,27 @@ void SYSCALLExceptionHandler() {
         /*on success returns/places 0 in the caller’s v0, otherwise
                         MSGNOGOOD is used to provide a meaningful error
           condition on return*/
+
         break;
       case RECEIVEMESSAGE:
-          /*This system call is used by a process to extract a message from its
-          inbox or, if this one is empty, to wait for a message. This is a
-          synchronous operation since the requesting process will be frozen
-          until a message matching the required characteristics doesn’t arrive.
-          This system call provides as returning value (placed in caller’s v0 in
-          µMPS3) the identifier of the process which sent the message extracted.
-          This system call may cause the process to lose its remaining time
-          slice, since if its inbox is empty it has to be frozen. The SYS2
-          service is requested by the calling process by placing the value -2 in
-          a0, the sender process PCB address or ANYMESSAGE in a1, a pointer to
-          an area where the nucleus will store the payload of the message in a2
-          (NULL if the payload should be ignored) and then executing the SYSCALL
-          instruction. If a1 contains a ANYMESSAGE pointer, then the requesting
-          process is looking for the first message in its inbox, without any
-          restriction about the sender. In this case it will be frozen only if
-          the queue is empty, and the first message sent to it will wake up it
-          and put it in the Ready Queue.
-        */
+        /*This system call is used by a process to extract a message from its
+        inbox or, if this one is empty, to wait for a message. This is a
+        synchronous operation since the requesting process will be frozen
+        until a message matching the required characteristics doesn’t arrive.
+        This system call provides as returning value (placed in caller’s v0 in
+        µMPS3) the identifier of the process which sent the message extracted.
+        This system call may cause the process to lose its remaining time
+        slice, since if its inbox is empty it has to be frozen. The SYS2
+        service is requested by the calling process by placing the value -2 in
+        a0, the sender process PCB address or ANYMESSAGE in a1, a pointer to
+        an area where the nucleus will store the payload of the message in a2
+        (NULL if the payload should be ignored) and then executing the SYSCALL
+        instruction. If a1 contains a ANYMESSAGE pointer, then the requesting
+        process is looking for the first message in its inbox, without any
+        restriction about the sender. In this case it will be frozen only if
+        the queue is empty, and the first message sent to it will wake up it
+        and put it in the Ready Queue.
+      */
 
         /*
          * NOTA implementativa:
@@ -132,41 +131,37 @@ void SYSCALLExceptionHandler() {
          * 2. messaggio non presente -> bloccare il processo
          * */
         unsigned int sender_pid = a1_reg;
-        unsigned int payload = a2_reg;
 
-        msg_t *msg = popMessageByPid(current_process->msg_inbox, a1_reg);
+        msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
 
         if (msg == NULL) { // i'll wait
           soft_block_count++;
-          insertProcQ(&blockedPCBs[RECEIVEMESSAGE],
-                      current_process); // in che posizione metterlo?
+          insertProcQ(&blockedPCBs[WAITINGMSG], current_process);
+          /*The saved processor state (located at the start of the BIOS Data
+          Page [Section 3]) must be copied into the Current Process’s PCB
+          (p_s)*/
+
+          current_process->p_s.cause = exception_state->cause;
+          current_process->p_s.entry_hi = exception_state->entry_hi;
+          // current_process->p_s.gpr = exception_state->gpr;              //err
+          // 'l'espressione deve essere un lvalue modificabile'
+          current_process->p_s.mie = exception_state->mie;
+          current_process->p_s.pc_epc = exception_state->pc_epc;
+          current_process->p_s.status = exception_state->status;
+          // 2nd Update the accumulated CPU time for the Current Process
+          // LDIT(current_process->p_time); //TODO : sez 10
+          // 3rd call the scheduler
+          Scheduler();
         }
 
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
 
-        current_process->p_s.reg_a0 = (msg == NULL) ? 0 : msg->m_sender->p_pid;
+        current_process->p_s.reg_a0 = msg->m_sender->p_pid;
+        int *payload = (int *)a2_reg;
+        *payload = (int)msg->m_payload;
 
-        if (msg != NULL && payload != NULL) {
-          *payload = msg->m_payload;
-        }
-
-        /*The saved processor state (located at the start of the BIOS Data Page
-        [Section 3]) must be copied into the Current Process’s PCB (p_s)*/
-
-        current_process->p_s.cause = exception_state->cause;
-        current_process->p_s.entry_hi = exception_state->entry_hi;
-        // current_process->p_s.gpr = exception_state->gpr;              //err
-        // 'l'espressione deve essere un lvalue modificabile'
-        current_process->p_s.mie = exception_state->mie;
-        current_process->p_s.pc_epc = exception_state->pc_epc;
-        current_process->p_s.status = exception_state->status;
-        LDST(&current_process->p_s.status);
-        // 2nd Update the accumulated CPU time for the Current Process
-        // LDIT(current_process->p_time); //TODO = sez 10
-        // 3rd call the scheduler
-        Scheduler();
         break;
       default:
         // Process is in kernel mode, simulate Program Trap exception
@@ -174,11 +169,11 @@ void SYSCALLExceptionHandler() {
         TrapExceptionHandler();
         break;
       }
-      // Returning from SYSCALL
+      // Returning from SYSCALL1 or SYSCALL2 (no blocking)
       // Increment PC by 4 to avoid an infinite loop of SYSCALLs +//load back
       // updated interrupted state
       current_process->p_s.pc_epc += WORDLEN;
-      LDST(exception_state);
+      LDST(&current_process->p_s);
     } else {
       /*The above two Nucleus services are considered privileged services and
         are only available to processes executing in kernel-mode. Any attempt to

@@ -10,7 +10,8 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-void interruptHandler(pcb_PTR caller) {
+void interruptHandler() {
+  pcb_PTR caller = current_process;
   if (CAUSE_IP_GET(getCAUSE(), 1) == 1) {
     interruptHandlerPLT(caller);
   }
@@ -87,7 +88,7 @@ unsigned int transm_status;
 unsigned int transm_command;
 } termreg_t;*/
   switch (IntlineNo) {
-  case 7:
+  case IL_TERMINAL:
     void *trasm_status = dev_addr_base + 0x8;
     unsigned int status = *((unsigned int *)trasm_status);
     unsigned *recv_status = dev_addr_base;
@@ -95,14 +96,14 @@ unsigned int transm_command;
     // send ack to ssi -> no syscall
     msg_t *ack_msg = (msg_t *)allocMsg();
 
-    ack_msg->m_payload = (void *)dev_addr_base;
-    // ack_msg->m_sender = IL_TERMINAL; ??
+    // ack_msg->m_sender = IL_TERMINAL;
+    ack_msg->m_payload = (unsigned)dev_addr_base;
 
     pushMessage(&caller->msg_inbox, ack_msg);
 
     caller->p_s.status = status;
-    outProcQ(&blockedPCBs, &caller->p_list);
-    insertProcQ(&ready_queue_list, &caller->p_list);
+    outProcQ(&blockedPCBs[dev_no], caller);
+    insertProcQ(&ready_queue_list, caller);
     LDST(&caller->p_s);
     break;
   default:
@@ -112,35 +113,36 @@ unsigned int transm_command;
 }
 
 void interruptHandlerPLT(pcb_PTR caller) {
-  /* The PLT portion of the interrupt exception handler should therefore:
-      •Acknowledge the PLT interrupt by loading the timer with a new value
-      [Section 4.1.4-pops]. •Copy the processor state at the time of the
-      exception (located at the start of the BIOS Data Page
-     [Section 3.2.2-pops]) into the Current Process’s PCB (p_s). •Place the
+  /* - Acknowledge the PLT interrupt by loading the timer with a new valu
+      [Section 4.1.4-pops]. 
+    - Copy into the Current Process’s PCB (p_s). 
+    - Place the
      Current Process on the Ready Queue; transitioning the Current Process from
-     the “running” state to the “ready” state. •Call the Scheduler.
+     the “running” state to the “ready” state. 
+    - Call the Scheduler.
   */
   setTIMER(TIMESLICE);
   STST(&caller->p_s);
-  outProcQ(&blockedPCBs, &caller->p_list);
-  insertProcQ(&ready_queue_list, &caller->p_list);
+  insertProcQ(&ready_queue_list, caller);
   Scheduler();
 }
 
-
 void pseudoClockHandler(pcb_PTR caller) {
   /*
-    The Interval Timer portion of the interrupt exception handler should therefore:
-      1. Acknowledge the interrupt by loading the Interval Timer with a new value: 100 milliseconds
-        (constant PSECOND) [Section 4.1.3-pops].
+    The Interval Timer portion of the interrupt exception handler should
+    therefore:
+      1. Acknowledge the interrupt by loading the Interval Timer with a new
+    value: 100 milliseconds (constant PSECOND) [Section 4.1.3-pops].
       2. Unblock all PCBs blocked waiting a Pseudo-clock tick.
-      3. Return control to the Current Process: perform a LDST on the saved exception state (located at
-        the start of the BIOS Data Page [Section 4]).
+      3. Return control to the Current Process: perform a LDST on the saved
+    exception state (located at the start of the BIOS Data Page [Section 4]).
   */
   LDIT(PSECOND);
   pcb_PTR pcb;
-  while ((pcb = outProcQ(&blockedPCBs, &caller->p_list)) != NULL) { //non proprio sicuro della correttezza del outProcQ, da ricontrollare
-    insertProcQ(&ready_queue_list, &pcb->p_list);
+  while ((pcb = outProcQ(&blockedPCBs[CLOCKWAIT], caller)) !=
+         NULL) { // non proprio sicuro della correttezza del outProcQ, da
+                 // ricontrollare
+    insertProcQ(&ready_queue_list, pcb);
   }
   LDST(&caller->p_s);
 }
