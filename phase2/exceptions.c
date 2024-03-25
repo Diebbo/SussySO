@@ -80,9 +80,9 @@ void SYSCALLExceptionHandler() {
         int dest_process_pid = a1_reg;
         pcb_t *dest_process = NULL;
 
-        if (is_in_list(&blockedPCBs[WAITINGMSG], dest_process_pid)) {
-          dest_process = findProcessPtr(&blockedPCBs[WAITINGMSG], dest_process_pid);
-          outProcQ(&blockedPCBs[WAITINGMSG], dest_process);
+        if (is_in_list(&msg_queue_list, dest_process_pid)) {
+          dest_process = findProcessPtr(&msg_queue_list, dest_process_pid);
+          outProcQ(&msg_queue_list, dest_process);
           insertProcQ(&ready_queue_list, dest_process);
           soft_block_count--;
           break;
@@ -136,7 +136,7 @@ void SYSCALLExceptionHandler() {
 
         if (msg == NULL) { // i'll wait
           soft_block_count++;
-          insertProcQ(&blockedPCBs[WAITINGMSG], current_process);
+          insertProcQ(&msg_queue_list, current_process);
           /*The saved processor state (located at the start of the BIOS Data
           Page [Section 3]) must be copied into the Current Process’s PCB
           (p_s)*/

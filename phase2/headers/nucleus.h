@@ -30,6 +30,10 @@ int soft_block_count = 0;
 struct list_head ready_queue_list; 
 pcb_t *current_process;
 struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
+
+// waiting for a message
+struct list_head msg_queue_list;
+
 // pcb waiting for clock tick
 struct list_head pseudoClockList;        
 // pcb free list    
