@@ -73,7 +73,7 @@ void initKernel() {
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
-  first_process->p_pid = generatePid();
+  first_process->p_pid = ssi_id;
 
   process_count++;
 

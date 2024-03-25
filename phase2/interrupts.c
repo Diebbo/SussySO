@@ -42,7 +42,7 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device number you can use a switch among constants
   // DEVxON
-  int dev_no; // Device number da calcolare
+  int dev_no = 0; // Device number da calcolare
   switch (getCAUSE() & DISKINTERRUPT & FLASHINTERRUPT & PRINTINTERRUPT &
           TERMINTERRUPT) {
   case DEV0ON:

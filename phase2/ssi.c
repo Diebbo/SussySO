@@ -9,17 +9,18 @@ void SSI_function_entry_point() {
   msg_PTR process_request_msg;
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
-    int process_request_id =
-        SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, NULL, 0); // payload?
+    SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0); 
+    
+    unsigned int process_request_id = current_process->p_s.reg_a0;
+
     process_request_ptr = findProcessPtr(
         &ready_queue_list, process_request_id); // situato in ready queue?
     // find msg payload
-    process_request_msg = headMessage(&process_request_ptr->msg_inbox);
+    process_request_msg = popMessageByPid(&process_request_ptr->msg_inbox,
+                                     process_request_id);
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,
                 (void *)process_request_msg->m_payload);
-    // remove process request
-    popMessage(process_request_msg, process_request_ptr);
   }
 }
 
@@ -30,7 +31,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
 
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  //int user_state = exception_state->status;
+  // int user_state = exception_state->status;
   memaddr kernel_user_state = getSTATUS() << 1;
 
   if (kernel_user_state != 1) {
@@ -121,7 +122,8 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     // delete sender???
   } else {
     list_for_each_entry(target, &target->p_child, p_child) {
-      Terminate_Process(target, container_of(target->p_child.next, pcb_t, p_child));
+      Terminate_Process(target,
+                        container_of(target->p_child.next, pcb_t, p_child));
       removeChild(target->p_parent); // TODO: check if it's correct, serve che
       outChild(target);
       removeProcQ(target);
@@ -201,12 +203,12 @@ void Wait_For_Clock(pcb_t *sender) {
   STCK(last_time);
   STCK(current_time);
   // send interrupt
-  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0); 
+  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0);
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
-  //waiting till tick
-  while(TRUE){
-    if((current_time - last_time) % tick == 0)
+  // waiting till tick
+  while (TRUE) {
+    if ((current_time - last_time) % tick == 0)
       break;
     // refresh TOD time till tick passed
     STCK(current_time);
