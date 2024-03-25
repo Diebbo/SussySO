@@ -26,7 +26,6 @@ void initKernel() {
   INIT_LIST_HEAD(&pcbFree_h);
   current_process = NULL;
 
-  msg_queue_list = NULL;
   INIT_LIST_HEAD(&msg_queue_list);
   // load the system wide interval timer
   LDIT(PSECOND);

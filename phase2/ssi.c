@@ -9,15 +9,15 @@ void SSI_function_entry_point() {
   msg_PTR process_request_msg;
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
-    SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0); 
-    
+    SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
+
     unsigned int process_request_id = current_process->p_s.reg_a0;
 
     process_request_ptr = findProcessPtr(
         &ready_queue_list, process_request_id); // situato in ready queue?
     // find msg payload
-    process_request_msg = popMessageByPid(&process_request_ptr->msg_inbox,
-                                     process_request_id);
+    process_request_msg =
+        popMessageByPid(&process_request_ptr->msg_inbox, process_request_id);
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,
                 (void *)process_request_msg->m_payload);
@@ -97,10 +97,10 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     else
       new_prole->p_supportStruct = arg->support;
     new_prole->p_time = 0;
-    new_prole->p_pid = generate_pid();
+    new_prole->p_pid = generatePid();
     process_count++;
-    insertProcQ(new_prole, &ready_queue_list);
-    insertChild(sender, &new_prole);
+    insertProcQ(&ready_queue_list, new_prole);
+    insertChild(sender, new_prole);
     return new_prole;
   }
 }
