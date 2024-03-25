@@ -93,7 +93,7 @@ void SYSCALLExceptionHandler() {
         if (dest_process == NULL) {
           dest_process = findProcessPtr(&ready_queue_list, dest_process_pid);
 
-          if (dest_process == NOPROC) { // not found even in ready queue
+          if (dest_process == NULL) { // not found even in ready queue
             current_process->p_s.reg_a0 = DEST_NOT_EXIST;
             return;
           }
@@ -122,15 +122,32 @@ void SYSCALLExceptionHandler() {
           process is looking for the first message in its inbox, without any
           restriction about the sender. In this case it will be frozen only if
           the queue is empty, and the first message sent to it will wake up it
-          and put it in the Ready Queue.*/
+          and put it in the Ready Queue.
+        */
+        int sender_pid = a1_reg;
+
+        
+          /*
+           * NOTA implementativa:
+           * per implementare un servizio di msg passing, asincrono dato uno msgp 
+           * completamente asincorno, dobbiamo
+           *  - mando un messaggio a me stesso con un payload fake simulando sia stato mandato dal mittente
+           *  - ricevo il messaggio
+           *  - se il messaggio NON e' quello fake => posso ritornarlo
+           *  - ripeto il cilco
+           * */
+
+
+        msg_t *msg = NULL;
+        msg = popMessage(&current_process->msg_inbox, );
 
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
-        current_process->p_s.reg_a0 =
-            SYSCALL(RECEIVEMESSAGE, a1_reg, a2_reg, 0);
+
         /*The saved processor state (located at the start of the BIOS Data Page
         [Section 3]) must be copied into the Current Process’s PCB (p_s)*/
+
         current_process->p_s.cause = exception_state->cause;
         current_process->p_s.entry_hi = exception_state->entry_hi;
         // current_process->p_s.gpr = exception_state->gpr;              //err

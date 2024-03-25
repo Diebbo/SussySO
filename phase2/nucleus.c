@@ -94,7 +94,7 @@ void initKernel() {
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
-  second_process->p_pid = generate_pid();
+  second_process->p_pid = generatePid();
 
   process_count++;
 }
@@ -114,6 +114,6 @@ pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
     if (tmp->p_pid == pid)
       return tmp;
   }
-  return NOPROC;
+  return NULL;
 }
 

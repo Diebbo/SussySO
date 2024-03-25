@@ -51,7 +51,7 @@ void SSI_function_entry_point(void);
 void passUpOrDie(pcb_t *process, unsigned value);
 // generate unique pid for processes
 int generatePid(void);
-// Return pcb_ptr of a process given the list where it is and his pid, NOPROC if not found
+// Return pcb_ptr of a process given the list where it is and his pid, NULL if not found
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 
 //defined in p2test.c
