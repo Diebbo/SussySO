@@ -34,9 +34,9 @@ void SYSCALLExceptionHandler() {
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   memaddr kernel_user_state = getSTATUS() << 1;
 
-  int a0_reg = current_process->p_s.reg_a0, // syscall number
-      a1_reg = current_process->p_s.reg_a1, // dest process
-      a2_reg = current_process->p_s.reg_a2; // payload
+  int a0_reg = current_process->p_s.reg_a0, /* syscall number */
+      a1_reg = current_process->p_s.reg_a1, /* dest process */
+      a2_reg = current_process->p_s.reg_a2; /* payload */
   // user_state = exception_state->statu;
 
   /*Kup???*/
@@ -85,6 +85,7 @@ void SYSCALLExceptionHandler() {
             dest_process = findProcessPtr(&blockedPCBs[i], dest_process_pid);
             outProcQ(&blockedPCBs[i], dest_process);
             insertProcQ(&ready_queue_list, dest_process);
+            soft_block_count--;
             break;
           }
         }
@@ -106,7 +107,7 @@ void SYSCALLExceptionHandler() {
           condition on return*/
         break;
       case RECEIVEMESSAGE:
-        /*This system call is used by a process to extract a message from its
+          /*This system call is used by a process to extract a message from its
           inbox or, if this one is empty, to wait for a message. This is a
           synchronous operation since the requesting process will be frozen
           until a message matching the required characteristics doesn’t arrive.
@@ -124,26 +125,32 @@ void SYSCALLExceptionHandler() {
           the queue is empty, and the first message sent to it will wake up it
           and put it in the Ready Queue.
         */
-        int sender_pid = a1_reg;
 
-        
-          /*
-           * NOTA implementativa:
-           * per implementare un servizio di msg passing, asincrono dato uno msgp 
-           * completamente asincorno, dobbiamo
-           *  - mando un messaggio a me stesso con un payload fake simulando sia stato mandato dal mittente
-           *  - ricevo il messaggio
-           *  - se il messaggio NON e' quello fake => posso ritornarlo
-           *  - ripeto il cilco
-           * */
+        /*
+         * NOTA implementativa:
+         * 1. messaggio gia' in inbox -> restituire il messaggio
+         * 2. messaggio non presente -> bloccare il processo
+         * */
+        unsigned int sender_pid = a1_reg;
+        unsigned int payload = a2_reg;
 
+        msg_t *msg = popMessageByPid(current_process->msg_inbox, a1_reg);
 
-        msg_t *msg = NULL;
-        msg = popMessage(&current_process->msg_inbox, );
+        if (msg == NULL) { // i'll wait
+          soft_block_count++;
+          insertProcQ(&blockedPCBs[RECEIVEMESSAGE],
+                      current_process); // in che posizione metterlo?
+        }
 
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
+
+        current_process->p_s.reg_a0 = (msg == NULL) ? 0 : msg->m_sender->p_pid;
+
+        if (msg != NULL && payload != NULL) {
+          *payload = msg->m_payload;
+        }
 
         /*The saved processor state (located at the start of the BIOS Data Page
         [Section 3]) must be copied into the Current Process’s PCB (p_s)*/

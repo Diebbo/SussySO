@@ -154,7 +154,7 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
   ssi_do_io_PTR do_io = arg->arg;
-  unsigned int device = IL_TERMINAL % (SEMDEVLEN - 1);
+  unsigned int device = IL_TERMINAL;
   list_add_tail(&sender->p_list, &blockedPCBs[device]);
   soft_block_count++;
 

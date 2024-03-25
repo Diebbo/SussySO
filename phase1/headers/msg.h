@@ -31,6 +31,8 @@ If p_ptr is NULL, return the first message in the queue. Return NULL if the mess
 was empty or if no message from p_ptr was found; otherwise return the pointer to the removed
 message.*/
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr);
+/*the same as popMessage, but i can pass the pid, not the entire pcb*/
+msg_t *popMessageByPid(struct list_head *head, int pid);
 /*Return a pointer to the first message from the queue whose head is pointed to by head. Do not
 remove the message from the queue. Return NULL if the queue is empty.*/
 msg_t *headMessage(struct list_head *head);

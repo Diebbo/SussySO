@@ -55,6 +55,10 @@ void pushMessage(struct list_head *head, msg_t *m) {
 }
 
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
+    return popMessageByPid(head, (p_ptr->p_pid == NULL ? ANYMESSAGE : p_ptr->p_pid));
+}
+
+msg_t *popMessageByPid(struct list_head *head, int pid) {
     struct list_head *pos;
     msg_t *msg = NULL;
 
@@ -64,7 +68,7 @@ msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
 
     list_for_each(pos, head) {
         msg = container_of(pos, msg_t, m_list);
-        if (p_ptr == NULL || msg->m_sender == p_ptr) {                                      
+        if (msg->m_sender->p_pid == pid || pid == ANYMESSAGE) {                                      
             list_del(pos); // Remove the message from the list                              
             return msg;
         }
