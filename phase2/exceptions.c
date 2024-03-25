@@ -33,12 +33,11 @@ void SYSCALLExceptionHandler() {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   memaddr kernel_user_state = getSTATUS() << 1;
-  // pcb_t *current_process?
 
-  int a0_reg = current_process->p_s.reg_a0,
-      a1_reg = current_process->p_s.reg_a1,
-      a2_reg = current_process->p_s.reg_a2,
-      a3_reg = current_process->p_s.reg_a3;
+  int a0_reg = current_process->p_s.reg_a0, // syscall number
+      a1_reg = current_process->p_s.reg_a1, // dest process
+      a2_reg = current_process->p_s.reg_a2, // payload
+      a3_reg = current_process->p_s.reg_a3; // unused
   // user_state = exception_state->statu;
 
   /*Kup???*/
@@ -64,23 +63,33 @@ void SYSCALLExceptionHandler() {
           payload of the message in a2 and then executing the SYSCALL
           instruction.*/
 
-        if (is_in_list(&pcbFree_h, a2_reg))
+        if (is_in_list(&pcbFree_h, a2_reg)) { // error!
           current_process->p_s.reg_a0 = DEST_NOT_EXIST;
-        else {
-          /*on success returns/places 0 in the caller’s v0, otherwise
-                          MSGNOGOOD is used to provide a meaningful error
-            condition on return*/
-          current_process->p_s.reg_a0 = SYSCALL(SENDMESSAGE, a1_reg, a2_reg, 0);
+          return;
         }
 
-        if (is_in_list(&ready_queue_list, a2_reg))
-          pushMessage(&current_process->msg_inbox, current_process->p_s.reg_a0);
-        else if (is_in_list(&blockedPCBs, a2_reg)) {
-          // wakeup process //TODO
-          outProcQ(&blockedPCBs, current_process);
-          insertProcQ(&ready_queue_list, current_process);
+        // push message
+        msg_t *msg = allocMsg();
+        if (msg == NULL) {
+          current_process->p_s.reg_a0 = MSGNOGOOD;
+          return;
         }
 
+        msg->m_payload = (unsigned)a2_reg;
+        msg->m_sender = current_process;
+
+        pcb_t *dest_process = (pcb_PTR)a1_reg;
+        pushMessage(&dest_process->msg_inbox, msg);
+
+        if (is_in_list(blockedPCBs, a1_reg)) {
+          outProcQ(blockedPCBs, (pcb_PTR)a1_reg);
+          insertProcQ(&ready_queue_list, (pcb_PTR)a1_reg);
+        }
+        
+        current_process->p_s.reg_a0 = 0;
+        /*on success returns/places 0 in the caller’s v0, otherwise
+                        MSGNOGOOD is used to provide a meaningful error
+          condition on return*/
         break;
       case RECEIVEMESSAGE:
         /*This system call is used by a process to extract a message from its
@@ -155,9 +164,7 @@ void SYSCALLExceptionHandler() {
   }
 }
 
-void TrapExceptionHandler() { 
-  passUpOrDie(current_process, GENERALEXCEPT); 
-}
+void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
 
 void passUpOrDie(pcb_t *p, unsigned type) {
   if (p->p_supportStruct == NULL) {
@@ -181,6 +188,4 @@ void passUpOrDie(pcb_t *p, unsigned type) {
         p->p_supportStruct->sup_exceptContext[type].pc);
 }
 
-void TLBExceptionHandler() { 
-  passUpOrDie(current_process, PGFAULTEXCEPT); 
-}
+void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
