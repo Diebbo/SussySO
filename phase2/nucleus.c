@@ -60,7 +60,8 @@ void initKernel() {
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
   first_process->p_s.status =
-      IECON |
+      IEPON |
+      IMON |
       ALLOFF; // 32 bit reg. -> 0x01 = Enable interrupts, kernel mode actv
 
   // tree structure

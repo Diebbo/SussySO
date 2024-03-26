@@ -2,7 +2,6 @@
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
 #include "./headers/ssi.h"
-#include "headers/nucleus.h"
 
 void SSI_function_entry_point() {
   pcb_PTR process_request_ptr;
@@ -43,7 +42,6 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Create_Process(
           sender,
           (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
-      unused                            // tipi diversi di ritorno?
           break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);

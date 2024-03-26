@@ -2,8 +2,6 @@
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
 #include "./headers/interrupts.h"
-#include "headers/nucleus.h"
-#include <uriscv/types.h>
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -73,6 +71,7 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
     break;
   default:
     // Error
+    TrapExceptionHandler();
     break;
   }
   // Interrupt line number da calcolare
@@ -91,11 +90,11 @@ unsigned int transm_command;
 } termreg_t;*/
   termreg_t *term = (termreg_t *)dev_addr_base;
   term->transm_status = ACK;
-  // send ack to ssi -> no syscall
+  // send ack to device & unlock process SYS2 
   msg_t *ack_msg = (msg_t *)allocMsg();
 
   // ack_msg->m_sender = IL_TERMINAL;
-  ack_msg->m_sender = findProcessPtr(ready_queue_list, ssi_id);
+  ack_msg->m_sender = findProcessPtr(&ready_queue_list, ssi_id);
   ack_msg->m_payload = (unsigned)term->recv_status;
 
   pushMessage(&caller->msg_inbox, ack_msg);
