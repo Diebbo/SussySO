@@ -255,6 +255,7 @@ void kill_progeny(pcb_t *sender) {
         process_count--;
         outChild(sender);
         removeProcQ(&(sender->p_list));
+        freePcb(sender);
         kill_progeny(item);
       }
     }
