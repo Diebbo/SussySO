@@ -30,7 +30,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
   to the SSI, it must wait for the answer.*/
 
   // finding if in user or kernel mode
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
   memaddr kernel_user_state = getSTATUS() << 1;
 
@@ -43,7 +43,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Create_Process(
           sender,
           (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
-                                        // tipi diversi di ritorno?
+     unused                                   // tipi diversi di ritorno?
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
@@ -84,7 +84,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   PBCs), an error code of -1 (constant NOPROC) will be returned, otherwise, the
   pointer to the new PCB will be returned.*/
   pcb_t *new_prole = allocPcb();
-  ssi_create_process_PTR new_prole_support = arg;
+  // ssi_create_process_PTR new_prole_support = arg;
   if (process_count == MAXPROC || new_prole == NULL)
     return (pcb_PTR)NOPROC;
   else {
@@ -118,7 +118,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     // terminate sender process but not the progeny!
     removeChild(sender->p_parent);
     outChild(sender);
-    removeProcQ(sender);
+    removeProcQ(sender->p_list);
     // delete sender???
   } else {
     list_for_each_entry(target, &target->p_child, p_child) {
@@ -170,7 +170,7 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
   // generate a TRAP
   // sends back the status of the device operation
   void *payload;
-  void *dev_addr;
+  // void *dev_addr;
 
   // the messagge should be the first in the list of the process
   msg_t *msg = popMessage(&sender->msg_inbox, IL_TERMINAL);

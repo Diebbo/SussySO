@@ -2,6 +2,8 @@
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
 #include "./headers/interrupts.h"
+#include "headers/nucleus.h"
+#include <uriscv/types.h>
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -74,8 +76,8 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
     break;
   }
   // Interrupt line number da calcolare
-  void *dev_addr_base =
-      (void *)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
+  unsigned *dev_addr_base =
+      (unsigned *)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
 
@@ -87,38 +89,30 @@ unsigned int recv_command;
 unsigned int transm_status;
 unsigned int transm_command;
 } termreg_t;*/
-  switch (IntlineNo) {
-  case IL_TERMINAL:
-    void *trasm_status = dev_addr_base + 0x8;
-    unsigned int status = *((unsigned int *)trasm_status);
-    unsigned *recv_status = dev_addr_base;
-    *recv_status = ACK;
-    // send ack to ssi -> no syscall
-    msg_t *ack_msg = (msg_t *)allocMsg();
+  termreg_t *term = (termreg_t *)dev_addr_base;
+  term->transm_status = ACK;
+  // send ack to ssi -> no syscall
+  msg_t *ack_msg = (msg_t *)allocMsg();
 
-    // ack_msg->m_sender = IL_TERMINAL;
-    ack_msg->m_payload = (unsigned)dev_addr_base;
+  // ack_msg->m_sender = IL_TERMINAL;
+  ack_msg->m_sender = findProcessPtr(ready_queue_list, ssi_id);
+  ack_msg->m_payload = (unsigned)term->recv_status;
 
-    pushMessage(&caller->msg_inbox, ack_msg);
+  pushMessage(&caller->msg_inbox, ack_msg);
 
-    caller->p_s.status = status;
-    outProcQ(&blockedPCBs[dev_no], caller);
-    insertProcQ(&ready_queue_list, caller);
-    LDST(&caller->p_s);
-    break;
-  default:
-    // error
-    break;
-  }
+  caller->p_s.reg_a0 = term->recv_status;
+  outProcQ(&blockedPCBs[dev_no], caller);
+  insertProcQ(&ready_queue_list, caller);
+  LDST(&caller->p_s);
 }
 
 void interruptHandlerPLT(pcb_PTR caller) {
   /* - Acknowledge the PLT interrupt by loading the timer with a new valu
-      [Section 4.1.4-pops]. 
-    - Copy into the Current Process’s PCB (p_s). 
+      [Section 4.1.4-pops].
+    - Copy into the Current Process’s PCB (p_s).
     - Place the
      Current Process on the Ready Queue; transitioning the Current Process from
-     the “running” state to the “ready” state. 
+     the “running” state to the “ready” state.
     - Call the Scheduler.
   */
   setTIMER(TIMESLICE);
