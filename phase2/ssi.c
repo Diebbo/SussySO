@@ -119,7 +119,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   of 2. This service terminates the sender process if arg is NULL. Otherwise,
   arg should be a pcb_t pointer
   */
-  if (target == NULL) {
+  /*if (target == NULL) {                               //sistemerà vitto per ora provo a sistemarlo io
     // terminate sender process but not the progeny!
     removeChild(sender->p_parent);
     outChild(sender);
@@ -134,6 +134,12 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
       outProcQ(target->p_list, target);
       // delete target???
     }
+  }*/
+  if(target == NULL){
+    outChild(sender);
+    removeProcQ(&sender->p_list);
+  }else{
+    kill_progeny(sender);
   }
 }
 
