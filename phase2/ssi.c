@@ -43,8 +43,8 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       arg = Create_Process(
           sender,
           (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
-     unused                                   // tipi diversi di ritorno?
-      break;
+      unused                            // tipi diversi di ritorno?
+          break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
       break;
@@ -56,6 +56,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
+      arg = NULL;
       break;
     case GETSUPPORTPTR:
       arg = Get_Support_Data(sender);
@@ -66,10 +67,16 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
     default:
       // no match with services so must end process and progeny
       kill_progeny(sender);
+      arg = NULL;
       break;
     }
     // send back resoults
-    SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned)arg, 0);
+    if (arg != NULL) {
+      /*
+       * some functions (eg. DOIO & default) don't need to send back a message
+       * */
+      SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned)arg, 0);
+    }
   }
 }
 
@@ -156,7 +163,10 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
   ssi_do_io_PTR do_io = arg->arg;
-  unsigned int device = IL_TERMINAL;
+  unsigned int_line_no = 7; // da specifiche per terminale
+  unsigned device =
+      (unsigned)(*do_io->commandAddr - 0x10000054 - (int_line_no - 3) * 0x80) >>
+      0x10; // formula inversa dell'indirizzamento interrupt
   list_add_tail(&sender->p_list, &blockedPCBs[device]);
   soft_block_count++;
 
@@ -164,22 +174,7 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
       do_io->commandValue; // !IMPORTANT: this rise an interrupt exception from
                            // a device
 
-  // ? - SSI Continue execution
-
-  // await for interrupt handler
-  // generate a TRAP
-  // sends back the status of the device operation
-  void *payload;
-  // void *dev_addr;
-
-  // the messagge should be the first in the list of the process
-  msg_t *msg = popMessage(&sender->msg_inbox, IL_TERMINAL);
-  payload = (void *)msg->m_payload;
-
-  list_del(&sender->p_list);
-  list_add_tail(&sender->p_list, &ready_queue_list);
-  soft_block_count--;
-  return payload;
+  return NULL;
 }
 
 cpu_t Get_CPU_Time(pcb_t *sender) {
