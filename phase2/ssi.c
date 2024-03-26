@@ -245,40 +245,42 @@ int Get_Process_ID(pcb_t *sender, int arg) {
 
 void kill_progeny(pcb_t *sender) {
   // check if process has children
-  if (headProcQ(&sender->p_child) == NULL) {
+  if (headProcQ(&(sender->p_child)) == NULL) {
     // check if has sib
-    if (headProcQ(&sender->p_sib) != NULL) {
+    if (headProcQ(&(sender->p_sib)) != NULL) {
       struct list_head *iter;
       // iteration on all sib to recursevely kill progeny
-      list_for_each(iter, &sender->p_sib) {
+      list_for_each(iter, &(sender->p_sib)) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
         outChild(sender);
-        removeProcQ(&sender);
-        pcb_PTR son = headProcQ(&sender->p_child);
-        kill_progeny(son);
+        removeProcQ(&(sender->p_list));
+        kill_progeny(item);
       }
     }
     process_count--;
     outChild(sender);
-    removeProcQ(&sender);
+    removeProcQ(&(sender->p_list));
+    freePcb(sender);
   } else {
+    //check sib
     if (headProcQ(&sender->p_sib) != NULL) {
       struct list_head *iter;
       list_for_each(iter, &sender->p_sib) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
         outChild(sender);
-        removeProcQ(&sender);
-        pcb_PTR son = headProcQ(&sender->p_child);
-        kill_progeny(son);
+        removeProcQ(&(sender->p_list));
+        freePcb(sender);
+        kill_progeny(item);
       }
     } else {
       process_count--;
       outChild(sender);
-      removeProcQ(&sender);
-        pcb_PTR son = headProcQ(&sender->p_child);
-        kill_progeny(son);
+      removeProcQ(&(sender->p_list));
+      pcb_PTR son = headProcQ(&sender->p_child);
+      freePcb(sender);
+      kill_progeny(son);
     }
   }
 }
