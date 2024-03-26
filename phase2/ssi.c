@@ -123,7 +123,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     // terminate sender process but not the progeny!
     removeChild(sender->p_parent);
     outChild(sender);
-    removeProcQ(sender->p_list);
+    outProcQ(sender->p_list, sender);
     // delete sender???
   } else {
     list_for_each_entry(target, &target->p_child, p_child) {
@@ -131,7 +131,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
                         container_of(target->p_child.next, pcb_t, p_child));
       removeChild(target->p_parent); // TODO: check if it's correct, serve che
       outChild(target);
-      removeProcQ(target);
+      outProcQ(target->p_list, target);
       // delete target???
     }
   }
