@@ -26,7 +26,7 @@ LDFLAGS = -G 0 -nostdlib -T $(URISCV_DATA_DIR)/uriscvcore.ldscript
 VPATH = $(URISCV_DATA_DIR)
 
 # Source files
-SOURCE = src/main.c src/p2test.c $(wildcard phase1/*.c)	$(wildcard phase2/*.c) 
+SOURCE = $(wildcard src/*.c) $(wildcard phase1/*.c) $(wildcard phase2/*.c) 
 
 # OBJ files
 OBJ = $(patsubst %.c,%.o,$(SOURCE))
