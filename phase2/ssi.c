@@ -248,12 +248,14 @@ void kill_progeny(pcb_t *sender) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
         outChild(sender);
-        kill_progeny(removeProcQ(item));
+        removeProcQ(&sender);
+        pcb_PTR son = headProcQ(&sender->p_child);
+        kill_progeny(son);
       }
     }
     process_count--;
     outChild(sender);
-    removeProcQ(sender);
+    removeProcQ(&sender);
   } else {
     if (headProcQ(&sender->p_sib) != NULL) {
       struct list_head *iter;
@@ -261,12 +263,16 @@ void kill_progeny(pcb_t *sender) {
         pcb_t *item = container_of(iter, pcb_t, p_sib);
         process_count--;
         outChild(sender);
-        kill_progeny(removeProcQ(item));
+        removeProcQ(&sender);
+        pcb_PTR son = headProcQ(&sender->p_child);
+        kill_progeny(son);
       }
     } else {
       process_count--;
       outChild(sender);
-      kill_progeny(removeProcQ(&sender->p_child));
+      removeProcQ(&sender);
+        pcb_PTR son = headProcQ(&sender->p_child);
+        kill_progeny(son);
     }
   }
 }
