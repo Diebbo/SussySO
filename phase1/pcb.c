@@ -4,7 +4,7 @@ static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 static struct list_head pcbFree_h; /* List head for the free PCBs */
 static int next_pid = 1;
 
-int is_in_list(struct list_head *target_process, int pid) {
+int isInList(struct list_head *target_process, int pid) {
   pcb_PTR tmp;
   list_for_each_entry(tmp, target_process, p_list) {
     if (tmp->p_pid == pid)
@@ -49,6 +49,10 @@ void initPcbs() {
     }  
 }
 
+int isFree(int p_pid){
+    return isInList(&pcbFree_h, p_pid);
+}
+
 void freePcb(pcb_t *p) {
     if (list_empty(&pcbFree_h)) {                                           
         // If the free list is empty, initialize it
@@ -57,8 +61,6 @@ void freePcb(pcb_t *p) {
     
     // Add the PCB to the tail of the existing free list
     list_add_tail(&p->p_list, &pcbFree_h);
-    
-
 }
 
 pcb_t *allocPcb() {                                                         

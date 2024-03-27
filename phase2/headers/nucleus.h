@@ -23,25 +23,25 @@
 
 /* GLOBAL VARIABLES*/
 // started but not terminated processes
-int process_count;
+extern int process_count;
 // processes waiting for a resource
-int soft_block_count;
+extern int soft_block_count;
 // tail pointer to the ready state queue processes
-struct list_head ready_queue_list;
-pcb_t *current_process;
-struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
+extern struct list_head ready_queue_list;
+extern pcb_t *current_process;
+extern struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
 
 // waiting for a message
-struct list_head msg_queue_list;
+extern struct list_head msg_queue_list;
 
 // pcb waiting for clock tick
-struct list_head pseudoClockList;
+extern struct list_head pseudoClockList;
 // SSI id (the only process to have pid = 0)
 #define SSIPID 0
 // SSI process
-pcb_PTR ssi_pcb;
+extern pcb_PTR ssi_pcb;
 // last pid number assigned to a process
-int last_used_pid;
+extern int last_used_pid;
 
 /* GLOBAL FUNCTIONS */
 void initKernel(void);

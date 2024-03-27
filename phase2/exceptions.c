@@ -63,7 +63,7 @@ void SYSCALLExceptionHandler() {
           payload of the message in a2 and then executing the SYSCALL
           instruction.*/
 
-        if (is_in_list(&pcbFree_h, a2_reg)) { // error!
+        if (isFree(a2_reg)) { // error!
           current_process->p_s.reg_a0 = DEST_NOT_EXIST;
           return;
         }
@@ -81,7 +81,7 @@ void SYSCALLExceptionHandler() {
         int dest_process_pid = a1_reg;
         pcb_t *dest_process = NULL;
 
-        if (is_in_list(&msg_queue_list, dest_process_pid)) {
+        if (isInList(&msg_queue_list, dest_process_pid)) {
           dest_process = findProcessPtr(&msg_queue_list, dest_process_pid);
           outProcQ(&msg_queue_list, dest_process);
           insertProcQ(&ready_queue_list, dest_process);
