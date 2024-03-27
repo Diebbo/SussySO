@@ -1,4 +1,5 @@
 #include "./headers/exceptions.h"
+#include "headers/interrupts.h"
 #include "headers/nucleus.h"
 #include "headers/ssi.h"
 #include <uriscv/const.h>
@@ -26,7 +27,7 @@ void exceptionHandler() {
            (exception_error >= 12 && exception_error <= 23))
     TrapExceptionHandler();
   else if (exception_error >= 17 && exception_error <= 21)
-    InterruptExceptionHandler();
+    interruptHandler();
 }
 
 void SYSCALLExceptionHandler() {

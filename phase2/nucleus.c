@@ -3,6 +3,17 @@ process count, soft-blocked count, blocked PCBs lists/pointers, etc.*/
 
 #include "./headers/nucleus.h"
 
+int main()
+{
+    // 1. Initialize the nucleus
+    initKernel();
+
+    // 2. scheduler
+    Scheduler();
+
+    return 0;
+}
+
 void initKernel() {
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector

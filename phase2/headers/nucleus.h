@@ -60,5 +60,6 @@ pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 
 //defined in p2test.c
 extern void test(void); 
+int main(void);
 
 #endif
