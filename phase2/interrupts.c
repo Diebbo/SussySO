@@ -94,7 +94,7 @@ unsigned int transm_command;
   msg_t *ack_msg = (msg_t *)allocMsg();
 
   // ack_msg->m_sender = IL_TERMINAL;
-  ack_msg->m_sender = findProcessPtr(&ready_queue_list, ssi_id);
+  ack_msg->m_sender = ssi_pcb;
   ack_msg->m_payload = (unsigned)term->recv_status;
 
   pushMessage(&caller->msg_inbox, ack_msg);

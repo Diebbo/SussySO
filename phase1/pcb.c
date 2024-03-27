@@ -1,7 +1,7 @@
 #include "./headers/pcb.h"
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
-LIST_HEAD(pcbFree_h);            /* List of free PCBs                     */
+static struct list_head pcbFree_h; /* List head for the free PCBs */
 static int next_pid = 1;
 
 int is_in_list(struct list_head *target_process, int pid) {
@@ -16,7 +16,7 @@ int is_in_list(struct list_head *target_process, int pid) {
 
 void initPcbs() {
     // Initialize the list head for the free PCBs                           
-    INIT_LIST_HEAD(&pcbFree_h);
+    LIST_HEAD(pcbFree_h);
 
     for (int i = 0; i < MAXPROC; ++i) {
         INIT_LIST_HEAD(&pcbTable[i].p_list);

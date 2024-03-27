@@ -1,4 +1,9 @@
-#include "./headers/nucleus.h"
+#include <uriscv/liburiscv.h>
+#include "../headers/const.h"
+#include "../headers/listx.h"
+#include "../headers/types.h"
+
+#include "../phase1/headers/pcb.h"
 
 typedef unsigned int devregtr;
 

@@ -15,7 +15,7 @@ void Scheduler() {
     current_process = removeProcQ(&ready_queue_list);
 
     if (current_process == NULL) { // ready_queue_head is empty
-      if (process_count == 1 && current_process->p_pid == ssi_id) { 
+      if (process_count == 1 && current_process->p_pid == SSIPID) { 
           HALT();
       } else if (process_count > 0 && soft_block_count > 0) {
         //dalle specifiche pg 4

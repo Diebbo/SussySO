@@ -29,12 +29,15 @@ void initKernel() {
   initMsgs();
 
   // Initialize other variables
+  soft_block_count = 0;
+  process_count = 0;
+  last_used_pid = 0;
+
   INIT_LIST_HEAD(&ready_queue_list);
   for (int i = 0; i < SEMDEVLEN-1; i++) {
     INIT_LIST_HEAD(&blockedPCBs[i]);
   }
   INIT_LIST_HEAD(&pseudoClockList);
-  INIT_LIST_HEAD(&pcbFree_h);
   current_process = NULL;
 
   INIT_LIST_HEAD(&msg_queue_list);
@@ -86,7 +89,9 @@ void initKernel() {
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
-  first_process->p_pid = ssi_id;
+  first_process->p_pid = SSIPID;
+
+  ssi_pcb = first_process;
 
   process_count++;
 
