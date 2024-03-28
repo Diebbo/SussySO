@@ -1,7 +1,7 @@
 #include "./headers/pcb.h"
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
-static struct list_head pcbFree_h; /* List head for the free PCBs */
+LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
 static int next_pid = 1;
 
 int isInList(struct list_head *target_process, int pid) {
@@ -13,38 +13,37 @@ int isInList(struct list_head *target_process, int pid) {
   return FALSE;
 }
 
+void initPcb(pcb_PTR p){
+    // Reset PCB members if needed
+    p->p_parent = NULL;
+    // Initialize p_child, p_sib, msg_inbox as an empty list
+    INIT_LIST_HEAD(&p->p_child); 
+    INIT_LIST_HEAD(&p->p_sib);   
+    p->p_time = 0;
+    p->p_time = 0;                                                          
+    INIT_LIST_HEAD(&p->msg_inbox); 
+    p->p_supportStruct = NULL;
+    p->p_pid = next_pid++;
+
+    // Update p_list for the allocated PCB
+    INIT_LIST_HEAD(&p->p_list);                                            
+
+    // Reset the processor state
+    p->p_s.entry_hi = 0;
+    p->p_s.cause = 0;
+    p->p_s.status = 0;
+    p->p_s.pc_epc = 0;
+    p->p_s.mie = 0;
+}
 
 void initPcbs() {
-    // Initialize the list head for the free PCBs                           
-    LIST_HEAD(pcbFree_h);
+    // Initialize the list head for the free 
+    // assum to be already initialized
+
 
     for (int i = 0; i < MAXPROC; ++i) {
-        INIT_LIST_HEAD(&pcbTable[i].p_list);
-
-        // Reset PCB fields to initial values:                              
-        // Initializing p_child, p_sib, msg_inbox as an empty list          
-        // Resetting processor state, cpu time, process ID to 0             
-        // Resetting p_supportStruct to NULL                                
-        pcbTable[i].p_parent = NULL;                                        
-        INIT_LIST_HEAD(&pcbTable[i].p_child);                               
-        INIT_LIST_HEAD(&pcbTable[i].p_sib);      
-
-        // init null state of the cpu
-        pcbTable[i].p_s.entry_hi = 0;
-        pcbTable[i].p_s.cause = 0;
-        pcbTable[i].p_s.status = 0;
-        pcbTable[i].p_s.pc_epc = 0;
-        pcbTable[i].p_s.mie = 0;
-
-        for(int i = 0; i < STATE_GPR_LEN; i++) {
-            pcbTable[i].p_s.gpr[i] = 0;
-        }
-
-        pcbTable[i].p_time = 0;                                             
-        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);                             
-        pcbTable[i].p_supportStruct = NULL;                                 
-        pcbTable[i].p_pid = 0;                                              
-
+        // Initialize the PCB array
+        initPcb(&pcbTable[i]);
         list_add(&pcbTable[i].p_list, &pcbFree_h);
     }  
 }
@@ -73,26 +72,8 @@ pcb_t *allocPcb() {
     // Convert the list_head to the PCB type
     pcb_t *p = container_of(head, pcb_t, p_list);                           
 
-    // Reset PCB members if needed
-    p->p_parent = NULL;
-    // Initialize p_child, p_sib, msg_inbox as an empty list
-    INIT_LIST_HEAD(&p->p_child); 
-    INIT_LIST_HEAD(&p->p_sib);   
-    p->p_time = 0;
-    p->p_time = 0;                                                          
-    INIT_LIST_HEAD(&p->msg_inbox); 
-    p->p_supportStruct = NULL;
-    p->p_pid = next_pid++;
-
-    // Update p_list for the allocated PCB
-    INIT_LIST_HEAD(&p->p_list);                                            
-
-    // Reset the processor state
-    p->p_s.entry_hi = 0;
-    p->p_s.cause = 0;
-    p->p_s.status = 0;
-    p->p_s.pc_epc = 0;
-    p->p_s.mie = 0;
+    // Initialize the PCB fields
+    initPcb(p);
 
     return p;
 }

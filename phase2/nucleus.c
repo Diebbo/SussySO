@@ -21,8 +21,6 @@ struct list_head pseudoClockList;
 #define SSIPID 0
 // SSI process
 pcb_PTR ssi_pcb;
-// last pid number assigned to a process
-int last_used_pid;
 
 int main(int argc, char *argv[])
 {
@@ -36,15 +34,16 @@ int main(int argc, char *argv[])
 }
 
 void initKernel() {
+  // block interrupts
+  setSTATUS(ALLOFF);
+
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
   passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; 
-  passupvector->tlb_refill_stackPtr =
-      (memaddr)KERNELSTACK; // Stacks in µMPS3 grow down
-  passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
   passupvector->exception_handler =
       (memaddr)exceptionHandler; 
-
+  passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
+  
   // initialize the nucleus data structures
   initPcbs();
   initMsgs();
@@ -52,7 +51,6 @@ void initKernel() {
   // Initialize other variables
   soft_block_count = 0;
   process_count = 0;
-  last_used_pid = 0;
 
   INIT_LIST_HEAD(&ready_queue_list);
   for (int i = 0; i < SEMDEVLEN-1; i++) {
@@ -118,18 +116,8 @@ void initKernel() {
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
-  second_process->p_pid = generatePid();
-
   process_count++;
-}
-
-int generatePid(void) {
-  // 40 = num max of pcb
-  if (last_used_pid == MAXPROC) {
-    last_used_pid = 1;
-  }
-  last_used_pid++;
-  return last_used_pid;
+  setSTATUS(IECON | IMON | ALLOFF);
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {

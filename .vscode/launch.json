@@ -8,7 +8,7 @@
             "MIMode": "gdb",
             "miDebuggerPath": "/opt/riscv/bin/riscv32-unknown-linux-gnu-gdb",
             "miDebuggerServerAddress": "localhost:8080",
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "stopAtConnect": true,
             "cwd": "."
         }
