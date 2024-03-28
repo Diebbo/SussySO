@@ -2,7 +2,6 @@
 /uriscv/
 backup
 riscv-gnu-toolchain
-.vscode
 kernel
 *.uriscv
 *.tar.gz

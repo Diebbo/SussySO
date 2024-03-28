@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "RISC-V: Debug on URIscV",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/kernel",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/opt/riscv/bin/riscv32-unknown-linux-gnu-gdb",
+            "miDebuggerServerAddress": "localhost:8080",
+            "stopAtEntry": true,
+            "stopAtConnect": true,
+            "cwd": "."
+        }
+    ]
+}
+            

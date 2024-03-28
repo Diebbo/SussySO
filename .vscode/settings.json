@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "complex": "cpp",
+        "types.h": "c",
+        "pcb.h": "c",
+        "stdlib.h": "c",
+        "listx.h": "c",
+        "liburiscv.h": "c"
+    }
+}
