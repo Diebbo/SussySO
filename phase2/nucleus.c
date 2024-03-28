@@ -108,7 +108,7 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; // STST()???
   second_process->p_s.pc_epc = (memaddr)test; 
-  second_process->p_s.status = IMON | IEPON | KUSEG | IECON | ALLOFF;
+  second_process->p_s.status = IMON | IEPON | IECON | ALLOFF;
 
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
