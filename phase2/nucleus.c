@@ -24,7 +24,7 @@ pcb_PTR ssi_pcb;
 // last pid number assigned to a process
 int last_used_pid;
 
-int main()
+int main(int argc, char *argv[])
 {
     // 1. Initialize the nucleus
     initKernel();
@@ -38,7 +38,7 @@ int main()
 void initKernel() {
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
-  passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; // TODO refil
+  passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; 
   passupvector->tlb_refill_stackPtr =
       (memaddr)KERNELSTACK; // Stacks in µMPS3 grow down
   passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
@@ -99,15 +99,7 @@ void initKernel() {
       IMON |
       ALLOFF; // 32 bit reg. -> 0x01 = Enable interrupts, kernel mode actv
 
-  // tree structure
-  INIT_LIST_HEAD(&first_process->p_sib);
-  INIT_LIST_HEAD(&first_process->p_child);
-  first_process->p_parent = NULL;
-
-  first_process->p_time = 0;
-
-  first_process->p_supportStruct = NULL;
-
+  list_add_tail(&first_process->p_list, &ready_queue_list);
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
   first_process->p_pid = SSIPID;
@@ -120,16 +112,9 @@ void initKernel() {
 
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; // STST()???
-  second_process->p_s.pc_epc = (memaddr)test; // TODO
+  second_process->p_s.pc_epc = (memaddr)test; 
   second_process->p_s.status = IECON | ALLOFF;
 
-  INIT_LIST_HEAD(&second_process->p_sib);
-  INIT_LIST_HEAD(&second_process->p_child);
-  second_process->p_parent = NULL;
-
-  second_process->p_time = 0;
-
-  second_process->p_supportStruct = NULL;
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
@@ -141,7 +126,7 @@ void initKernel() {
 int generatePid(void) {
   // 40 = num max of pcb
   if (last_used_pid == MAXPROC) {
-    last_used_pid = 0;
+    last_used_pid = 1;
   }
   last_used_pid++;
   return last_used_pid;
