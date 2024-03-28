@@ -56,7 +56,7 @@ void passUpOrDie(pcb_t *process, unsigned value);
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 
 // defined in p2test.c
-void test(void);
+extern void test(void);
 int main(int, char **);
 
 #endif
