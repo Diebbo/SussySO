@@ -40,6 +40,7 @@ void initKernel() {
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
   passupvector->tlb_refill_handler = (memaddr)uTLB_RefillHandler; 
+  passupvector->tlb_refill_stackPtr = (memaddr)KERNELSTACK;
   passupvector->exception_handler =
       (memaddr)exceptionHandler; 
   passupvector->exception_stackPtr = (memaddr)KERNELSTACK;
@@ -60,6 +61,7 @@ void initKernel() {
   current_process = NULL;
 
   INIT_LIST_HEAD(&msg_queue_list);
+  
   // load the system wide interval timer
   LDIT(PSECOND);
 
@@ -76,7 +78,6 @@ void initKernel() {
 
   /*init first process state */
   RAMTOP(first_process->p_s.reg_sp); // Set SP to RAMTOP
-  STST(&first_process->p_s);         // saving in pcb struct
 
   /*FROM MANUAL:
           IEc: bit 0 - The “current” global interrupt enable bit. When 0,
@@ -92,12 +93,8 @@ void initKernel() {
      restarted, the stack is popped. [Section 7.4]*/
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
-  first_process->p_s.status =
-      IEPON |
-      IMON |
-      ALLOFF; // 32 bit reg. -> 0x01 = Enable interrupts, kernel mode actv
+  first_process->p_s.status = IMON | IEPON | KUSEG | IECON | ALLOFF;
 
-  list_add_tail(&first_process->p_list, &ready_queue_list);
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
   first_process->p_pid = SSIPID;
@@ -111,13 +108,14 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; // STST()???
   second_process->p_s.pc_epc = (memaddr)test; 
-  second_process->p_s.status = IECON | ALLOFF;
+  second_process->p_s.status = IMON | IEPON | KUSEG | IECON | ALLOFF;
 
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
   process_count++;
-  setSTATUS(IECON | IMON | ALLOFF);
+  setSTATUS(IMON | IEPON | KUSEG | IECON | ALLOFF);
+
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
