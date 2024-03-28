@@ -93,7 +93,7 @@ void initKernel() {
      restarted, the stack is popped. [Section 7.4]*/
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
-  first_process->p_s.status = IMON | IEPON | KUSEG | IECON | ALLOFF;
+  first_process->p_s.status = IMON | IEPON | IECON | ALLOFF;
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
@@ -114,7 +114,7 @@ void initKernel() {
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
   process_count++;
-  setSTATUS(IMON | IEPON | KUSEG | IECON | ALLOFF);
+  setSTATUS(IMON | IEPON | IECON);
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {

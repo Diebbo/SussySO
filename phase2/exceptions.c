@@ -2,6 +2,7 @@
 #include "headers/interrupts.h"
 #include "headers/nucleus.h"
 #include "headers/ssi.h"
+#include <uriscv/arch.h>
 #include <uriscv/const.h>
 #include <uriscv/liburiscv.h>
 
@@ -12,9 +13,11 @@ void uTLB_RefillHandler() {
   LDST((state_t *)0x0FFFF000);
 }
 
+
+
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  memaddr exception_error = getCAUSE() << CAUSESHIFT;
+  unsigned int exception_error = getCAUSE();
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
 
@@ -33,14 +36,15 @@ void exceptionHandler() {
 void SYSCALLExceptionHandler() {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  memaddr kernel_user_state = getSTATUS() << 1;
+  // the 1st bit of the status register is the 'user mode' bit
+  // 0 = kernel mode, 1 = user mode
+  memaddr kernel_user_state = getSTATUS() >> 1;
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
       a2_reg = current_process->p_s.reg_a2; /* payload */
-  // user_state = exception_state->statu;
+
   msg_t *msg;
-  /*Kup???*/
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
     if (kernel_user_state == 0) {
@@ -81,7 +85,8 @@ void SYSCALLExceptionHandler() {
         int dest_process_pid = a1_reg;
         pcb_t *dest_process = NULL;
 
-        if (isInList(&msg_queue_list, dest_process_pid)) {
+        if (isInList(&msg_queue_list, dest_process_pid) == TRUE) {
+          // process is blocked waiting for a message
           dest_process = findProcessPtr(&msg_queue_list, dest_process_pid);
           outProcQ(&msg_queue_list, dest_process);
           insertProcQ(&ready_queue_list, dest_process);
@@ -137,6 +142,7 @@ void SYSCALLExceptionHandler() {
 
         if (msg == NULL) { // i'll wait
           soft_block_count++;
+          // no need to remove from ready_queue_list -> already done in Scheduler
           insertProcQ(&msg_queue_list, current_process);
           /*The saved processor state (located at the start of the BIOS Data
           Page [Section 3]) must be copied into the Current Process’s PCB
@@ -150,7 +156,7 @@ void SYSCALLExceptionHandler() {
           current_process->p_s.pc_epc = exception_state->pc_epc;
           current_process->p_s.status = exception_state->status;
           // 2nd Update the accumulated CPU time for the Current Process
-          // LDIT(current_process->p_time); //TODO : sez 10
+          // LDIT(getTIMER() - exception_state->); //TODO : sez 10
           // 3rd call the scheduler
           Scheduler();
         }
