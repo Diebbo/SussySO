@@ -115,7 +115,6 @@ void initKernel() {
 
   process_count++;
   setSTATUS(IMON | IEPON | KUSEG | IECON | ALLOFF);
-
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
