@@ -65,7 +65,7 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   msg_t *msg;
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
-    if (!kernel_mode) {
+    if (kernel_mode) {
       switch (a0_reg) {
       case SENDMESSAGE:
         /*This system call cause the transmission of a message to a specified
