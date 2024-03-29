@@ -5,9 +5,10 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 
 
 #include "interrupts.h"
+#include "ssi.h"
 
 void TLBExceptionHandler(void);
 void SYSCALLExceptionHandler(unsigned);
-
+extern void Terminate_Process(pcb_t *sender, pcb_t *target);
 #endif
 

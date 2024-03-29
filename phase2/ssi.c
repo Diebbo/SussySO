@@ -105,7 +105,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     return (pcb_PTR)NOPROC;
   else {
     // initialization of new prole
-    new_prole->p_s = *(arg->state);
+    copyState(&new_prole->p_s, arg->state);
     new_prole->p_supportStruct =
         arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
