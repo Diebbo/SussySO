@@ -56,9 +56,11 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
+      arg = NULL;
       break;
     case DOIO:
-      arg = DoIO(sender, (ssi_payload_t *)arg);
+      DoIO(sender, (ssi_payload_t *)arg);
+      arg = NULL;
       break;
     case GETTIME:
       arg = (void *)Get_CPU_Time(sender);
@@ -234,7 +236,7 @@ int Get_Process_ID(pcb_t *sender, int arg) {
 
 void killProgeny(pcb_t *sender) {
   // check if process has children
-  if (sender == NULL) {
+  if (sender == NULL || isFree(sender->p_pid)) {
     return;
   }
 
@@ -244,15 +246,8 @@ void killProgeny(pcb_t *sender) {
     killProgeny(son);
   }
 
-  // check if has sib
-  if (headProcQ(&(sender->p_sib)) != NULL) {
-    struct list_head *iter;
-    // iteration on all sib to recursevely kill progeny
-    list_for_each(iter, &(sender->p_sib)) {
-      pcb_PTR item = (pcb_PTR)container_of(iter, pcb_t, p_sib);
-      killProgeny(item);
-    }
-  }
+  // save sib_next -> then recursively kill all sib
+  pcb_PTR sib_next = headProcQ(&sender->p_sib);
 
   if (isInList(&ready_queue_list, sender->p_pid)) {
     outProcQ(&ready_queue_list, sender);
@@ -272,4 +267,7 @@ void killProgeny(pcb_t *sender) {
   outChild(sender);
   freePcb(sender);
   process_count--;
+
+  // check if has sib
+  killProgeny(sib_next);
 }
