@@ -20,7 +20,6 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  unsigned int operation_start_timer = getTIMER(); // get timer serve a ?
   unsigned int exception_error = getCAUSE();
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
@@ -29,7 +28,7 @@ void exceptionHandler() {
   if (exception_error >= 24 && exception_error <= 28)
     TLBExceptionHandler();
   else if (exception_error >= 8 && exception_error <= 11)
-    SYSCALLExceptionHandler(operation_start_timer);
+    SYSCALLExceptionHandler();
   else if ((exception_error >= 0 && exception_error <= 7) ||
            (exception_error >= 12 && exception_error <= 23))
     TrapExceptionHandler();
@@ -37,7 +36,7 @@ void exceptionHandler() {
     interruptHandler();
 }
 
-void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
+void SYSCALLExceptionHandler() {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // the 1st bit of the status register is the 'user mode' bit
@@ -151,8 +150,16 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
         unsigned int sender_pid = a1_reg;
 
         msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
+        //saving TOD to not have more time passed caused blocking receive
+        cpu_t new_time;
+        cpu_t current_time_process = STCK(new_time);
 
-        if (msg == NULL) { // i'll wait
+        //wait for msg
+        while (msg == NULL) { 
+          if(msg == NULL){
+            msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
+          }
+
           soft_block_count++;
           // no need to remove from ready_queue_list -> already done in
           // Scheduler
@@ -161,17 +168,18 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
           Page [Section 3]) must be copied into the Current Process’s PCB
           (p_s)*/
 
-          current_process->p_s.cause = exception_state->cause;
-          current_process->p_s.entry_hi = exception_state->entry_hi;
-          // current_process->p_s.gpr = exception_state->gpr;              //err
-          // 'l'espressione deve essere un lvalue modificabile'
-          current_process->p_s.mie = exception_state->mie;
-          current_process->p_s.pc_epc = exception_state->pc_epc;
-          current_process->p_s.status = exception_state->status;
+          copyState(&current_process->p_s,exception_state);
           // 2nd Update the accumulated CPU time for the Current Process
-          LDIT(getTIMER() - operation_start_timer);
+
+          LDIT(current_time_process);
           // 3rd call the scheduler
           Scheduler();
+
+          //saving time not re-checking while cond
+          if (msg != NULL){
+            break;
+          }
+          
         }
 
         /*This system call provides as returning value (placed in caller’s v0 in
