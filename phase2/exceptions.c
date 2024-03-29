@@ -1,11 +1,4 @@
 #include "./headers/exceptions.h"
-#include "headers/interrupts.h"
-#include "headers/nucleus.h"
-#include "headers/ssi.h"
-#include <uriscv/arch.h>
-#include <uriscv/const.h>
-#include <uriscv/liburiscv.h>
-
 /*
 gimmie an unsigned int and an integer representing the bit you want to check (0-indexed)
 and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
