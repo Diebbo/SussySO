@@ -186,23 +186,10 @@ void Wait_For_Clock(pcb_t *sender) {
   message to the SSI, as for other interrupts. This service should allow the
   sender to suspend its execution until the next pseudo-clock tick. You need to
   save the list of PCBs waiting for the tick.*/
-  int tick = PSECOND;
-  cpu_t current_time;
-  cpu_t last_time;
-  // macro to read TimeOfDay clock
-  STCK(last_time);
-  STCK(current_time);
-  // send interrupt
-  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0);
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
-  // waiting till tick
-  while (TRUE) {
-    if ((current_time - last_time) % tick == 0)
-      break;
-    // refresh TOD time till tick passed
-    STCK(current_time);
-  }
+  // send interrupt
+  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0);
   // removing from clock list cause tick passed
   removeProcQ(&pseudoClockList);
 }
