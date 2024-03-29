@@ -10,18 +10,16 @@ void SSI_function_entry_point() {
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
     SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
-  
+
     // current process == ssi_pcb
     // get request id
     unsigned int process_request_id = ssi_pcb->p_s.reg_a0;
 
-    // find process 
-    process_request_ptr = findProcessPtr(
-        &ready_queue_list, process_request_id); 
+    // find process
+    process_request_ptr = findProcessPtr(&ready_queue_list, process_request_id);
 
     if (process_request_ptr == NULL) {
-      process_request_ptr = findProcessPtr(
-          &msg_queue_list, process_request_id);
+      process_request_ptr = findProcessPtr(&msg_queue_list, process_request_id);
     }
 
     if (process_request_ptr == NULL) {
@@ -32,7 +30,7 @@ void SSI_function_entry_point() {
     // find msg payload
     process_request_msg =
         popMessageByPid(&process_request_ptr->msg_inbox, process_request_id);
-    
+
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,
                 (void *)process_request_msg->m_payload);
@@ -111,8 +109,9 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     return (pcb_PTR)NOPROC;
   else {
     // initialization of new prole
-    new_prole->p_s = *(arg->state) ;
-    new_prole->p_supportStruct = arg->support; // even if optional -> will be null
+    new_prole->p_s = *(arg->state);
+    new_prole->p_supportStruct =
+        arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
     process_count++;
     insertProcQ(&ready_queue_list, new_prole);
@@ -148,10 +147,9 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     }
   }*/
   if (target == NULL) {
-    outChild(sender);
-    removeProcQ(&sender->p_list);
-  } else {
     killProgeny(sender);
+  } else {
+    killProgeny(target);
   }
 }
 
@@ -257,43 +255,29 @@ int Get_Process_ID(pcb_t *sender, int arg) {
 
 void killProgeny(pcb_t *sender) {
   // check if process has children
-  if (headProcQ(&(sender->p_child)) == NULL) {
-    // check if has sib
-    if (headProcQ(&(sender->p_sib)) != NULL) {
-      struct list_head *iter;
-      // iteration on all sib to recursevely kill progeny
-      list_for_each(iter, &(sender->p_sib)) {
-        pcb_t *item = container_of(iter, pcb_t, p_sib);
-        process_count--;
-        outChild(sender);
-        removeProcQ(&(sender->p_list));
-        freePcb(sender);
-        killProgeny(item);
-      }
-    }
-    process_count--;
-    outChild(sender);
-    removeProcQ(&(sender->p_list));
-    freePcb(sender);
-  } else {
-    // check sib
-    if (headProcQ(&sender->p_sib) != NULL) {
-      struct list_head *iter;
-      list_for_each(iter, &sender->p_sib) {
-        pcb_t *item = container_of(iter, pcb_t, p_sib);
-        process_count--;
-        outChild(sender);
-        removeProcQ(&(sender->p_list));
-        freePcb(sender);
-        killProgeny(item);
-      }
-    } else {
-      process_count--;
-      outChild(sender);
-      removeProcQ(&(sender->p_list));
-      pcb_PTR son = headProcQ(&sender->p_child);
-      freePcb(sender);
-      killProgeny(son);
+  if (sender == NULL) {
+    return;
+  }
+
+  if (headProcQ(&(sender->p_child)) != NULL) {
+    // has children
+    pcb_PTR son = headProcQ(&sender->p_child);
+    killProgeny(son);
+  }
+
+  // check if has sib
+  if (headProcQ(&(sender->p_sib)) != NULL) {
+    struct list_head *iter;
+    // iteration on all sib to recursevely kill progeny
+    list_for_each(iter, &(sender->p_sib)) {
+      pcb_PTR item = (pcb_PTR)container_of(iter, pcb_t, p_sib);
+      killProgeny(item);
     }
   }
+
+  // kill process
+  outChild(sender);
+  outProcQ(&sender->p_list, sender);
+  freePcb(sender);
+  process_count--;
 }
