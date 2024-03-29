@@ -39,7 +39,7 @@ void SSI_function_entry_point() {
   }
 }
 
-void SSI_Request(pcb_t *sender, int service, void *arg) {
+void SSI_Request(pcb_PTR sender, int service, void *arg) {
   /*If service does not match any of those provided by the SSI, the SSI should
   terminate the process and its progeny. Also, when a process requires a service
   to the SSI, it must wait for the answer.*/
@@ -52,6 +52,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
   if (kernel_user_state == 1) {
     // Must be in kernel mode otherwise trap!
     // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
+    Terminate_Process(ssi_pcb, sender);
   } else {
     switch (service) {
     case CREATEPROCESS:
@@ -80,7 +81,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
       break;
     default:
       // no match with services so must end process and progeny
-      kill_progeny(sender);
+      killProgeny(sender);
       arg = NULL;
       break;
     }
@@ -106,17 +107,12 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   pointer to the new PCB will be returned.*/
   pcb_t *new_prole = allocPcb();
   // ssi_create_process_PTR new_prole_support = arg;
-  if (process_count == MAXPROC || new_prole == NULL)
+  if (new_prole == NULL) // no more free PBCs
     return (pcb_PTR)NOPROC;
   else {
     // initialization of new prole
-    RAMTOP(new_prole->p_s.reg_sp);
-    new_prole->p_s.status = arg->state->status;
-    STST(&new_prole->p_s); // loading arg state in new_prole p_s??
-    if (arg == NULL)
-      new_prole->p_supportStruct = NULL;
-    else
-      new_prole->p_supportStruct = arg->support;
+    new_prole->p_s = *(arg->state) ;
+    new_prole->p_supportStruct = arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
     process_count++;
     insertProcQ(&ready_queue_list, new_prole);
@@ -155,7 +151,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
     outChild(sender);
     removeProcQ(&sender->p_list);
   } else {
-    kill_progeny(sender);
+    killProgeny(sender);
   }
 }
 
@@ -259,7 +255,7 @@ int Get_Process_ID(pcb_t *sender, int arg) {
   }
 }
 
-void kill_progeny(pcb_t *sender) {
+void killProgeny(pcb_t *sender) {
   // check if process has children
   if (headProcQ(&(sender->p_child)) == NULL) {
     // check if has sib
@@ -272,7 +268,7 @@ void kill_progeny(pcb_t *sender) {
         outChild(sender);
         removeProcQ(&(sender->p_list));
         freePcb(sender);
-        kill_progeny(item);
+        killProgeny(item);
       }
     }
     process_count--;
@@ -289,7 +285,7 @@ void kill_progeny(pcb_t *sender) {
         outChild(sender);
         removeProcQ(&(sender->p_list));
         freePcb(sender);
-        kill_progeny(item);
+        killProgeny(item);
       }
     } else {
       process_count--;
@@ -297,7 +293,7 @@ void kill_progeny(pcb_t *sender) {
       removeProcQ(&(sender->p_list));
       pcb_PTR son = headProcQ(&sender->p_child);
       freePcb(sender);
-      kill_progeny(son);
+      killProgeny(son);
     }
   }
 }

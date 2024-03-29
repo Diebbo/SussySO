@@ -29,5 +29,5 @@ the sender if argument is 0 or of the sender’s parent otherwise. It should
 return 0 as the parent identifier of the root process.*/
 int Get_Process_ID(pcb_t *sender, int arg);
 /*This service is called if there is no match with ssi service*/
-void kill_progeny(pcb_t *sender);
+void killProgeny(pcb_t *sender);
 #endif
