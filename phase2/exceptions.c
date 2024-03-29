@@ -1,13 +1,13 @@
 #include "./headers/exceptions.h"
 /*
-gimmie an unsigned int and an integer representing the bit you want to check
-(0-indexed) and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
+given an unsigned int and an integer representing the bit you want to check
+(0-indexed) and return 1 if the bit is 1, 0 otherwise 
 */
 int bitChecker(unsigned int n, int bit) { return (n >> bit) % 2; }
 
 /*
-gimmie an unsigned int and an integer representing the bit you want to check
-(0-indexed) and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
+given an unsigned int and an integer representing the bit you want to check
+(0-indexed) and return 1 if the bit is 1, 0 otherwise 
 */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
