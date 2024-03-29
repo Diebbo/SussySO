@@ -4,6 +4,7 @@
 #include "../../headers/const.h"
 #include "../../headers/types.h"
 #include "../../headers/listx.h"
+#include <uriscv/types.h>
 /*Initialize the pcbFree list to contain all the elements of the static array of MAXPROC PCBs.
 This method will be called only once during data structure initialization.*/
 void initPcbs();
@@ -49,4 +50,5 @@ void initPcb(pcb_PTR pcb);
 // return TRUE if the pcb is in free list
 int isFree(int);
 
+void copyState(state_t *source, state_t *dest);
 #endif

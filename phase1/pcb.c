@@ -1,4 +1,6 @@
 #include "./headers/pcb.h"
+#include <uriscv/liburiscv.h>
+#include <uriscv/types.h>
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
@@ -34,6 +36,14 @@ void initPcb(pcb_PTR p){
     p->p_s.status = 0;
     p->p_s.pc_epc = 0;
     p->p_s.mie = 0;
+}
+
+void copyState(state_t *source, state_t *dest) {
+    dest->entry_hi = source->entry_hi;
+    dest->cause = source->cause;
+    dest->status = source->status;
+    dest->pc_epc = source->pc_epc;
+    dest->mie = source->mie;
 }
 
 void initPcbs() {
