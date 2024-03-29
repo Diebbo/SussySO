@@ -44,8 +44,13 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
-  int kernel_mode = !BIT_CHECKER(
-      kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
+  int kernel_mode = BIT_CHECKER(kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
+  if (kernel_mode){
+    kernel_mode = 0;
+  }
+  else{
+    kernel_mode = 1;
+  }//ora kernelmode = 1 se sono in kernel mode, 0 altrimenti
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
