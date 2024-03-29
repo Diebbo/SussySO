@@ -38,8 +38,9 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // the 1st bit of the status register is the 'user mode' bit
+  // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
-  memaddr kernel_user_state = getSTATUS() >> 1;
+  memaddr kernel_user_state = getSTATUS() >> 3;
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
