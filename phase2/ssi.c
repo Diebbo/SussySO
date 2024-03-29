@@ -2,6 +2,7 @@
 This involves handling various system service calls (SYS1, SYS3, SYS5, SYS6,
 SYS7, etc.).*/
 #include "./headers/ssi.h"
+#include "headers/nucleus.h"
 
 void SSI_function_entry_point() {
   pcb_PTR process_request_ptr;
@@ -9,14 +10,29 @@ void SSI_function_entry_point() {
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
     SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
+  
+    // current process == ssi_pcb
+    // get request id
+    unsigned int process_request_id = ssi_pcb->p_s.reg_a0;
 
-    unsigned int process_request_id = current_process->p_s.reg_a0;
-
+    // find process 
     process_request_ptr = findProcessPtr(
-        &ready_queue_list, process_request_id); // situato in ready queue?
+        &ready_queue_list, process_request_id); 
+
+    if (process_request_ptr == NULL) {
+      process_request_ptr = findProcessPtr(
+          &msg_queue_list, process_request_id);
+    }
+
+    if (process_request_ptr == NULL) {
+      // process not found -> look for the next message
+      continue;
+    }
+
     // find msg payload
     process_request_msg =
         popMessageByPid(&process_request_ptr->msg_inbox, process_request_id);
+    
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_ptr->p_s.reg_a2,
                 (void *)process_request_msg->m_payload);
@@ -33,16 +49,16 @@ void SSI_Request(pcb_t *sender, int service, void *arg) {
   // int user_state = exception_state->status;
   memaddr kernel_user_state = getSTATUS() << 1;
 
-  if (kernel_user_state != 1) {
+  if (kernel_user_state == 1) {
     // Must be in kernel mode otherwise trap!
-    TrapExceptionHandler();
+    // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
   } else {
     switch (service) {
     case CREATEPROCESS:
       arg = Create_Process(
           sender,
           (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
-          break;
+      break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
       break;
@@ -118,7 +134,8 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   of 2. This service terminates the sender process if arg is NULL. Otherwise,
   arg should be a pcb_t pointer
   */
-  /*if (target == NULL) {                               //sistemerà vitto per ora provo a sistemarlo io
+  /*if (target == NULL) {                               //sistemerà vitto per
+  ora provo a sistemarlo io
     // terminate sender process but not the progeny!
     removeChild(sender->p_parent);
     outChild(sender);
@@ -134,10 +151,10 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
       // delete target???
     }
   }*/
-  if(target == NULL){
+  if (target == NULL) {
     outChild(sender);
     removeProcQ(&sender->p_list);
-  }else{
+  } else {
     kill_progeny(sender);
   }
 }
@@ -263,7 +280,7 @@ void kill_progeny(pcb_t *sender) {
     removeProcQ(&(sender->p_list));
     freePcb(sender);
   } else {
-    //check sib
+    // check sib
     if (headProcQ(&sender->p_sib) != NULL) {
       struct list_head *iter;
       list_for_each(iter, &sender->p_sib) {
