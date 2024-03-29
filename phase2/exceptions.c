@@ -154,31 +154,24 @@ void SYSCALLExceptionHandler() {
         cpu_t new_time;
         cpu_t current_time_process = STCK(new_time);
 
+        soft_block_count++;
+        // no need to remove from ready_queue_list -> already done in Scheduler
+        insertProcQ(&msg_queue_list, current_process);
         //wait for msg
-        while (msg == NULL) { 
-          if(msg == NULL){
-            msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
-          }
-
-          soft_block_count++;
-          // no need to remove from ready_queue_list -> already done in
-          // Scheduler
-          insertProcQ(&msg_queue_list, current_process);
-          /*The saved processor state (located at the start of the BIOS Data
-          Page [Section 3]) must be copied into the Current Process’s PCB
-          (p_s)*/
-          copyState(exception_state, &current_process->p_s);
-          // 2nd Update the accumulated CPU time for the Current Process
-          LDIT(current_time_process);
-          // 3rd call the scheduler
-          Scheduler();
-
-          //saving time not re-checking while cond
-          if (msg != NULL){
+        while(msg ==NULL){
+          msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
+          if(msg != NULL)
             break;
-          }
-          
         }
+
+        /*The saved processor state (located at the start of the BIOS Data
+        Page [Section 3]) must be copied into the Current Process’s PCB
+        (p_s)*/
+        copyState(exception_state, &current_process->p_s);
+        // 2nd Update the accumulated CPU time for the Current Process
+        LDIT(current_time_process);
+        // 3rd call the scheduler
+        Scheduler();       
 
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
