@@ -17,8 +17,6 @@ struct list_head msg_queue_list;
 
 // pcb waiting for clock tick
 struct list_head pseudoClockList;
-// SSI id (the only process to have pid = 0)
-#define SSIPID 0
 // SSI process
 pcb_PTR ssi_pcb;
 
