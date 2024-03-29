@@ -55,7 +55,9 @@ void initPcbs() {
         // Initialize the PCB array
         initPcb(&pcbTable[i]);
         list_add(&pcbTable[i].p_list, &pcbFree_h);
-    }  
+    }
+
+    next_pid = 1;
 }
 
 int isFree(int p_pid){
