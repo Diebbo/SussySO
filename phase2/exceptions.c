@@ -147,39 +147,38 @@ void SYSCALLExceptionHandler() {
          * 1. messaggio gia' in inbox -> restituire il messaggio
          * 2. messaggio non presente -> bloccare il processo
          * */
-        unsigned int sender_pid = a1_reg;
-        msg = allocMsg();
-        msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
-        //saving TOD to not have more time passed caused blocking receive
-        cpu_t new_time;
-        cpu_t current_time_process = STCK(new_time);
-
-        soft_block_count++;
-        // no need to remove from ready_queue_list -> already done in Scheduler
-        insertProcQ(&msg_queue_list, current_process);
-        //wait for msg
-        while(msg ==NULL){
-          msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
-          if(msg != NULL)
-            break;
+        unsigned int sender_pid = a1_reg; // the desired sender pid
+        if (sender_pid == ANYMESSAGE){//if sender is anymessage I get the first message in the inbox
+          msg = popMessage(&current_process->msg_inbox, NULL);
         }
-
+        else{//otherwise I get the message from the desired sender
+          msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
+        }
+        
+        if (msg == NULL){
+          //there is no correct message in the inbox, I have to be frozen.
+          insertProcQ(&msg_queue_list, current_process);
+          soft_block_count++;
+          //le specifiche tecnicamente dicono di fare solo questo, la mia logica 
+          //è che non modificando il p_s quando il processo verrà risvegliato
+          //(ovvero all'arrivo di un messaggio) rifarà questo processo finchè non 
+          //gli arriverà quello che sta aspettando.
+          return;//così facendo dovrei cedere di nuovo il controllo allo scheduler
+        } 
         /*The saved processor state (located at the start of the BIOS Data
         Page [Section 3]) must be copied into the Current Process’s PCB
         (p_s)*/
-        copyState(exception_state, &current_process->p_s);
-        // 2nd Update the accumulated CPU time for the Current Process
-        LDIT(current_time_process);
-        // 3rd call the scheduler
-        Scheduler();       
+            
 
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
-
         current_process->p_s.reg_a0 = msg->m_sender->p_pid;
+
+        //write the message's payload in the location signaled in the a2 register.
         int *payload = (int *)a2_reg;
-        *payload = (int)msg->m_payload;
+        if (payload != NULL)
+          *payload = (int)msg->m_payload;
 
         break;
       default:
