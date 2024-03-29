@@ -7,16 +7,16 @@
 #include <uriscv/liburiscv.h>
 
 /*
-passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
-e io ti restituisco 1 se il bit e' 1, 0 altrimenti
+gimmie an unsigned int and an integer representing the bit you want to check (0-indexed)
+and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
 */
 int bitChecker(unsigned int n, int bit) {
 	return (n>>bit)%2;
 }
 
 /*
-passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
-e io ti restituisco 1 se il bit e' 1, 0 altrimenti
+gimmie an unsigned int and an integer representing the bit you want to check (0-indexed)
+and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
 */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
@@ -56,7 +56,7 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
-  int kernel_mode = !BIT_CHECKER(kernel_user_state, 3);
+  int kernel_mode = !BIT_CHECKER(kernel_user_state, 3);//se il bit e' a zero allora sono in kernel mode
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
