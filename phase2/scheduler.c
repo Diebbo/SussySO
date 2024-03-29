@@ -19,9 +19,11 @@ void Scheduler() {
 
       if (process_count > 1 && soft_block_count > 0) {
         // enable interrupts
-        setSTATUS(IECON | IMON);
+        setSTATUS((IECON | IMON) & !TEBITON); // !TEBITON serve per annullare il PLT
+                                              // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         // wait for an interrupt
         WAIT();
+        setSTATUS(TEBITON);
       } else { // process count > 0 soft block count = 0
         PANIC();
       }
