@@ -7,7 +7,7 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 #include "interrupts.h"
 
 void TLBExceptionHandler(void);
-void SYSCALLExceptionHandler(void);
+void SYSCALLExceptionHandler(unsigned);
 
 #endif
 

@@ -17,6 +17,7 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
+  unsigned int operation_start_timer = getTIMER();
   unsigned int exception_error = getCAUSE();
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
@@ -25,7 +26,7 @@ void exceptionHandler() {
   if (exception_error >= 24 && exception_error <= 28)
     TLBExceptionHandler();
   else if (exception_error >= 8 && exception_error <= 11)
-    SYSCALLExceptionHandler();
+    SYSCALLExceptionHandler(operation_start_timer);
   else if ((exception_error >= 0 && exception_error <= 7) ||
            (exception_error >= 12 && exception_error <= 23))
     TrapExceptionHandler();
@@ -33,7 +34,7 @@ void exceptionHandler() {
     interruptHandler();
 }
 
-void SYSCALLExceptionHandler() {
+void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // finding if in user or kernel mode
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // the 1st bit of the status register is the 'user mode' bit
@@ -156,7 +157,7 @@ void SYSCALLExceptionHandler() {
           current_process->p_s.pc_epc = exception_state->pc_epc;
           current_process->p_s.status = exception_state->status;
           // 2nd Update the accumulated CPU time for the Current Process
-          // LDIT(getTIMER() - exception_state->); //TODO : sez 10
+          LDIT(getTIMER() - operation_start_timer);
           // 3rd call the scheduler
           Scheduler();
         }
