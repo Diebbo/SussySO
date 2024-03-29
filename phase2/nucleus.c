@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
 void initKernel() {
   // block interrupts
-  setSTATUS(ALLOFF);
+  //setSTATUS(ALLOFF);
 
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
@@ -114,7 +114,7 @@ void initKernel() {
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
   process_count++;
-  setSTATUS(IMON | IEPON | IECON);
+  // setSTATUS(IMON | IEPON | IECON);
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
