@@ -10,7 +10,7 @@
 passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
 e io ti restituisco 1 se il bit e' 1, 0 altrimenti
 */
-int bit_checker(unsigned int n, int bit) {
+int bitChecker(unsigned int n, int bit) {
 	return (n>>bit)%2;
 }
 
