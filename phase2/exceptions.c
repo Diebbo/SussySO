@@ -6,6 +6,20 @@
 #include <uriscv/const.h>
 #include <uriscv/liburiscv.h>
 
+/*
+passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
+e io ti restituisco 1 se il bit e' 1, 0 altrimenti
+*/
+int bit_checker(unsigned int n, int bit) {
+	unsigned int maschera = 1;
+	for (int i = 0; i < bit; i++){
+		maschera = maschera*2;
+	}
+	return ((n & maschera) != 0);
+}
+
+
+
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
   setENTRYLO(0x00000000);
@@ -17,7 +31,7 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  unsigned int operation_start_timer = getTIMER();
+  unsigned int operation_start_timer = getTIMER();//get timer serve a ?
   unsigned int exception_error = getCAUSE();
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
@@ -40,7 +54,8 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // the 1st bit of the status register is the 'user mode' bit
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
-  memaddr kernel_user_state = getSTATUS() >> 3;
+  memaddr kernel_user_state = getSTATUS();
+  int kernel_mode = bit_checker(kernel_user_state, 3);
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
@@ -49,7 +64,7 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   msg_t *msg;
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
-    if (kernel_user_state == 0) {
+    if (!kernel_mode) {
       switch (a0_reg) {
       case SENDMESSAGE:
         /*This system call cause the transmission of a message to a specified
