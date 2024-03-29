@@ -148,7 +148,7 @@ void SYSCALLExceptionHandler() {
          * 2. messaggio non presente -> bloccare il processo
          * */
         unsigned int sender_pid = a1_reg;
-
+        msg = allocMsg();
         msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
         //saving TOD to not have more time passed caused blocking receive
         cpu_t new_time;
@@ -167,10 +167,8 @@ void SYSCALLExceptionHandler() {
           /*The saved processor state (located at the start of the BIOS Data
           Page [Section 3]) must be copied into the Current Process’s PCB
           (p_s)*/
-
-          copyState(&current_process->p_s,exception_state);
+          copyState(exception_state, &current_process->p_s);
           // 2nd Update the accumulated CPU time for the Current Process
-
           LDIT(current_time_process);
           // 3rd call the scheduler
           Scheduler();
