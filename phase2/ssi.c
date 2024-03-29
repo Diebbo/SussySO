@@ -254,6 +254,7 @@ void killProgeny(pcb_t *sender) {
   } else if (isInList(&msg_queue_list, sender->p_pid)) {
     outProcQ(&msg_queue_list, sender);
   } else {
+    /*check if is blocked for device response*/
     for (int i = 0; i < SEMDEVLEN - 1; i++) {
       if (isInList(&blockedPCBs[i], sender->p_pid)) {
         outProcQ(&blockedPCBs[i], sender);
