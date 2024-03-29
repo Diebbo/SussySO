@@ -10,14 +10,15 @@
 passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
 e io ti restituisco 1 se il bit e' 1, 0 altrimenti
 */
-int bit_checker(unsigned int n, int bit) {
-	unsigned int maschera = 1;
-	for (int i = 0; i < bit; i++){
-		maschera = maschera*2;
-	}
-	return ((n & maschera) != 0);
+int bitChecker(unsigned int n, int bit) {
+	return (n>>bit)%2;
 }
 
+/*
+passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
+e io ti restituisco 1 se il bit e' 1, 0 altrimenti
+*/
+#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
 
 void uTLB_RefillHandler() {
@@ -55,7 +56,7 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
-  int kernel_mode = bit_checker(kernel_user_state, 3);
+  int kernel_mode = BIT_CHECKER(kernel_user_state, 3);
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
@@ -64,7 +65,7 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   msg_t *msg;
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
-    if (!kernel_mode) {
+    if (kernel_mode) {
       switch (a0_reg) {
       case SENDMESSAGE:
         /*This system call cause the transmission of a message to a specified
