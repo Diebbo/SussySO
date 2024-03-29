@@ -1,18 +1,15 @@
 #include "./headers/exceptions.h"
 /*
-gimmie an unsigned int and an integer representing the bit you want to check (0-indexed)
-and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
+gimmie an unsigned int and an integer representing the bit you want to check
+(0-indexed) and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
 */
-int bitChecker(unsigned int n, int bit) {
-	return (n>>bit)%2;
-}
+int bitChecker(unsigned int n, int bit) { return (n >> bit) % 2; }
 
 /*
-gimmie an unsigned int and an integer representing the bit you want to check (0-indexed)
-and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
+gimmie an unsigned int and an integer representing the bit you want to check
+(0-indexed) and i'll return 1 if the bit is 1, 0 otherwise (Alex anglofono)
 */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
-
 
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
@@ -21,11 +18,9 @@ void uTLB_RefillHandler() {
   LDST((state_t *)0x0FFFF000);
 }
 
-
-
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  unsigned int operation_start_timer = getTIMER();//get timer serve a ?
+  unsigned int operation_start_timer = getTIMER(); // get timer serve a ?
   unsigned int exception_error = getCAUSE();
   // performing a bitwise right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
@@ -49,7 +44,8 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
-  int kernel_mode = !BIT_CHECKER(kernel_user_state, 3);//se il bit e' a zero allora sono in kernel mode
+  int kernel_mode = !BIT_CHECKER(
+      kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
 
   int a0_reg = current_process->p_s.reg_a0, /* syscall number */
       a1_reg = current_process->p_s.reg_a1, /* dest process */
@@ -153,7 +149,8 @@ void SYSCALLExceptionHandler(unsigned int operation_start_timer) {
 
         if (msg == NULL) { // i'll wait
           soft_block_count++;
-          // no need to remove from ready_queue_list -> already done in Scheduler
+          // no need to remove from ready_queue_list -> already done in
+          // Scheduler
           insertProcQ(&msg_queue_list, current_process);
           /*The saved processor state (located at the start of the BIOS Data
           Page [Section 3]) must be copied into the Current Process’s PCB
@@ -220,7 +217,7 @@ void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
 void passUpOrDie(pcb_t *p, unsigned type) {
   if (p->p_supportStruct == NULL) {
     // then the process and the progeny of the process must be terminated
-    Terminate_Process(p, p);
+    killProgeny(p);
     return;
   }
 

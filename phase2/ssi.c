@@ -125,23 +125,6 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   of 2. This service terminates the sender process if arg is NULL. Otherwise,
   arg should be a pcb_t pointer
   */
-  /*if (target == NULL) {                               //sistemerà vitto per
-  ora provo a sistemarlo io
-    // terminate sender process but not the progeny!
-    removeChild(sender->p_parent);
-    outChild(sender);
-    outProcQ(sender->p_list, sender);
-    // delete sender???
-  } else {
-    list_for_each_entry(target, &target->p_child, p_child) {
-      Terminate_Process(target,
-                        container_of(target->p_child.next, pcb_t, p_child));
-      removeChild(target->p_parent); // TODO: check if it's correct, serve che
-      outChild(target);
-      outProcQ(target->p_list, target);
-      // delete target???
-    }
-  }*/
   if (target == NULL) {
     killProgeny(sender);
   } else {
@@ -271,9 +254,22 @@ void killProgeny(pcb_t *sender) {
     }
   }
 
+  if (isInList(&ready_queue_list, sender->p_pid)) {
+    outProcQ(&ready_queue_list, sender);
+  } else if (isInList(&msg_queue_list, sender->p_pid)) {
+    outProcQ(&msg_queue_list, sender);
+  } else {
+    for (int i = 0; i < SEMDEVLEN - 1; i++) {
+      if (isInList(&blockedPCBs[i], sender->p_pid)) {
+        outProcQ(&blockedPCBs[i], sender);
+        soft_block_count--;
+        break;
+      }
+    }
+  }
+
   // kill process
   outChild(sender);
-  outProcQ(&sender->p_list, sender);
   freePcb(sender);
   process_count--;
 }
