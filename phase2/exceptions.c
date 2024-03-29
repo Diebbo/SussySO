@@ -14,6 +14,11 @@ int bit_checker(unsigned int n, int bit) {
 	return (n>>bit)%2;
 }
 
+/*
+passami un unsigned int e un intero rappresentante il bit che vuoi controllare (0-indexed)
+e io ti restituisco 1 se il bit e' 1, 0 altrimenti
+*/
+#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
 
 void uTLB_RefillHandler() {
