@@ -11,11 +11,7 @@ passami un unsigned int e un intero rappresentante il bit che vuoi controllare (
 e io ti restituisco 1 se il bit e' 1, 0 altrimenti
 */
 int bit_checker(unsigned int n, int bit) {
-	unsigned int maschera = 1;
-	for (int i = 0; i < bit; i++){
-		maschera = maschera*2;
-	}
-	return ((n & maschera) != 0);
+	return (n>>bit)%2;
 }
 
 
