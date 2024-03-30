@@ -111,7 +111,6 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     new_prole->p_supportStruct =
         arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
-    new_prole->p_pid = generatePid();
     process_count++;
     insertProcQ(&ready_queue_list, new_prole);
     insertChild(sender, new_prole);

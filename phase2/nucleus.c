@@ -109,7 +109,6 @@ void initKernel() {
   second_process->p_s.pc_epc = (memaddr)test; 
   second_process->p_s.status = IMON | IEPON;// | IECON | ALLOFF;
 
-  second_process->p_pid = generatePid();
   process_count++;
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
@@ -124,13 +123,6 @@ pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
       return tmp;
   }
   return NULL;
-}
-
-int generatePid(){
-  if(pid_counter_tracer == (SEMDEVLEN - 1)){
-    pid_counter_tracer = 0;
-  }
-  return ++pid_counter_tracer;
 }
 
 void copyState(state_t *source, state_t *dest) {

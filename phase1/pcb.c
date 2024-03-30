@@ -1,9 +1,11 @@
 #include "./headers/pcb.h"
+#include <climits>
 #include <uriscv/liburiscv.h>
 #include <uriscv/types.h>
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
+int next_pid = 1; /* Next PID to be assigned */
 
 int isInList(struct list_head *target_process, int pid) {
   pcb_PTR tmp;
@@ -34,6 +36,8 @@ void initPcb(pcb_PTR p){
     p->p_s.status = 0;
     p->p_s.pc_epc = 0;
     p->p_s.mie = 0;
+
+    p->p_pid = 1;
 }
 
 void initPcbs() {
@@ -74,6 +78,9 @@ pcb_t *allocPcb() {
 
     // Initialize the PCB fields
     initPcb(p);
+
+    // Assign the next PID to the PCB
+    p->p_pid = next_pid++;
 
     return p;
 }
