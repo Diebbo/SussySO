@@ -92,9 +92,8 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     return (pcb_PTR)NOPROC;
   else {
     // initialization of new prole
-    copyState(&new_prole->p_s, arg->state);
-    new_prole->p_supportStruct =
-        arg->support; // even if optional -> will be null
+    copyState( arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
+    new_prole->p_supportStruct = arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
     process_count++;
     insertProcQ(&ready_queue_list, new_prole);
