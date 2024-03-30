@@ -222,8 +222,8 @@ int Get_Process_ID(pcb_t *sender, int arg) {
 }
 
 void killProgeny(pcb_t *sender) {
-  // check if process has children
-  if (sender == NULL || isFree(sender->p_pid)) {
+  // check if process exists and is not ssi
+  if (sender == NULL || sender->p_pid == SSI_PID || isFree(sender->p_pid)) {
     return;
   }
 

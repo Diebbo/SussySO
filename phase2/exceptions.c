@@ -1,13 +1,14 @@
 #include "./headers/exceptions.h"
+#include "headers/nucleus.h"
 /*
 given an unsigned int and an integer representing the bit you want to check
-(0-indexed) and return 1 if the bit is 1, 0 otherwise 
+(0-indexed) and return 1 if the bit is 1, 0 otherwise
 */
 int bitChecker(unsigned int n, int bit) { return (n >> bit) % 2; }
 
 /*
 given an unsigned int and an integer representing the bit you want to check
-(0-indexed) and return 1 if the bit is 1, 0 otherwise 
+(0-indexed) and return 1 if the bit is 1, 0 otherwise
 */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
@@ -43,23 +44,23 @@ void SYSCALLExceptionHandler() {
   // but i need to shift to the KUp(revious) bit (3rd bit)
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
-  int kernel_mode = BIT_CHECKER(kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
-  //transcribing kernel_mode in boolan style to understand better
-  if (kernel_mode){
-    //not active
+  int kernel_mode = BIT_CHECKER(
+      kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
+  // transcribing kernel_mode in boolan style to understand better
+  if (kernel_mode) {
+    // not active
     kernel_mode = FALSE;
-  }
-  else{
-    //active
+  } else {
+    // active
     kernel_mode = TRUE;
   }
 
   /* syscall number */
   int a0_reg = exception_state->reg_a0;
   /* dest process */
-  int a1_reg = exception_state->reg_a1; 
+  int a1_reg = exception_state->reg_a1;
   /* payload */
-  int a2_reg = exception_state->reg_a2; 
+  int a2_reg = exception_state->reg_a2;
   msg_t *msg;
 
   if (a0_reg >= -2 && a0_reg <= -1) {
@@ -154,19 +155,23 @@ void SYSCALLExceptionHandler() {
          * 2. messaggio non presente -> bloccare il processo
          * */
         unsigned int sender_pid = a1_reg; // the desired sender pid
-        if (sender_pid == ANYMESSAGE){//if sender is anymessage I get the first message in the inbox
+        if (sender_pid == ANYMESSAGE) {   // if sender is anymessage I get the
+                                          // first message in the inbox
           msg = popMessage(&current_process->msg_inbox, NULL);
-        }
-        else{//otherwise I get the message from the desired sender
+        } else { // otherwise I get the message from the desired sender
           msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
         }
-        
-        if (msg == NULL){
-          //there is no correct message in the inbox, need to be frozen.
+
+        if (msg == NULL) {
+          // there is no correct message in the inbox, need to be frozen.
           insertProcQ(&msg_queue_list, current_process);
           soft_block_count++;
-          break;
-        } 
+          
+            // TODO: update CPU
+
+            Scheduler();
+            return;
+        }
 
         /*The saved processor state (located at the start of the BIOS Data
         Page [Section 3]) must be copied into the Current Process’s PCB
@@ -176,7 +181,8 @@ void SYSCALLExceptionHandler() {
         +payload in stored in a2*/
         current_process->p_s.reg_a0 = msg->m_sender->p_pid;
 
-        //write the message's payload in the location signaled in the a2 register.
+        // write the message's payload in the location signaled in the a2
+        // register.
         int *payload = (int *)a2_reg;
         if (payload != NULL)
           *payload = (int)msg->m_payload;
@@ -207,7 +213,8 @@ void SYSCALLExceptionHandler() {
 
       // Process is in user mode, simulate Program Trap exception
       // Set Cause.ExcCode to RI (Reserved Instruction)
-      exception_state->cause = PRIVINSTR; // Reserved Instruction Exception, exc code = 10
+      exception_state->cause =
+          PRIVINSTR; // Reserved Instruction Exception, exc code = 10
       TrapExceptionHandler();
     }
   } else {
