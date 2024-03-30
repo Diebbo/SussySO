@@ -6,6 +6,7 @@
         "stdlib.h": "c",
         "listx.h": "c",
         "liburiscv.h": "c",
-        "nucleus.h": "c"
+        "nucleus.h": "c",
+        "executor": "c"
     }
 }
