@@ -187,7 +187,7 @@ void SYSCALLExceptionHandler() {
       // Increment PC by 4 to avoid an infinite loop of SYSCALLs +//load back
       // updated interrupted state
       exception_state->pc_epc += WORDLEN;
-      LDST(&exception_state);
+      LDST(exception_state);
     } else {
       /*The above two Nucleus services are considered privileged services and
         are only available to processes executing in kernel-mode. Any attempt to
