@@ -19,7 +19,10 @@ void Scheduler() {
 
       if (process_count > 1 && soft_block_count > 0) {
         // enable interrupts
-        setSTATUS((IECON | IMON) & !TEBITON); // !TEBITON serve per annullare il PLT
+        unsigned int status = getSTATUS();
+        status = status | IECON | IMON;
+        status = status & TEBITOFF;
+        setSTATUS(status); // !TEBITON serve per annullare il PLT -> TEBITOFF
                                               // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         // wait for an interrupt
         WAIT();

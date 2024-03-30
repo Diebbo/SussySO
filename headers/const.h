@@ -66,6 +66,7 @@
 #define IECON       0x00000001
 #define IMON        0x0000FF00
 #define TEBITON     0x08000000
+#define TEBITOFF    0xF7FFFFFF
 #define DISABLEINTS 0xFFFFFFFE
 
 #define IL_TIMER 3

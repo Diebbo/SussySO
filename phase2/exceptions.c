@@ -167,7 +167,7 @@ void SYSCALLExceptionHandler() {
           insertProcQ(&msg_queue_list, current_process);
           soft_block_count++;
           
-            // TODO: update CPU
+            // TODO: update CPU time
 
             Scheduler();
             return;
@@ -215,10 +215,7 @@ void SYSCALLExceptionHandler() {
       // Set Cause.ExcCode to RI (Reserved Instruction)
       exception_state->cause =
           PRIVINSTR; // Reserved Instruction Exception, exc code = 10
-      TrapExceptionHandler();
     }
-  } else {
-    TrapExceptionHandler();
   }
 }
 
