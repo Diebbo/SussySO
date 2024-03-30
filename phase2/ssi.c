@@ -5,9 +5,8 @@ void SSI_function_entry_point() {
     // receive request (asked from ssi proc; payload is temporaly not important)
     pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
-    // find msg payload
-    msg_PTR process_request_msg =
-        popMessageByPid(&ssi_pcb->msg_inbox, process_request_ptr->p_pid);
+    // find msg payload in modo sensato magari
+    msg_PTR process_request_msg = popMessage(&ssi_pcb->msg_inbox, process_request_ptr);
 
 
     ssi_payload_PTR process_request_payload = (ssi_payload_PTR) process_request_msg->m_payload;
