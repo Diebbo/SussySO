@@ -61,7 +61,7 @@ void SYSCALLExceptionHandler() {
   /* payload */
   int a2_reg = current_process->p_s.reg_a2; 
   msg_t *msg;
-  
+
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
     if (kernel_mode) {
@@ -162,20 +162,15 @@ void SYSCALLExceptionHandler() {
         }
         
         if (msg == NULL){
-          //there is no correct message in the inbox, I have to be frozen.
+          //there is no correct message in the inbox, need to be frozen.
           insertProcQ(&msg_queue_list, current_process);
           soft_block_count++;
-          //le specifiche tecnicamente dicono di fare solo questo, la mia logica 
-          //è che non modificando il p_s quando il processo verrà risvegliato
-          //(ovvero all'arrivo di un messaggio) rifarà questo processo finchè non 
-          //gli arriverà quello che sta aspettando.
-          return;//così facendo dovrei cedere di nuovo il controllo allo scheduler
+          break;
         } 
+
         /*The saved processor state (located at the start of the BIOS Data
         Page [Section 3]) must be copied into the Current Process’s PCB
         (p_s)*/
-            
-
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
@@ -212,8 +207,7 @@ void SYSCALLExceptionHandler() {
 
       // Process is in user mode, simulate Program Trap exception
       // Set Cause.ExcCode to RI (Reserved Instruction)
-      exception_state->cause =
-          PRIVINSTR; // Reserved Instruction Exception, exc code = 10
+      exception_state->cause = PRIVINSTR; // Reserved Instruction Exception, exc code = 10
       TrapExceptionHandler();
     }
   } else {
@@ -222,6 +216,8 @@ void SYSCALLExceptionHandler() {
 }
 
 void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
+
+void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
 
 void passUpOrDie(pcb_t *p, unsigned type) {
   if (p->p_supportStruct == NULL) {
@@ -244,5 +240,3 @@ void passUpOrDie(pcb_t *p, unsigned type) {
         p->p_supportStruct->sup_exceptContext[type].status,
         p->p_supportStruct->sup_exceptContext[type].pc);
 }
-
-void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
