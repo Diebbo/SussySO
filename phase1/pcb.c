@@ -1,7 +1,4 @@
 #include "./headers/pcb.h"
-#include <climits>
-#include <uriscv/liburiscv.h>
-#include <uriscv/types.h>
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
