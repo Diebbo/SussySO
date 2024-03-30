@@ -42,11 +42,9 @@ no parent, return NULL; otherwise, return p.*/
 pcb_t *outChild(pcb_t *p);
 //this function serves to find if a crocess is in a specific list based on his pid
 int isInList(struct list_head *target_process, int pid);
-//initialize the pcb
+//initialize the single pcb
 void initPcb(pcb_PTR pcb);
 // return TRUE if the pcb is in free list
 int isFree(int);
-/*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
-void copyState(state_t *source, state_t *dest);
 
 #endif

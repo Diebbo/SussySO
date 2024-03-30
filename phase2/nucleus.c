@@ -10,15 +10,15 @@ int soft_block_count;
 // tail pointer to the ready state queue processes
 struct list_head ready_queue_list;
 pcb_t *current_process;
-struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
-
+struct list_head blockedPCBs[SEMDEVLEN - 1]; 
 // waiting for a message
 struct list_head msg_queue_list;
-
 // pcb waiting for clock tick
 struct list_head pseudoClockList;
 // SSI process
 pcb_PTR ssi_pcb;
+//pid counter
+int pid_counter_tracer;
 
 int main(int argc, char *argv[])
 {
@@ -48,6 +48,7 @@ void initKernel() {
   initMsgs();
 
   // Initialize other variables
+  pid_counter_tracer = 0;
   soft_block_count = 0;
   process_count = 0;
 
@@ -108,10 +109,11 @@ void initKernel() {
   second_process->p_s.pc_epc = (memaddr)test; 
   second_process->p_s.status = IMON | IEPON;// | IECON | ALLOFF;
 
+  second_process->p_pid = generatePid();
+  process_count++;
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
 
-  process_count++;
   // setSTATUS(IMON | IEPON | IECON);
 }
 
@@ -124,3 +126,17 @@ pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
   return NULL;
 }
 
+int generatePid(){
+  if(pid_counter_tracer == (SEMDEVLEN - 1)){
+    pid_counter_tracer = 0;
+  }
+  return ++pid_counter_tracer;
+}
+
+void copyState(state_t *source, state_t *dest) {
+    dest->entry_hi = source->entry_hi;
+    dest->cause = source->cause;
+    dest->status = source->status;
+    dest->pc_epc = source->pc_epc;
+    dest->mie = source->mie;
+}

@@ -29,17 +29,17 @@ extern int soft_block_count;
 // tail pointer to the ready state queue processes
 extern struct list_head ready_queue_list;
 extern pcb_t *current_process;
-extern struct list_head blockedPCBs[SEMDEVLEN - 1]; // size (siam sicuri ..-1 ?)
-
+extern struct list_head blockedPCBs[SEMDEVLEN - 1]; 
 // waiting for a message
 extern struct list_head msg_queue_list;
-
 // pcb waiting for clock tick
 extern struct list_head pseudoClockList;
 // SSI id (the only process to have pid = 0)
 #define SSIPID 0
 // SSI process
 extern pcb_PTR ssi_pcb;
+//pid counter
+extern int pid_counter_tracer;
 
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
@@ -51,9 +51,12 @@ void TrapExceptionHandler(void);
 void Scheduler(void);
 void SSI_function_entry_point(void);
 void passUpOrDie(pcb_t *process, unsigned value);
-// Return pcb_ptr of a process given the list where it is and his pid, NULL if
-// not found
+// Return pcb_ptr of a process given the list where it is and his pid, NULL if not found
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
+/*function that generate pid for process*/
+int generatePid(void);
+/*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
+void copyState(state_t *source, state_t *dest);
 
 // defined in p2test.c
 extern void test(void);

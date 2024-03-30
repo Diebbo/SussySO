@@ -4,7 +4,6 @@
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
-static int next_pid = 0;
 
 int isInList(struct list_head *target_process, int pid) {
   pcb_PTR tmp;
@@ -25,8 +24,6 @@ void initPcb(pcb_PTR p){
     p->p_time = 0;                                                          
     INIT_LIST_HEAD(&p->msg_inbox); 
     p->p_supportStruct = NULL;
-    next_pid %= MAXPROC; // Ensure the next PID is within the range
-    p->p_pid = next_pid == SSI_PID ? ++next_pid : next_pid++; // Assign the PID
 
     // Update p_list for the allocated PCB
     INIT_LIST_HEAD(&p->p_list);                                            
@@ -39,18 +36,9 @@ void initPcb(pcb_PTR p){
     p->p_s.mie = 0;
 }
 
-void copyState(state_t *source, state_t *dest) {
-    dest->entry_hi = source->entry_hi;
-    dest->cause = source->cause;
-    dest->status = source->status;
-    dest->pc_epc = source->pc_epc;
-    dest->mie = source->mie;
-}
-
 void initPcbs() {
     // Initialize the list head for the free 
     // assum to be already initialized
-
 
     for (int i = 0; i < MAXPROC; ++i) {
         // Initialize the PCB array
@@ -58,7 +46,6 @@ void initPcbs() {
         list_add(&pcbTable[i].p_list, &pcbFree_h);
     }
 
-    next_pid = 0;
 }
 
 int isFree(int p_pid){

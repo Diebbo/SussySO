@@ -44,18 +44,24 @@ void SYSCALLExceptionHandler() {
   // 0 = kernel mode, 1 = user mode
   memaddr kernel_user_state = getSTATUS();
   int kernel_mode = BIT_CHECKER(kernel_user_state, 3); // se il bit e' a zero allora sono in kernel mode
+  //transcribing kernel_mode in boolan style to understand better
   if (kernel_mode){
-    kernel_mode = 0;
+    //not active
+    kernel_mode = FALSE;
   }
   else{
-    kernel_mode = 1;
-  }//ora kernelmode = 1 se sono in kernel mode, 0 altrimenti
+    //active
+    kernel_mode = TRUE;
+  }
 
-  int a0_reg = current_process->p_s.reg_a0, /* syscall number */
-      a1_reg = current_process->p_s.reg_a1, /* dest process */
-      a2_reg = current_process->p_s.reg_a2; /* payload */
-
+  /* syscall number */
+  int a0_reg = current_process->p_s.reg_a0;
+  /* dest process */
+  int a1_reg = current_process->p_s.reg_a1; 
+  /* payload */
+  int a2_reg = current_process->p_s.reg_a2; 
   msg_t *msg;
+  
   if (a0_reg >= -2 && a0_reg <= -1) {
     // check if in current process is in kernel mode
     if (kernel_mode) {
