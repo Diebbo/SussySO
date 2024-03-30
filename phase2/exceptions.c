@@ -90,19 +90,19 @@ void SYSCALLExceptionHandler() {
 
         if (dest_process==NULL){
           //probabilmente fai sesso con gli uomini
-          current_process->p_s.reg_a0 = DEST_NOT_EXIST;
+          exception_state->reg_a0 = DEST_NOT_EXIST;
           return;
         }
 
         if (isFree(dest_process_pid)) { // error!
-          current_process->p_s.reg_a0 = DEST_NOT_EXIST;
+          exception_state->reg_a0 = DEST_NOT_EXIST;
           return;
         }
 
         // push message
         msg = allocMsg();
         if (msg == NULL) {
-          current_process->p_s.reg_a0 = MSGNOGOOD;
+          exception_state->reg_a0 = MSGNOGOOD;
           return;
         }
 
@@ -118,7 +118,7 @@ void SYSCALLExceptionHandler() {
         }
 
         pushMessage(&dest_process->msg_inbox, msg);
-        current_process->p_s.reg_a0 = 0;
+        exception_state->reg_a0 = 0;
         /*on success returns/places 0 in the caller’s v0, otherwise
                         MSGNOGOOD is used to provide a meaningful error
           condition on return*/
@@ -173,7 +173,7 @@ void SYSCALLExceptionHandler() {
         /*This system call provides as returning value (placed in caller’s v0 in
         µMPS3) the identifier of the process which sent the message extracted.
         +payload in stored in a2*/
-        current_process->p_s.reg_a0 = msg->m_sender->p_pid;
+        exception_state->reg_a0 = (unsigned)msg->m_sender;
 
         // write the message's payload in the location signaled in the a2
         // register.
