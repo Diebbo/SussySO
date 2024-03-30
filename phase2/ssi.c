@@ -41,9 +41,9 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   // finding if in user or kernel mode
   // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
-  memaddr kernel_user_state = getSTATUS() << 1;
+  memaddr kernel_user_state = getSTATUS() >> 1;
 
-  if (kernel_user_state == 1) {
+  if (kernel_user_state == TRUE) {
     // Must be in kernel mode otherwise trap!
     // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
     Terminate_Process(ssi_pcb, sender);
