@@ -84,8 +84,17 @@ void SYSCALLExceptionHandler() {
           value -1 in a0, the destina- tion process PCB address in a1, the
           payload of the message in a2 and then executing the SYSCALL
           instruction.*/
+        
+        pcb_t *dest_process = a1_reg;
+        int dest_process_pid = a1_reg->p_pid;
 
-        if (isFree(a2_reg)) { // error!
+        if (dest_process==NULL){
+          //probabilmente fai sesso con gli uomini
+          current_process->p_s.reg_a0 = DEST_NOT_EXIST;
+          return;
+        }
+
+        if (isFree(dest_process_pid)) { // error!
           current_process->p_s.reg_a0 = DEST_NOT_EXIST;
           return;
         }
@@ -100,37 +109,14 @@ void SYSCALLExceptionHandler() {
         msg->m_payload = (unsigned)a2_reg;
         msg->m_sender = current_process;
 
-        int dest_process_pid = a1_reg;
-        pcb_t *dest_process = NULL;
-
-        if (dest_process_pid == current_process->p_pid) {
-          dest_process = current_process;
-        }
-
         if (isInList(&msg_queue_list, dest_process_pid) == TRUE) {
-          // process is blocked waiting for a message
-          dest_process = findProcessPtr(&msg_queue_list, dest_process_pid);
+          // process is blocked waiting for a message, i unblock it
           outProcQ(&msg_queue_list, dest_process);
           insertProcQ(&ready_queue_list, dest_process);
           soft_block_count--;
           break;
         }
 
-        // process not found in blockedPCBs, so check ready_queue_list
-        if (dest_process == NULL) {
-          dest_process = findProcessPtr(&ready_queue_list, dest_process_pid);
-        }
-
-        for (int i = 0; dest_process == NULL; i++) { // check blockedPCBs
-          dest_process = findProcessPtr(&blockedPCBs[i], dest_process_pid);
-          if (i >= SEMDEVLEN - 1)
-            break;
-        }
-
-        if (dest_process == NULL) { // not found even in ready queue
-          current_process->p_s.reg_a0 = DEST_NOT_EXIST;
-          return;
-        }
         pushMessage(&dest_process->msg_inbox, msg);
         current_process->p_s.reg_a0 = 0;
         /*on success returns/places 0 in the caller’s v0, otherwise
