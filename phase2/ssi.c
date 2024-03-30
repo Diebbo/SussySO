@@ -1,18 +1,16 @@
 #include "./headers/ssi.h"
 
 void SSI_function_entry_point() {
-  pcb_PTR process_request_ptr;
-  msg_PTR process_request_msg;
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
-    pcb_PTR process_request = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
+    pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
     // find msg payload
-    process_request_msg =
-        popMessageByPid(&process_request_ptr->msg_inbox, process_request->p_pid);
+    msg_PTR process_request_msg =
+        popMessageByPid(&ssi_pcb->msg_inbox, process_request_ptr->p_pid);
 
 
-    ssi_payload_PTR process_request_payload = process_request_msg->m_payload;
+    ssi_payload_PTR process_request_payload = (ssi_payload_PTR) process_request_msg->m_payload;
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_payload->service_code,
                 process_request_payload->arg);

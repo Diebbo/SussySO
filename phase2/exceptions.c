@@ -114,7 +114,6 @@ void SYSCALLExceptionHandler() {
           outProcQ(&msg_queue_list, dest_process);
           insertProcQ(&ready_queue_list, dest_process);
           soft_block_count--;
-          break;
         }
 
         pushMessage(&dest_process->msg_inbox, msg);
