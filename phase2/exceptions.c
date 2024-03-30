@@ -85,8 +85,8 @@ void SYSCALLExceptionHandler() {
           payload of the message in a2 and then executing the SYSCALL
           instruction.*/
         
-        pcb_t *dest_process = a1_reg;
-        int dest_process_pid = a1_reg->p_pid;
+        pcb_t *dest_process = (pcb_PTR)a1_reg;
+        int dest_process_pid = dest_process->p_pid;
 
         if (dest_process==NULL){
           //probabilmente fai sesso con gli uomini
@@ -149,7 +149,7 @@ void SYSCALLExceptionHandler() {
          * 1. messaggio gia' in inbox -> restituire il messaggio
          * 2. messaggio non presente -> bloccare il processo
          * */
-        pcb_t* sender = a1_reg; // the desired sender pid
+        pcb_t* sender = (pcb_PTR)a1_reg; // the desired sender pid
         if (sender == ANYMESSAGE) {   // if sender is anymessage I get the
                                           // first message in the inbox
           msg = popMessage(&current_process->msg_inbox, NULL);
@@ -163,9 +163,9 @@ void SYSCALLExceptionHandler() {
           soft_block_count++;
           
             // TODO: update CPU time
-
-            Scheduler();
-            return;
+          current_process->p_time += deltaTime(); 
+          Scheduler();
+          return;
         }
 
         /*The saved processor state (located at the start of the BIOS Data

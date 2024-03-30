@@ -102,6 +102,7 @@ unsigned int transm_command;
   caller->p_s.reg_a0 = term->recv_status;
   outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
+  STCK(acc_cpu_time);
   LDST(&caller->p_s);
 }
 
@@ -132,7 +133,7 @@ void pseudoClockHandler(pcb_PTR caller) {
   */
   LDIT(PSECOND);
   pcb_PTR pcb;
-  while ((pcb = outProcQ(&blockedPCBs[CLOCKWAIT], caller)) !=
+  while ((pcb = outProcQ(&pseudoClockList, caller)) !=
          NULL) { // non proprio sicuro della correttezza del outProcQ, da
                  // ricontrollare
     insertProcQ(&ready_queue_list, pcb);

@@ -17,6 +17,8 @@ struct list_head msg_queue_list;
 struct list_head pseudoClockList;
 // SSI process
 pcb_PTR ssi_pcb;
+//accumulated CPU time
+cpu_t acc_cpu_time;
 
 int main(int argc, char *argv[])
 {
@@ -128,4 +130,10 @@ void copyState(state_t *source, state_t *dest) {
     dest->status = source->status;
     dest->pc_epc = source->pc_epc;
     dest->mie = source->mie;
+}
+
+cpu_t deltaTime(void) {
+  cpu_t current_time;
+  STCK(current_time);
+  return current_time - acc_cpu_time;
 }

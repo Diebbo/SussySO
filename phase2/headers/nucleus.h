@@ -40,6 +40,9 @@ extern struct list_head pseudoClockList;
 extern pcb_PTR ssi_pcb;
 //pid counter
 extern int pid_counter_tracer;
+//accumulated CPU time
+extern cpu_t acc_cpu_time;
+
 
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
@@ -55,7 +58,7 @@ void passUpOrDie(pcb_t *process, unsigned value);
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 /*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
 void copyState(state_t *source, state_t *dest);
-
+cpu_t deltaTime(void);
 // defined in p2test.c
 extern void test(void);
 int main(int, char **);
