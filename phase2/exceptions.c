@@ -55,11 +55,11 @@ void SYSCALLExceptionHandler() {
   }
 
   /* syscall number */
-  int a0_reg = current_process->p_s.reg_a0;
+  int a0_reg = exception_state->reg_a0;
   /* dest process */
-  int a1_reg = current_process->p_s.reg_a1; 
+  int a1_reg = exception_state->reg_a1; 
   /* payload */
-  int a2_reg = current_process->p_s.reg_a2; 
+  int a2_reg = exception_state->reg_a2; 
   msg_t *msg;
 
   if (a0_reg >= -2 && a0_reg <= -1) {
