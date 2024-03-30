@@ -86,7 +86,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       /*
        * some functions (eg. DOIO & default) don't need to send back a message
        * */
-      SYSCALL(SENDMESSAGE, sender->p_pid, (unsigned)arg, 0);
+      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)arg, 0);
     }
   }
 }
@@ -189,7 +189,7 @@ void Wait_For_Clock(pcb_t *sender) {
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
   // send interrupt
-  SYSCALL(SENDMESSAGE, sender->p_pid, sender->p_s.reg_a2, 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_s.reg_a2, 0);
   // removing from clock list cause tick passed
   removeProcQ(&pseudoClockList);
 }
