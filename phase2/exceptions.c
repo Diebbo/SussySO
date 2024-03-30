@@ -123,7 +123,7 @@ void SYSCALLExceptionHandler() {
 
         for (int i = 0; dest_process == NULL; i++) { // check blockedPCBs
           dest_process = findProcessPtr(&blockedPCBs[i], dest_process_pid);
-          if (i == SEMDEVLEN - 1)
+          if (i >= SEMDEVLEN - 1)
             break;
         }
 
