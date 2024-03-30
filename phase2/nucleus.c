@@ -17,8 +17,6 @@ struct list_head msg_queue_list;
 struct list_head pseudoClockList;
 // SSI process
 pcb_PTR ssi_pcb;
-//pid counter
-int pid_counter_tracer;
 
 int main(int argc, char *argv[])
 {
@@ -48,7 +46,6 @@ void initKernel() {
   initMsgs();
 
   // Initialize other variables
-  pid_counter_tracer = 0;
   soft_block_count = 0;
   process_count = 0;
 
