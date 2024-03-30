@@ -1,5 +1,7 @@
 #include "./headers/ssi.h"
 
+#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
+
 void SSI_function_entry_point() {
   while (TRUE) {
     // receive request (asked from ssi proc; payload is temporaly not important)
@@ -24,9 +26,9 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   // finding if in user or kernel mode
   // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
-  memaddr kernel_user_state = getSTATUS() >> 1;
+  int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
 
-  if (kernel_user_state == TRUE) {
+  if (is_user_mode) {
     // Must be in kernel mode otherwise trap!
     // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
     Terminate_Process(ssi_pcb, sender);
