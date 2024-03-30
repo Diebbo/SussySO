@@ -149,12 +149,12 @@ void SYSCALLExceptionHandler() {
          * 1. messaggio gia' in inbox -> restituire il messaggio
          * 2. messaggio non presente -> bloccare il processo
          * */
-        unsigned int sender_pid = a1_reg; // the desired sender pid
-        if (sender_pid == ANYMESSAGE) {   // if sender is anymessage I get the
+        pcb_t* sender = a1_reg; // the desired sender pid
+        if (sender == ANYMESSAGE) {   // if sender is anymessage I get the
                                           // first message in the inbox
           msg = popMessage(&current_process->msg_inbox, NULL);
         } else { // otherwise I get the message from the desired sender
-          msg = popMessageByPid(&current_process->msg_inbox, sender_pid);
+          msg = popMessage(&current_process->msg_inbox, sender);
         }
 
         if (msg == NULL) {
