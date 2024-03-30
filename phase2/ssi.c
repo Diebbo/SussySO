@@ -4,14 +4,11 @@
 
 void SSI_function_entry_point() {
   while (TRUE) {
-    // receive request (asked from ssi proc; payload is temporaly not important)
-    pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
-
     // find msg payload in modo sensato magari
-    msg_PTR process_request_msg = popMessage(&ssi_pcb->msg_inbox, process_request_ptr);
+    ssi_payload_PTR process_request_payload;
 
+    pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
 
-    ssi_payload_PTR process_request_payload = (ssi_payload_PTR) process_request_msg->m_payload;
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
     SSI_Request(process_request_ptr, process_request_payload->service_code,
                 process_request_payload->arg);

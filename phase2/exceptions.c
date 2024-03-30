@@ -149,7 +149,7 @@ void SYSCALLExceptionHandler() {
          * 2. messaggio non presente -> bloccare il processo
          * */
         pcb_t* sender = (pcb_PTR)a1_reg; // the desired sender pid
-        if (sender == ANYMESSAGE) {   // if sender is anymessage I get the
+        if (a1_reg == ANYMESSAGE) {   // if sender is anymessage I get the
                                           // first message in the inbox
           msg = popMessage(&current_process->msg_inbox, NULL);
         } else { // otherwise I get the message from the desired sender
@@ -176,9 +176,10 @@ void SYSCALLExceptionHandler() {
 
         // write the message's payload in the location signaled in the a2
         // register.
-        int *payload = (int *)a2_reg;
-        if (payload != NULL)
-          *payload = (int)msg->m_payload;
+        if (a2_reg != 0){
+          // has a payload
+          *((unsigned *)a2_reg) = (unsigned)msg->m_payload;
+        }
 
         break;
       }
