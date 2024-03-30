@@ -188,11 +188,6 @@ void SYSCALLExceptionHandler() {
           *payload = (int)msg->m_payload;
 
         break;
-      default:
-        // Process is in kernel mode, simulate Program Trap exception
-        // same behavior
-        TrapExceptionHandler();
-        break;
       }
       // Returning from SYSCALL1 or SYSCALL2 (no blocking)
       // Increment PC by 4 to avoid an infinite loop of SYSCALLs +//load back
