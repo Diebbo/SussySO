@@ -162,7 +162,6 @@ void SYSCALLExceptionHandler() {
           insertProcQ(&msg_queue_list, current_process);
           soft_block_count++;
           
-            // TODO: update CPU time
           current_process->p_time += deltaTime(); 
           Scheduler();
           return;
@@ -187,8 +186,8 @@ void SYSCALLExceptionHandler() {
       // Returning from SYSCALL1 or SYSCALL2 (no blocking)
       // Increment PC by 4 to avoid an infinite loop of SYSCALLs +//load back
       // updated interrupted state
-      current_process->p_s.pc_epc += WORDLEN;
-      LDST(&current_process->p_s);
+      exception_state->pc_epc += WORDLEN;
+      LDST(&exception_state);
     } else {
       /*The above two Nucleus services are considered privileged services and
         are only available to processes executing in kernel-mode. Any attempt to
