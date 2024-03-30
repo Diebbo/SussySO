@@ -103,6 +103,8 @@ void SYSCALLExceptionHandler() {
         int dest_process_pid = a1_reg;
         pcb_t *dest_process = NULL;
 
+        // TODO: controllo che non sia me stesso
+
         if (isInList(&msg_queue_list, dest_process_pid) == TRUE) {
           // process is blocked waiting for a message
           dest_process = findProcessPtr(&msg_queue_list, dest_process_pid);
@@ -115,13 +117,14 @@ void SYSCALLExceptionHandler() {
         // process not found in blockedPCBs, so check ready_queue_list
         if (dest_process == NULL) {
           dest_process = findProcessPtr(&ready_queue_list, dest_process_pid);
-
-          if (dest_process == NULL) { // not found even in ready queue
-            current_process->p_s.reg_a0 = DEST_NOT_EXIST;
-            return;
-          }
         }
 
+        // TODO: controllare che non sia fra i blockedPCBS (NON sbloccarlo!!!)
+
+        if (dest_process == NULL) { // not found even in ready queue
+          current_process->p_s.reg_a0 = DEST_NOT_EXIST;
+          return;
+        }
         pushMessage(&dest_process->msg_inbox, msg);
         current_process->p_s.reg_a0 = 0;
         /*on success returns/places 0 in the caller’s v0, otherwise
