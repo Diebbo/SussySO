@@ -51,6 +51,8 @@
 #define SENDMESSAGE -1
 #define RECEIVEMESSAGE -2
 
+#define NORESPONSE -1
+
 #define CREATEPROCESS 1
 #define TERMPROCESS   2
 #define DOIO          3

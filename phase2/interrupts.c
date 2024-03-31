@@ -79,6 +79,7 @@ void interruptHandlerNonTimer(int IntlineNo) {
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
+  dev_no = 7;
   pcb_PTR caller = outProcQ(&blockedPCBs[dev_no], headProcQ(&blockedPCBs[dev_no]));
 
   // the only device that needs to be acknowledged is the terminal ->

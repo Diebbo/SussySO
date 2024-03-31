@@ -41,7 +41,8 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
-      DoIO(sender, (ssi_do_io_PTR)arg);
+      DoIO(sender, (ssi_do_io_PTR)arg);\
+      syscall_response_arg = (void *)NORESPONSE;
       break;
     case GETTIME:
       syscall_response_arg = (void *)Get_CPU_Time(sender);
@@ -61,7 +62,8 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     }
     // send back resoults - or just need to unblock sender
-    SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)(syscall_response_arg == NULL ? 0 : syscall_response_arg), 0);
+    if((unsigned)syscall_response_arg != NORESPONSE)
+      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)(syscall_response_arg == NULL ? 0 : syscall_response_arg), 0);
     
   }
 }
@@ -131,10 +133,12 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     elaborate the request from the device; • given the device address, the SSI
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
-  unsigned int_line_no = 7; // da specifiche per terminale
-  unsigned device =
-      ((unsigned)arg->commandAddr - 0x10000054 - ((int_line_no - 3) * 0x80)) >>
-      0x10; // formula inversa dell'indirizzamento interrupt
+  // unsigned dev_no = 7; // da specifiche per terminale
+  
+  // unsigned device_line = ((unsigned)arg->commandAddr - 0x10000054 + (dev_no * 0x10)) / 0x80 + 3;
+
+  unsigned device = 7; // da specifiche per terminale
+
   insertProcQ(&blockedPCBs[device], sender);
   
   soft_block_count++;
@@ -150,7 +154,7 @@ cpu_t Get_CPU_Time(pcb_t *sender) {
   /*This service should allow the sender to get back the accumulated processor
   time (in µseconds) used by the sender process. Hence, the Nucleus records (in
   the PCB: p_time) the amount of processor time used by each process*/
-  return sender->p_time + deltaTime() ;
+  return sender->p_time + deltaTime();
 }
 
 void Wait_For_Clock(pcb_t *sender) {

@@ -22,20 +22,28 @@ void uTLB_RefillHandler() {
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
   unsigned int exception_error = getCAUSE();
-  // performing a bitwise right shift operation
+  // performing a bitwis5e right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
+  unsigned is_interrupt = BIT_CHECKER(getSTATUS(), 0);
+
+  if (is_interrupt) {
+    interruptHandler();
+    return;
+  }
+  // else are exceptions
+
 
   /*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
-  if (exception_error >= 24 && exception_error <= 28)
+  if (exception_error >= 24 && exception_error <= 28){
     TLBExceptionHandler();
-  else if (exception_error >= 8 && exception_error <= 11)
+  } else if (exception_error >= 8 && exception_error <= 11){
     SYSCALLExceptionHandler();
-  else if ((exception_error >= 0 && exception_error <= 7) ||
-           (exception_error >= 12 && exception_error <= 23))
+  } else if ((exception_error >= 0 && exception_error <= 7) ||
+           (exception_error >= 12 && exception_error <= 23)) {
     TrapExceptionHandler();
-  else if (exception_error >= 17 && exception_error <= 21)
-    interruptHandler();
+           }
 }
+
 
 void SYSCALLExceptionHandler() {
   // finding if in user or kernel mode
