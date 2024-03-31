@@ -20,6 +20,10 @@
 
 #define SSI_PID 0 /* SSI process id */
 
+#define USERMODE 1
+
+#define MAXINT 0x7FFFFFFF
+
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
 #define RAMBASESIZE   0x10000004

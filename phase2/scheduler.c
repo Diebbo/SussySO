@@ -12,6 +12,10 @@ void Scheduler() {
 
   while (TRUE) {
     // ready_queue_head is a shared resource => disable interrupts
+    if(current_process != NULL){
+      current_process->p_time += deltaTime();
+    }
+
     current_process = removeProcQ(&ready_queue_list);
 
     if (current_process == NULL) {
@@ -19,14 +23,11 @@ void Scheduler() {
 
       if (process_count > 1 && soft_block_count > 0) {
         // enable interrupts
-        unsigned int status = getSTATUS();
-        status = status | IECON | IMON;
-        status = status & TEBITOFF;
-        setSTATUS(status); // !TEBITON serve per annullare il PLT -> TEBITOFF
+            setTIMER(MAXINT);
+            setSTATUS(IECON | IMON);
                                               // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         // wait for an interrupt
         WAIT();
-        setSTATUS(TEBITON);
       } else { // process count > 0 soft block count = 0
         PANIC();
       }

@@ -8,6 +8,10 @@
         "liburiscv.h": "c",
         "nucleus.h": "c",
         "executor": "c",
-        "ssi.h": "c"
+        "ssi.h": "c",
+        "*.inc": "c",
+        "const.h": "c",
+        "interrupts.h": "c",
+        "exceptions.h": "c"
     }
 }
