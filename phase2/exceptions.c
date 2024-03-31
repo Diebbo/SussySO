@@ -21,11 +21,12 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
+  //unsigned int exception_error = CAUSE_GET_EXCCODE(getCAUSE());
   unsigned int exception_error = getCAUSE();
   // performing a bitwis5e right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
   unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 0);
-
+  //is_interrupt_enabled = getSTATUS() & IECON;
   
   // else are exceptions
    if (is_interrupt_enabled) {
