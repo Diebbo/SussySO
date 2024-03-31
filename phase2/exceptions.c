@@ -87,7 +87,6 @@ void SYSCALLExceptionHandler() {
         
 
         if (a1_reg == 0){
-          //probabilmente fai sesso con gli uomini
           exception_state->reg_a0 = DEST_NOT_EXIST;
           return;
         }
