@@ -148,7 +148,7 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
                            // a device
   setCAUSE(PRINTINTERRUPT);
   //exceptionHandler();
-  interruptHandler();
+  interruptHandlerNonTimer(7);
   return NULL;
 }
 
