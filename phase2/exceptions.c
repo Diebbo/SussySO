@@ -26,10 +26,7 @@ void exceptionHandler() {
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
   unsigned is_interrupt = BIT_CHECKER(getSTATUS(), 0);
 
-  if (is_interrupt) {
-    interruptHandler();
-    return;
-  }
+  
   // else are exceptions
 
 
@@ -41,7 +38,10 @@ void exceptionHandler() {
   } else if ((exception_error >= 0 && exception_error <= 7) ||
            (exception_error >= 12 && exception_error <= 23)) {
     TrapExceptionHandler();
-           }
+  }else if (!is_interrupt) {
+    interruptHandler();
+    return;
+  }
 }
 
 
