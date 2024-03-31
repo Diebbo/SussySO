@@ -12,14 +12,14 @@ FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 
 void interruptHandler() {
   pcb_PTR caller = current_process;
-  if (CAUSE_IP_GET(getCAUSE(), 1)) {
+  if (CAUSE_IP_GET(getCAUSE(), 1) != 0) {
     interruptHandlerPLT(caller);
   }
-  if (CAUSE_IP_GET(getCAUSE(), 2)) {
+  if (CAUSE_IP_GET(getCAUSE(), 2) != 0) {
     pseudoClockHandler(caller);
   }
   for (int i = 3; i < 8; i++) {
-    if (CAUSE_IP_GET(getCAUSE(), i)) {
+    if (CAUSE_IP_GET(getCAUSE(), i) != 0) {
       interruptHandlerNonTimer(i);
     }
   }
@@ -117,7 +117,10 @@ void interruptHandlerPLT(pcb_PTR caller) {
     - Call the Scheduler.
   */
   setTIMER(TIMESLICE);
-  STST(&caller->p_s);
+  //STST(&caller->p_s);
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+
+  copyState(exception_state, &caller->p_s);
   insertProcQ(&ready_queue_list, caller);
   Scheduler();
 }

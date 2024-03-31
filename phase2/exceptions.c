@@ -25,7 +25,9 @@ void exceptionHandler() {
   unsigned int exception_error = getCAUSE();
   // performing a bitwis5e right shift operation
   // int exception_error = Cause >> CAUSESHIFT; // GETEXCODE?
-  unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 0);
+  unsigned status = getSTATUS();
+  status = status;
+  unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 2);
   //is_interrupt_enabled = getSTATUS() & IECON;
   
   // else are exceptions

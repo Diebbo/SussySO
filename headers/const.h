@@ -207,7 +207,7 @@
  * that we find "on" / "running" / "of which we get 1 from this function"
 */
 
-//00000000000000000100000000
+//00000000001000000000000000
 #define CAUSE_IP_GET(cause, il_no) ((cause) & (1 << ((il_no) + 8))) // performs a bit shift based on the parameters
 
 

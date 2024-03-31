@@ -25,7 +25,6 @@ void Scheduler() {
         setSTATUS(status); // !TEBITON serve per annullare il PLT -> TEBITOFF
                                               // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         // wait for an interrupt
-        interruptHandler();
         WAIT();
         setSTATUS(TEBITON);
       } else { // process count > 0 soft block count = 0
