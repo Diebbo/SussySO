@@ -31,4 +31,6 @@ int Get_Process_ID(pcb_t *sender, int arg);
 /*This service is called if there is no match with ssi service*/
 void killProgeny(pcb_t *sender);
 
+extern void interruptHandler(void);
+
 #endif
