@@ -20,12 +20,12 @@ void interruptHandler() {
   }
   for (int i = 3; i < 8; i++) {
     if (CAUSE_IP_GET(getCAUSE(), i) == 1) {
-      interruptHandlerNonTimer(caller, i);
+      interruptHandlerNonTimer(i);
     }
   }
 }
 
-void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
+void interruptHandlerNonTimer(int IntlineNo) {
   /*  1. Calculate the address for this device’s device register
       2. Save off the status code from the device’s device register
       3. Acknowledge the outstanding interrupt
@@ -75,12 +75,12 @@ void interruptHandlerNonTimer(pcb_PTR caller, int IntlineNo) {
     break;
   }
   // Interrupt line number da calcolare
-  unsigned *dev_addr_base =
-      (unsigned *)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
+  unsigned dev_addr_base =
+      (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
+  pcb_PTR caller = outProcQ(&blockedPCBs[dev_no], headProcQ(&blockedPCBs[dev_no]));
 
-  // 3. Acknowledge the outstanding interrupt
   // the only device that needs to be acknowledged is the terminal ->
   /*typedef struct termreg {
 unsigned int recv_status;
@@ -93,7 +93,7 @@ unsigned int transm_command;
   // send ack to device & unlock process SYS2 
   msg_t *ack_msg = (msg_t *)allocMsg();
 
-  // ack_msg->m_sender = IL_TERMINAL;
+  // 3. Acknowledge the outstanding interrupt
   ack_msg->m_sender = ssi_pcb;
   ack_msg->m_payload = (unsigned)term->recv_status;
 
@@ -102,8 +102,8 @@ unsigned int transm_command;
   caller->p_s.reg_a0 = term->recv_status;
   outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
-  STCK(acc_cpu_time);
-  LDST(&caller->p_s);
+
+  LDST(&current_process->p_s);
 }
 
 void interruptHandlerPLT(pcb_PTR caller) {

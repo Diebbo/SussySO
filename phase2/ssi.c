@@ -41,7 +41,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       Terminate_Process(sender, (pcb_t *)arg);
       break;
     case DOIO:
-      DoIO(sender, (ssi_payload_t *)arg);
+      DoIO(sender, (ssi_do_io_PTR)arg);
       break;
     case GETTIME:
       syscall_response_arg = (void *)Get_CPU_Time(sender);
@@ -108,7 +108,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
-void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
+void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
     process will wait for a response from the SSI; • the SSI will eventually
@@ -131,16 +131,16 @@ void *DoIO(pcb_t *sender, ssi_payload_t *arg) {
     elaborate the request from the device; • given the device address, the SSI
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
-  ssi_do_io_PTR do_io = arg->arg;
   unsigned int_line_no = 7; // da specifiche per terminale
   unsigned device =
-      (unsigned)(*do_io->commandAddr - 0x10000054 - (int_line_no - 3) * 0x80) >>
+      ((unsigned)arg->commandAddr - 0x10000054 - ((int_line_no - 3) * 0x80)) >>
       0x10; // formula inversa dell'indirizzamento interrupt
-  list_add_tail(&sender->p_list, &blockedPCBs[device]);
+  insertProcQ(&blockedPCBs[device], sender);
+  
   soft_block_count++;
 
-  *do_io->commandAddr =
-      do_io->commandValue; // !IMPORTANT: this rise an interrupt exception from
+  *arg->commandAddr =
+      arg->commandValue; // !IMPORTANT: this rise an interrupt exception from
                            // a device
 
   return NULL;
