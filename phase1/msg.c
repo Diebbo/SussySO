@@ -70,6 +70,7 @@ msg_t *popMessageByPid(struct list_head *head, int pid) {
         msg = container_of(pos, msg_t, m_list);
         if (msg->m_sender->p_pid == pid || pid == ANYMESSAGE) {                                      
             list_del(pos); // Remove the message from the list                              
+            freeMsg(msg); // Free the message
             return msg;
         }
     }

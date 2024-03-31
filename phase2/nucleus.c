@@ -130,6 +130,11 @@ void copyState(state_t *source, state_t *dest) {
     dest->status = source->status;
     dest->pc_epc = source->pc_epc;
     dest->mie = source->mie;
+    for (unsigned i = 0; i < 32; i++)
+    {
+        dest->gpr[i] = source->gpr[i];
+    }
+    
 }
 
 cpu_t deltaTime(void) {

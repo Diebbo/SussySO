@@ -24,6 +24,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
   int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
+  void *syscall_response_arg = NULL;
 
   if (is_user_mode) {
     // Must be in kernel mode otherwise trap!
@@ -32,44 +33,36 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   } else {
     switch (service) {
     case CREATEPROCESS:
-      arg = Create_Process(
+      syscall_response_arg = Create_Process(
           sender,
           (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
-      arg = NULL;
       break;
     case DOIO:
       DoIO(sender, (ssi_payload_t *)arg);
-      arg = NULL;
       break;
     case GETTIME:
-      arg = (void *)Get_CPU_Time(sender);
+      syscall_response_arg = (void *)Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
-      arg = NULL;
       break;
     case GETSUPPORTPTR:
-      arg = Get_Support_Data(sender);
+      syscall_response_arg = Get_Support_Data(sender);
       break;
     case GETPROCESSID:
-      arg = (void *)Get_Process_ID(sender, (int)arg);
+      syscall_response_arg = (void *)Get_Process_ID(sender, (int)arg);
       break;
     default:
       // no match with services so must end process and progeny
       killProgeny(sender);
-      arg = NULL;
       break;
     }
-    // send back resoults
-    if (arg != NULL) {
-      /*
-       * some functions (eg. DOIO & default) don't need to send back a message
-       * */
-      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)arg, 0);
-    }
+    // send back resoults - or just need to unblock sender
+    SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)(syscall_response_arg == NULL ? 0 : syscall_response_arg), 0);
+    
   }
 }
 
@@ -89,7 +82,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     return (pcb_PTR)NOPROC;
   else {
     // initialization of new prole
-    copyState( arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
+    copyState(arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
     new_prole->p_supportStruct = arg->support; // even if optional -> will be null
     new_prole->p_time = 0;
     process_count++;

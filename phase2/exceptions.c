@@ -85,14 +85,15 @@ void SYSCALLExceptionHandler() {
           payload of the message in a2 and then executing the SYSCALL
           instruction.*/
         
-        pcb_t *dest_process = (pcb_PTR)a1_reg;
-        int dest_process_pid = dest_process->p_pid;
 
-        if (dest_process==NULL){
+        if (a1_reg == 0){
           //probabilmente fai sesso con gli uomini
           exception_state->reg_a0 = DEST_NOT_EXIST;
           return;
         }
+
+        pcb_t *dest_process = (pcb_PTR)a1_reg;
+        int dest_process_pid = dest_process->p_pid;
 
         if (isFree(dest_process_pid)) { // error!
           exception_state->reg_a0 = DEST_NOT_EXIST;
@@ -156,12 +157,18 @@ void SYSCALLExceptionHandler() {
           msg = popMessage(&current_process->msg_inbox, sender);
         }
 
+        // there is no correct message in the inbox, need to be frozen.
         if (msg == NULL) {
-          // there is no correct message in the inbox, need to be frozen.
           insertProcQ(&msg_queue_list, current_process);
           soft_block_count++;
+
+          // save the processor state
+          copyState(exception_state, &(current_process->p_s));
           
+          // update the accumulated CPU time for the Current Process
           current_process->p_time += deltaTime(); 
+
+          // get the next process
           Scheduler();
           return;
         }
