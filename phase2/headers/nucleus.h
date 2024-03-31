@@ -48,6 +48,7 @@ extern cpu_t acc_cpu_time;
 /* GLOBAL FUNCTIONS */
 void initKernel(void);
 void uTLB_RefillHandler(void);
+extern void interruptHandler(void);
 
 /* COMMON FUNCTIONS*/
 void exceptionHandler(void);

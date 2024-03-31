@@ -146,9 +146,6 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   *arg->commandAddr =
       arg->commandValue; // !IMPORTANT: this rise an interrupt exception from
                            // a device
-  setCAUSE(PRINTINTERRUPT);
-  //exceptionHandler();
-  interruptHandlerNonTimer(7);
   return NULL;
 }
 

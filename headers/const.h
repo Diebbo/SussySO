@@ -206,6 +206,8 @@
  * As requested by chapter 3.4 exception 0 we call the interrupt of the first device
  * that we find "on" / "running" / "of which we get 1 from this function"
 */
+
+//00000000000000000100000000
 #define CAUSE_IP_GET(cause, il_no) ((cause) & (1 << ((il_no) + 8))) // performs a bit shift based on the parameters
 
 

@@ -12,14 +12,14 @@ FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 
 void interruptHandler() {
   pcb_PTR caller = current_process;
-  if (CAUSE_IP_GET(getCAUSE(), 1) == 1) {
+  if (CAUSE_IP_GET(getCAUSE(), 1)) {
     interruptHandlerPLT(caller);
   }
-  if (CAUSE_IP_GET(getCAUSE(), 2) == 1) {
+  if (CAUSE_IP_GET(getCAUSE(), 2)) {
     pseudoClockHandler(caller);
   }
   for (int i = 3; i < 8; i++) {
-    if (CAUSE_IP_GET(getCAUSE(), i) == 1) {
+    if (CAUSE_IP_GET(getCAUSE(), i)) {
       interruptHandlerNonTimer(i);
     }
   }
