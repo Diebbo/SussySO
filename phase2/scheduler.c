@@ -23,8 +23,8 @@ void Scheduler() {
 
       if (process_count > 1 && soft_block_count > 0) {
         // enable interrupts
-            setTIMER(MAXINT);
-            setSTATUS(IECON | IMON);
+        setTIMER(MAXINT);
+        setSTATUS(IECON | IMON);
                                               // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         // wait for an interrupt
         WAIT();

@@ -141,22 +141,25 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
 
   insertProcQ(&blockedPCBs[device], sender);
 
-  unsigned *recv_command_addr = arg->commandAddr - 2;
-  // eccezione per zona i mem proibita -> termreg_t *term = (termreg_t *)device_adrr;
-
   soft_block_count++;
 
+  unsigned *recv_command_addr = arg->commandAddr - 2;
+  unsigned *recv_command_status = arg->commandAddr - 3;
+  // eccezione per zona i mem proibita -> termreg_t *term = (termreg_t *)device_adrr;
+  while(*recv_command_status != 1) {
+    // wait for ack
+    *recv_command_addr = (unsigned)RECEIVECHAR;
+  }
+
+  
   *arg->commandAddr = arg->commandValue;
  // !this should rise an interrupt exception from a device
 
-  *recv_command_addr = (unsigned)RECEIVECHAR;
-  /*unsigned trasmitted_status = *status & 0x7;
-  char trasmitted_status_char = (char)(*status >> 3 & 0x7);
-  //while(*status != ACK) {
-    // wait for ack
-    trasmitted_status = trasmitted_status;
-    trasmitted_status_char = trasmitted_status_char;*/
-  //}
+  // no interrupt, no problema -> fake it
+  setMIE(ON);
+  setCAUSE(0x80000000 | TERMINTERRUPT);
+  exceptionHandler();
+
   return NULL;
 }
 

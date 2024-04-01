@@ -20,13 +20,12 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  unsigned exception_code = getCAUSE() & 0x7FFFFFFF;
+  unsigned exception_code = getCAUSE() & 0x3FFFFFFF; // 0311 1111 x 32
 
-  unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 31);
+  unsigned is_interrupt_enabled = BIT_CHECKER(getCAUSE(), 31);
 
   // guardare tesi di laurea per la spiegazione di come funziona
 
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
 
   // else are exceptions
   if (is_interrupt_enabled) {
@@ -38,11 +37,13 @@ void exceptionHandler() {
   if (exception_code >= 24 && exception_code <= 28) {
     TLBExceptionHandler();
   } else if (exception_code >= 8 && exception_code <= 11) {
+    state_t *exception_state = (state_t *)BIOSDATAPAGE;
     if (BIT_CHECKER(exception_state->status, 2) == USERMODE) {
       exception_state->cause = PRIVINSTR;
       exceptionHandler();
-    } 
-    SYSCALLExceptionHandler();
+    } else {
+      SYSCALLExceptionHandler();
+    }
   } else if ((exception_code >= 0 && exception_code <= 7) ||
              (exception_code >= 12 && exception_code <= 23)) {
     TrapExceptionHandler();

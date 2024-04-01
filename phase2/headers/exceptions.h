@@ -4,7 +4,6 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 #define EXCEPTIONS_H
 
 
-#include "interrupts.h"
 #include "ssi.h"
 
 void TLBExceptionHandler(void);

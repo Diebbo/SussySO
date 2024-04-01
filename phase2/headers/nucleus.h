@@ -43,14 +43,13 @@ extern int pid_counter_tracer;
 //accumulated CPU time
 extern cpu_t acc_cpu_time;
 
+void initKernel(void);
 
 
 /* GLOBAL FUNCTIONS */
-void initKernel(void);
 void uTLB_RefillHandler(void);
-extern void interruptHandler(void);
+void interruptHandler(void);
 
-/* COMMON FUNCTIONS*/
 void exceptionHandler(void);
 void TrapExceptionHandler(void);
 void Scheduler(void);
@@ -61,8 +60,11 @@ pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 /*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
 void copyState(state_t *source, state_t *dest);
 cpu_t deltaTime(void);
-// defined in p2test.c
+
+/* defined in p2test.c */
 extern void test(void);
+
+
 int main(int, char **);
 
 #endif
