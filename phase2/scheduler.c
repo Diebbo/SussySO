@@ -28,7 +28,7 @@ void Scheduler() {
         // enable interrupts
         setTIMER(MAXINT);
                                               // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
-        setSTATUS(getSTATUS() | IECON | IMON); // enable interrupts
+        setSTATUS(getSTATUS() | MSTATUS_MIE_MASK | MSTATUS_MPP_M); // enable interrupts
         setMIE(MIE_ALL);
         
         // wait for an interrupt

@@ -12,17 +12,18 @@ FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 
 void interruptHandler(void) {
   pcb_PTR caller = current_process;
-  if (BIT_CHECKER(getMIP(), 7) && BIT_CHECKER(getMIE(), 7)){
+  unsigned exce_mie = getMIE();
+  unsigned exce_mip = getMIP();
+  unsigned ip = exce_mie & exce_mip; // interrupt pending
+  if (BIT_CHECKER(ip, 7)){
     interruptHandlerPLT(caller);
   }
-  if (BIT_CHECKER(getMIP(), 3) && BIT_CHECKER(getMIE(), 3)){
+  if (BIT_CHECKER(ip, 3)){
     pseudoClockHandler(caller);
   }
-  if (BIT_CHECKER(getMIP(), 11) && BIT_CHECKER(getMIE(), 11)){
-    for (int i = 16; i <=21; i++){
-      if (BIT_CHECKER(getMIP(), i) && BIT_CHECKER(getMIE(), i)){
-        interruptHandlerNonTimer(i);
-      }
+  for (int i = 16; i <=21; i++){
+    if (BIT_CHECKER(ip, i)){
+      interruptHandlerNonTimer(i);
     }
   }
 }

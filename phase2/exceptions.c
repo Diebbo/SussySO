@@ -214,12 +214,7 @@ void passUpOrDie(pcb_t *p, unsigned type) {
 
   // 1st Save the processor state
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  p->p_supportStruct->sup_exceptState[type].cause = exception_state->cause;
-  p->p_supportStruct->sup_exceptState[type].entry_hi =
-      exception_state->entry_hi;
-  p->p_supportStruct->sup_exceptState[type].mie = exception_state->mie;
-  p->p_supportStruct->sup_exceptState[type].pc_epc = exception_state->pc_epc;
-  p->p_supportStruct->sup_exceptState[type].status = exception_state->status;
+  copyState(exception_state, &(p->p_s));
 
   // 2nd Update the accumulated CPU time for the Current Process
   LDCXT(p->p_supportStruct->sup_exceptContext[type].stackPtr,
