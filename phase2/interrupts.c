@@ -10,25 +10,31 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-void interruptHandler(void) {
+void interruptHandler(void)
+{
   pcb_PTR caller = current_process;
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
   unsigned ip = exce_mie & exce_mip; // interrupt pending
-  if (BIT_CHECKER(ip, 7)){
+  if (BIT_CHECKER(ip, 7))
+  {
     interruptHandlerPLT(caller);
   }
-  if (BIT_CHECKER(ip, 3)){
+  if (BIT_CHECKER(ip, 3))
+  {
     pseudoClockHandler(caller);
   }
-  for (int i = 16; i <=21; i++){
-    if (BIT_CHECKER(ip, i)){
+  for (int i = 16; i <= 21; i++)
+  {
+    if (BIT_CHECKER(ip, i))
+    {
       interruptHandlerNonTimer(i);
     }
   }
 }
 
-void interruptHandlerNonTimer(int IntlineNo) {
+void interruptHandlerNonTimer(int IntlineNo)
+{
   /*  1. Calculate the address for this device’s device register
       2. Save off the status code from the device’s device register
       3. Acknowledge the outstanding interrupt
@@ -47,9 +53,10 @@ void interruptHandlerNonTimer(int IntlineNo) {
   // DEVxON
   IntlineNo -= 14;
   int dev_no = 0;
-  //unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
+  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
   unsigned *devices_bit_map = (unsigned *)(0x10000040 + 0x10);
-  switch (*devices_bit_map) {
+  switch (*devices_bit_map)
+  {
   case DEV0ON:
     dev_no = 0;
     break;
@@ -76,47 +83,49 @@ void interruptHandlerNonTimer(int IntlineNo) {
     break;
   default:
     // Error
-    //TrapExceptionHandler();
+    // TrapExceptionHandler();
     break;
   }
-  
+
   // Interrupt line number da calcolare
   unsigned dev_addr_base =
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
+
+  termreg_t *term = (termreg_t *)dev_addr_base;
+  unsigned status = term->recv_status;
+  term->recv_command = ACK;
 
   // 2. Save off the status code from the device’s device register
   unsigned dev_index = (IntlineNo - 3) * 7 + dev_no;
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
-  // the only device that needs to be acknowledged is the terminal ->
-  /*typedef struct termreg {
-unsigned int recv_status;
-unsigned int recv_command;
-unsigned int transm_status;
-unsigned int transm_command;
-} termreg_t;*/
-  termreg_t *term = (termreg_t *)dev_addr_base;
-  term->recv_command = ACK;
-  // send ack to device & unlock process SYS2 
-  msg_t *ack_msg = (msg_t *)allocMsg();
+  if (caller != NULL)
+  {
+    // no process is blocked -> pass control to the scheduler
+    soft_block_count--;
+    // send ack to device & unlock process SYS2
+    msg_t *ack_msg = (msg_t *)allocMsg();
 
-  // 3. Acknowledge the outstanding interrupt
-  ack_msg->m_sender = ssi_pcb;
-  ack_msg->m_payload = (unsigned)term->recv_status;
+    // 3. Acknowledge the outstanding interrupt
+    ack_msg->m_sender = ssi_pcb;
+    ack_msg->m_payload = (unsigned)status;
 
-  pushMessage(&caller->msg_inbox, ack_msg);
+    pushMessage(&caller->msg_inbox, ack_msg);
 
-  caller->p_s.reg_a0 = term->recv_status;
-  insertProcQ(&ready_queue_list, caller);
+    caller->p_s.reg_a0 = status;
+    insertProcQ(&ready_queue_list, caller);
+  }
 
-  
   // 7. Return control to the Current Process
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  LDST(exception_state);
+  if (current_process == NULL)
+    Scheduler();
+  else 
+    LDST((state_t *)BIOSDATAPAGE);
 }
 
-void interruptHandlerPLT(pcb_PTR caller) {
+void interruptHandlerPLT(pcb_PTR caller)
+{
   /* - Acknowledge the PLT interrupt by loading the timer with a new valu
       [Section 4.1.4-pops].
     - Copy into the Current Process’s PCB (p_s).
@@ -126,7 +135,7 @@ void interruptHandlerPLT(pcb_PTR caller) {
     - Call the Scheduler.
   */
   setTIMER(TIMESLICE);
-  //STST(&caller->p_s);
+  // STST(&caller->p_s);
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
 
   copyState(exception_state, &caller->p_s);
@@ -134,7 +143,8 @@ void interruptHandlerPLT(pcb_PTR caller) {
   Scheduler();
 }
 
-void pseudoClockHandler(pcb_PTR caller) {
+void pseudoClockHandler(pcb_PTR caller)
+{
   /*
     The Interval Timer portion of the interrupt exception handler should
     therefore:
@@ -147,8 +157,9 @@ void pseudoClockHandler(pcb_PTR caller) {
   LDIT(PSECOND);
   pcb_PTR pcb;
   while ((pcb = outProcQ(&pseudoClockList, caller)) !=
-         NULL) { // non proprio sicuro della correttezza del outProcQ, da
-                 // ricontrollare
+         NULL)
+  { // non proprio sicuro della correttezza del outProcQ, da
+    // ricontrollare
     insertProcQ(&ready_queue_list, pcb);
   }
   LDST(&caller->p_s);
