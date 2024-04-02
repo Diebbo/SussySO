@@ -48,7 +48,6 @@ void initKernel(void);
 
 /* GLOBAL FUNCTIONS */
 void uTLB_RefillHandler(void);
-void interruptHandler(void);
 
 void exceptionHandler(void);
 void TrapExceptionHandler(void);

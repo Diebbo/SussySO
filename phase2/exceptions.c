@@ -20,9 +20,10 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
-  unsigned exception_code = getCAUSE() & 0x3FFFFFFF; // 0311 1111 x 32
+  unsigned cause = getCAUSE();
+  unsigned exception_code = cause & 0x3FFFFFFF; // 0311 1111 x 32
 
-  unsigned is_interrupt_enabled = BIT_CHECKER(getCAUSE(), 31);
+  unsigned is_interrupt_enabled = BIT_CHECKER(cause, 31);
 
   // guardare tesi di laurea per la spiegazione di come funziona
 
@@ -202,7 +203,7 @@ void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
 void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
 
 void passUpOrDie(pcb_t *p, unsigned type) {
-  if (p->p_supportStruct == NULL) {
+  if (p == NULL || p->p_supportStruct == NULL) {
     // then the process and the progeny of the process must be terminated
     killProgeny(p);
     return;

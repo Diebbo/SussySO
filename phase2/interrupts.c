@@ -10,7 +10,7 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-void interruptHandler() {
+void interruptHandler(void) {
   pcb_PTR caller = current_process;
   if (CAUSE_IP_GET(getCAUSE(), 1) != 0) {
     interruptHandlerPLT(caller);
@@ -90,7 +90,7 @@ unsigned int transm_status;
 unsigned int transm_command;
 } termreg_t;*/
   termreg_t *term = (termreg_t *)dev_addr_base;
-  term->transm_status = ACK;
+  term->recv_command = ACK;
   // send ack to device & unlock process SYS2 
   msg_t *ack_msg = (msg_t *)allocMsg();
 
@@ -104,7 +104,9 @@ unsigned int transm_command;
   outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
 
-  LDST(&current_process->p_s);
+  // 7. Return control to the Current Process
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  LDST(exception_state);
 }
 
 void interruptHandlerPLT(pcb_PTR caller) {

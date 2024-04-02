@@ -91,7 +91,8 @@ void initKernel() {
      restarted, the stack is popped. [Section 7.4]*/
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
-  first_process->p_s.status = IMON | IEPON | TEBITON;
+  first_process->p_s.status = IMON | IEPON;
+  first_process->p_s.mie = MIE_ALL;
 
   list_add_tail(&first_process->p_list, &ready_queue_list);
 
@@ -106,7 +107,8 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; 
   second_process->p_s.pc_epc = (memaddr)test; 
-  second_process->p_s.status = IMON | IEPON | TEBITON;
+  second_process->p_s.status = IMON | IEPON;
+  first_process->p_s.mie = MIE_ALL;
 
   process_count++;
 
