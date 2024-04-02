@@ -12,15 +12,17 @@ FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 
 void interruptHandler(void) {
   pcb_PTR caller = current_process;
-  if (CAUSE_IP_GET(getCAUSE(), 1) != 0) {
+  if (BIT_CHECKER(getMIP(), 7) && BIT_CHECKER(getMIE(), 7)){
     interruptHandlerPLT(caller);
   }
-  if (CAUSE_IP_GET(getCAUSE(), 2) != 0) {
+  if (BIT_CHECKER(getMIP(), 3) && BIT_CHECKER(getMIE(), 3)){
     pseudoClockHandler(caller);
   }
-  for (int i = 3; i < 8; i++) {
-    if (CAUSE_IP_GET(getCAUSE(), i) != 0) {
-      interruptHandlerNonTimer(i);
+  if (BIT_CHECKER(getMIP(), 11) && BIT_CHECKER(getMIE(), 11)){
+    for (int i = 16; i <=21; i++){
+      if (BIT_CHECKER(getMIP(), i) && BIT_CHECKER(getMIE(), i)){
+        interruptHandlerNonTimer(i);
+      }
     }
   }
 }
