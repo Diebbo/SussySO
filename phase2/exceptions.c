@@ -23,13 +23,14 @@ void exceptionHandler() {
   unsigned cause = getCAUSE();
   unsigned exception_code = cause & 0x3FFFFFFF; // 0311 1111 x 32
 
-  unsigned is_interrupt_enabled = BIT_CHECKER(cause, 31);
+  unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 3);
+  unsigned is_interrupt = BIT_CHECKER(cause, 31);
 
   // guardare tesi di laurea per la spiegazione di come funziona
 
 
   // else are exceptions
-  if (is_interrupt_enabled) {
+  if (is_interrupt_enabled && is_interrupt) {
     interruptHandler();
     return;
   }
