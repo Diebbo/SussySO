@@ -21,7 +21,7 @@ void uTLB_RefillHandler() {
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
   unsigned cause = getCAUSE();
-  unsigned exception_code = cause & 0x3FFFFFFF; // 0311 1111 x 32
+  unsigned exception_code = cause & 0x7FFFFFFF; // 0311 1111 x 32
 
   unsigned is_interrupt_enabled = BIT_CHECKER(cause, 31);
 
