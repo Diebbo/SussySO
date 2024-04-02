@@ -20,10 +20,11 @@ void uTLB_RefillHandler() {
 
 void exceptionHandler() {
   // error code from .ExcCode field of the Cause register
+  unsigned status = getSTATUS();
   unsigned cause = getCAUSE();
   unsigned exception_code = cause & 0x7FFFFFFF; // 0311 1111 x 32
 
-  unsigned is_interrupt_enabled = BIT_CHECKER(getSTATUS(), 3);
+  unsigned is_interrupt_enabled = BIT_CHECKER(status, 7);
   unsigned is_interrupt = BIT_CHECKER(cause, 31);
 
   // guardare tesi di laurea per la spiegazione di come funziona
@@ -207,6 +208,7 @@ void passUpOrDie(pcb_t *p, unsigned type) {
   if (p == NULL || p->p_supportStruct == NULL) {
     // then the process and the progeny of the process must be terminated
     killProgeny(p);
+    Scheduler();
     return;
   }
 
