@@ -137,7 +137,7 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   
   // unsigned device_line = ((unsigned)arg->commandAddr - 0x10000054 + (dev_no * 0x10)) / 0x80 + 3;
 
-  unsigned device = 7; // da specifiche per terminale
+  unsigned device = 0; // da specifiche per terminale
 
   insertProcQ(&blockedPCBs[device], sender);
 

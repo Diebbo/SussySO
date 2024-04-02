@@ -45,11 +45,11 @@ void interruptHandlerNonTimer(int IntlineNo) {
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device number you can use a switch among constants
   // DEVxON
-  int dev_no = 0; // Device number da calcolare
-  IntlineNo -= 13;
-  /*
-  switch (getCAUSE() & DISKINTERRUPT & FLASHINTERRUPT & PRINTINTERRUPT &
-          TERMINTERRUPT) {
+  IntlineNo -= 14;
+  int dev_no = 0;
+  //unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
+  unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x10;
+  switch (*devices_bit_map) {
   case DEV0ON:
     dev_no = 0;
     break;
@@ -76,17 +76,17 @@ void interruptHandlerNonTimer(int IntlineNo) {
     break;
   default:
     // Error
-    TrapExceptionHandler();
+    //TrapExceptionHandler();
     break;
   }
-  */
+  
   // Interrupt line number da calcolare
   unsigned dev_addr_base =
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
   //dev_no = 7;
-  pcb_PTR caller = outProcQ(&blockedPCBs[dev_no], headProcQ(&blockedPCBs[dev_no]));
+  pcb_PTR caller = removeProcQ(&blockedPCBs[0]);
 
   // the only device that needs to be acknowledged is the terminal ->
   /*typedef struct termreg {
@@ -110,6 +110,8 @@ unsigned int transm_command;
   outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
 
+  setCAUSE(getCAUSE() & ~(1 << IntlineNo));
+  
   // 7. Return control to the Current Process
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   LDST(exception_state);
