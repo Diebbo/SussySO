@@ -22,6 +22,7 @@
 #include <uriscv/types.h>
 
 /* GLOBAL VARIABLES*/
+#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 // started but not terminated processes
 extern int process_count;
 // processes waiting for a resource
@@ -48,6 +49,7 @@ void initKernel(void);
 
 /* GLOBAL FUNCTIONS */
 void uTLB_RefillHandler(void);
+
 
 void exceptionHandler(void);
 void TrapExceptionHandler(void);
