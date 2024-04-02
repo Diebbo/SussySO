@@ -113,6 +113,9 @@ void initKernel() {
   process_count++;
 
   list_add_tail(&second_process->p_list, &ready_queue_list);
+
+  setSTATUS(IECON | IMON);
+  setMIE(MIE_ALL);
 }
 
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
