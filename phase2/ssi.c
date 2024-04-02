@@ -134,12 +134,20 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
   // unsigned dev_no = 7; // da specifiche per terminale
+  unsigned dev_line = 21 - 14; // da specifiche per terminale  
+  unsigned dev_no = (unsigned)arg->commandAddr - 0x10000054 - ((dev_line-3) * 0x80);
+  dev_no = dev_no / 0x10;
+
+  unsigned dev_index = (dev_line - 3) * 7 + dev_no;
+
+  pcb_PTR blocked_for_message = outProcQ(&msg_queue_list, sender);
   
-  // unsigned device_line = ((unsigned)arg->commandAddr - 0x10000054 + (dev_no * 0x10)) / 0x80 + 3;
+  if (blocked_for_message == NULL) {
+    // no message to send
+    return NULL;
+  } 
 
-  unsigned device = 0; // da specifiche per terminale
-
-  insertProcQ(&blockedPCBs[device], sender);
+  insertProcQ(&blockedPCBs[dev_index], sender);
 
   soft_block_count++;
 

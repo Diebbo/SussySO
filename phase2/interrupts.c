@@ -43,7 +43,7 @@ void interruptHandlerNonTimer(int IntlineNo) {
 */
 
   // 1. Calculate the address for this device’s device register
-  // Tip: to calculate the device number you can use a switch among constants
+  // Tip: to calculate the device snumber you can use a switch among constants
   // DEVxON
   IntlineNo -= 14;
   int dev_no = 0;
@@ -85,8 +85,9 @@ void interruptHandlerNonTimer(int IntlineNo) {
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
-  //dev_no = 7;
-  pcb_PTR caller = removeProcQ(&blockedPCBs[0]);
+  unsigned dev_index = (IntlineNo - 3) * 7 + dev_no;
+
+  pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
   // the only device that needs to be acknowledged is the terminal ->
   /*typedef struct termreg {
@@ -107,7 +108,6 @@ unsigned int transm_command;
   pushMessage(&caller->msg_inbox, ack_msg);
 
   caller->p_s.reg_a0 = term->recv_status;
-  outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
 
   
