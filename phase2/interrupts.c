@@ -46,6 +46,8 @@ void interruptHandlerNonTimer(int IntlineNo) {
   // Tip: to calculate the device number you can use a switch among constants
   // DEVxON
   int dev_no = 0; // Device number da calcolare
+  IntlineNo -= 13;
+  /*
   switch (getCAUSE() & DISKINTERRUPT & FLASHINTERRUPT & PRINTINTERRUPT &
           TERMINTERRUPT) {
   case DEV0ON:
@@ -77,12 +79,13 @@ void interruptHandlerNonTimer(int IntlineNo) {
     TrapExceptionHandler();
     break;
   }
+  */
   // Interrupt line number da calcolare
   unsigned dev_addr_base =
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   // 2. Save off the status code from the device’s device register
-  dev_no = 7;
+  //dev_no = 7;
   pcb_PTR caller = outProcQ(&blockedPCBs[dev_no], headProcQ(&blockedPCBs[dev_no]));
 
   // the only device that needs to be acknowledged is the terminal ->
