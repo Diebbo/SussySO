@@ -48,7 +48,7 @@ void interruptHandlerNonTimer(int IntlineNo) {
   IntlineNo -= 14;
   int dev_no = 0;
   //unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
-  unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x10;
+  unsigned *devices_bit_map = (unsigned *)(0x10000040 + 0x10);
   switch (*devices_bit_map) {
   case DEV0ON:
     dev_no = 0;
@@ -110,7 +110,6 @@ unsigned int transm_command;
   outProcQ(&blockedPCBs[dev_no], caller);
   insertProcQ(&ready_queue_list, caller);
 
-  setCAUSE(getCAUSE() & ~(1 << IntlineNo));
   
   // 7. Return control to the Current Process
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
