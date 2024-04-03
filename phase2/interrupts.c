@@ -96,7 +96,7 @@ void interruptHandlerNonTimer(int IntlineNo)
   term->recv_command = ACK;
 
   // 2. Save off the status code from the device’s device register
-  unsigned dev_index = (IntlineNo - 3) * 7 + dev_no;
+  unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 

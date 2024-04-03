@@ -149,7 +149,7 @@ void SYSCALLExceptionHandler() {
        * 2. messaggio non presente -> bloccare il processo
        * */
       pcb_t *sender = (pcb_PTR)a1_reg; // the desired sender pid
-      state_t exception_state_prev;
+      //state_t exception_state_prev;
       copyState(exception_state, &exception_state_prev);
 
       if (a1_reg == ANYMESSAGE) { // if sender is anymessage I get the
@@ -165,7 +165,7 @@ void SYSCALLExceptionHandler() {
         soft_block_count++;
 
         // save the processor state
-        copyState(&exception_state_prev, &(current_process->p_s));
+        copyState(exception_state, &(current_process->p_s));
 
         // update the accumulated CPU time for the Current Process
         current_process->p_time += deltaTime();
