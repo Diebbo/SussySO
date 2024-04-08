@@ -92,9 +92,13 @@ void interruptHandlerNonTimer(int IntlineNo)
       (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
 
   termreg_t *term = (termreg_t *)dev_addr_base;
-  unsigned status = term->recv_status;
-  term->recv_command = ACK;
+  // TODO: check con bit map quale terminale è
+  term->recv_command = RECEIVECHAR;
 
+  // a questo punto dovrebbe aver ricevuto il carattere
+  term->recv_command = RESET;
+
+  unsigned status = RECVD;
   // 2. Save off the status code from the device’s device register
   unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
 
@@ -114,6 +118,7 @@ void interruptHandlerNonTimer(int IntlineNo)
     pushMessage(&caller->msg_inbox, ack_msg);
 
     caller->p_s.reg_a0 = status;
+    *((unsigned *)caller->p_s.reg_a2) = status;
     insertProcQ(&ready_queue_list, caller);
   }
 
