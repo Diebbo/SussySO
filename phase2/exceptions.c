@@ -150,7 +150,7 @@ void SYSCALLExceptionHandler() {
        * */
       pcb_t *sender = (pcb_PTR)a1_reg; // the desired sender pid
       //state_t exception_state_prev;
-      copyState(exception_state, &exception_state_prev);
+      //copyState(exception_state, &exception_state_prev);
 
       if (a1_reg == ANYMESSAGE) { // if sender is anymessage I get the
                                   // first message in the inbox
