@@ -96,10 +96,11 @@ void interruptHandlerNonTimer(int IntlineNo)
   term->recv_command = RECEIVECHAR;
 
   // a questo punto dovrebbe aver ricevuto il carattere
-  term->recv_command = RESET;
+  term->transm_command = RESET;
 
-  unsigned status = RECVD;
   // 2. Save off the status code from the device’s device register
+  unsigned status = RECVD;
+  
   unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
@@ -108,14 +109,6 @@ void interruptHandlerNonTimer(int IntlineNo)
   {
     // no process is blocked -> pass control to the scheduler
     soft_block_count--;
-    // send ack to device & unlock process SYS2
-    msg_t *ack_msg = (msg_t *)allocMsg();
-
-    // 3. Acknowledge the outstanding interrupt
-    ack_msg->m_sender = ssi_pcb;
-    ack_msg->m_payload = (unsigned)status;
-
-    pushMessage(&caller->msg_inbox, ack_msg);
 
     caller->p_s.reg_a0 = status;
     *((unsigned *)caller->p_s.reg_a2) = status;
