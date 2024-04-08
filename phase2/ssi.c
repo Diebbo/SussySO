@@ -134,7 +134,7 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
   // unsigned dev_no = 7; // da specifiche per terminale
-  unsigned dev_line = 21 - 14; // da specifiche per terminale  
+  unsigned dev_line = IL_TERMINAL - IL_OFFSET; // da specifiche per terminale  
   unsigned dev_no = (unsigned)arg->commandAddr - 0x10000054 - ((dev_line-3) * 0x80);
   dev_no = dev_no / 0x10;
 
