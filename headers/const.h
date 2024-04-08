@@ -78,6 +78,8 @@
 #define IL_TIMER 3
 #define IL_CPUTIMER 7
 
+#define IL_OFFSET 144
+
 #define IL_IPI 16
 #define IL_DISK 17
 #define IL_FLASH 18
