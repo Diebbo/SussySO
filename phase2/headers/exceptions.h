@@ -10,5 +10,6 @@ void TLBExceptionHandler(void);
 void SYSCALLExceptionHandler(void);
 extern void Terminate_Process(pcb_t *sender, pcb_t *target);
 extern void interruptHandler(void);
+extern cpu_t deltaInterruptTime(void);
 #endif
 

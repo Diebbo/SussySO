@@ -5,12 +5,11 @@ them into appropriate messages for blocked PCBs.*/
 #define INTERRUPTS_H
 
 #include "nucleus.h"
-#include <uriscv/arch.h>
 
 // time interrupt started
 cpu_t time_interrupt_start;
 
-cpu_t deltaInterruptTime();
+cpu_t deltaInterruptTime(void);
 void interruptHandler(void);
 void interruptHandlerNonTimer(int IntlineNo);
 void interruptHandlerPLT();

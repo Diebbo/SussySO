@@ -1,6 +1,6 @@
 #include "./headers/exceptions.h"
 
-extern cpu_t *time_interrupt_start;
+extern cpu_t time_interrupt_start;
 /*
 given an unsigned int and an integer representing the bit you want to check
 (0-indexed) and return 1 if the bit is 1, 0 otherwise
@@ -168,7 +168,7 @@ void SYSCALLExceptionHandler() {
         copyState(exception_state, &(current_process->p_s));
 
         // update the accumulated CPU time for the Current Process
-        current_process->p_time += deltaTime();
+        current_process->p_time -= deltaInterruptTime();
 
         // get the next process
         Scheduler();
