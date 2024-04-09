@@ -38,9 +38,9 @@ void Scheduler() {
       }
 
     } else {
+      STCK(acc_cpu_time);
       // load in plt 5 seconds
       setTIMER(TIMESLICE);
-      STCK(acc_cpu_time);
       LDST(&current_process->p_s);
     }
   

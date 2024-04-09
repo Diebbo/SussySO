@@ -140,8 +140,7 @@ void copyState(state_t *source, state_t *dest) {
     
 }
 
-cpu_t deltaTime(void) {
-  cpu_t current_time;
-  STCK(current_time);
-  return current_time - acc_cpu_time;
+cpu_t deltaTime(void){
+  cpu_t current_time_TOD;
+  return (STCK(current_time_TOD) - acc_cpu_time);
 }
