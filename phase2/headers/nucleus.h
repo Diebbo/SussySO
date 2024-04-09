@@ -60,6 +60,7 @@ void passUpOrDie(pcb_t *process, unsigned value);
 pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 /*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
 void copyState(state_t *source, state_t *dest);
+/*time accumulated function*/
 cpu_t deltaTime(void);
 
 /* defined in p2test.c */

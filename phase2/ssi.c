@@ -161,7 +161,7 @@ cpu_t Get_CPU_Time(pcb_t *sender) {
   /*This service should allow the sender to get back the accumulated processor
   time (in µseconds) used by the sender process. Hence, the Nucleus records (in
   the PCB: p_time) the amount of processor time used by each process*/
-  return sender->p_time + deltaTime();
+  return sender->p_time;
 }
 
 void Wait_For_Clock(pcb_t *sender) {
