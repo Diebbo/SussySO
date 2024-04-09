@@ -1,10 +1,6 @@
 #include "./headers/exceptions.h"
-/*
-given an unsigned int and an integer representing the bit you want to check
-(0-indexed) and return 1 if the bit is 1, 0 otherwise
-*/
-int bitChecker(unsigned int n, int bit) { return (n >> bit) % 2; }
 
+extern cpu_t *time_interrupt_start;
 /*
 given an unsigned int and an integer representing the bit you want to check
 (0-indexed) and return 1 if the bit is 1, 0 otherwise
@@ -18,7 +14,11 @@ void uTLB_RefillHandler() {
   LDST((state_t *)0x0FFFF000);
 }
 
+
 void exceptionHandler() {
+  // get cpu time 
+  STCK(time_interrupt_start);
+
   // error code from .ExcCode field of the Cause register
   unsigned status = getSTATUS();
   unsigned cause = getCAUSE();

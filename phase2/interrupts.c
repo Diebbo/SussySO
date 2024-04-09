@@ -2,6 +2,7 @@
 interrupts and convert them into appropriate messages for blocked PCBs.*/
 
 #include "./headers/interrupts.h"
+#include "headers/nucleus.h"
 
 /*int getInterruptLines(){
     // 1. Read the interrupt lines from the interrupting devices
@@ -10,31 +11,24 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
 FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
-void interruptHandler(void)
-{
-  pcb_PTR caller = current_process;
+void interruptHandler(void) {
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
   unsigned ip = exce_mie & exce_mip; // interrupt pending
-  if (BIT_CHECKER(ip, 7))
-  {
-    interruptHandlerPLT(caller);
+  if (BIT_CHECKER(ip, 7)) {
+    interruptHandlerPLT();
   }
-  if (BIT_CHECKER(ip, 3))
-  {
-    pseudoClockHandler(caller);
+  if (BIT_CHECKER(ip, 3)) {
+    pseudoClockHandler();
   }
-  for (int i = 16; i <= 21; i++)
-  {
-    if (BIT_CHECKER(ip, i))
-    {
+  for (int i = 16; i <= 21; i++) {
+    if (BIT_CHECKER(ip, i)) {
       interruptHandlerNonTimer(i);
     }
   }
 }
 
-void interruptHandlerNonTimer(int IntlineNo)
-{
+void interruptHandlerNonTimer(int IntlineNo) {
   /*  1. Calculate the address for this device’s device register
       2. Save off the status code from the device’s device register
       3. Acknowledge the outstanding interrupt
@@ -53,10 +47,10 @@ void interruptHandlerNonTimer(int IntlineNo)
   // DEVxON
   IntlineNo -= 14;
   int dev_no = 0;
-  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
+  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo -
+  // 3);
   unsigned *devices_bit_map = (unsigned *)(0x10000040 + 0x10);
-  switch (*devices_bit_map)
-  {
+  switch (*devices_bit_map) {
   case DEV0ON:
     dev_no = 0;
     break;
@@ -100,13 +94,12 @@ void interruptHandlerNonTimer(int IntlineNo)
 
   // 2. Save off the status code from the device’s device register
   unsigned status = RECVD;
-  
+
   unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
-  if (caller != NULL)
-  {
+  if (caller != NULL) {
     // no process is blocked -> pass control to the scheduler
     soft_block_count--;
 
@@ -118,12 +111,14 @@ void interruptHandlerNonTimer(int IntlineNo)
   // 7. Return control to the Current Process
   if (current_process == NULL)
     Scheduler();
-  else 
+  else{
+    // decrement the time that takes to the process to be interrupted
+    current_process->p_time -= deltaInterruptTime();
     LDST((state_t *)BIOSDATAPAGE);
+  }
 }
 
-void interruptHandlerPLT(pcb_PTR caller)
-{
+void interruptHandlerPLT() {
   /* - Acknowledge the PLT interrupt by loading the timer with a new valu
       [Section 4.1.4-pops].
     - Copy into the Current Process’s PCB (p_s).
@@ -136,13 +131,20 @@ void interruptHandlerPLT(pcb_PTR caller)
   // STST(&caller->p_s);
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
 
-  copyState(exception_state, &caller->p_s);
-  insertProcQ(&ready_queue_list, caller);
+  if (current_process != NULL) {
+    copyState(exception_state, &current_process->p_s);
+    // ! attenzione che il processo corrente è già in running
+    if (emptyProcQ(&current_process->p_list) == TRUE) {
+      insertProcQ(&ready_queue_list, current_process);
+    }
+
+    // decrement the time that takes to the process to be interrupted
+    current_process->p_time -= deltaInterruptTime();
+  }
   Scheduler();
 }
 
-void pseudoClockHandler(pcb_PTR caller)
-{
+void pseudoClockHandler() {
   /*
     The Interval Timer portion of the interrupt exception handler should
     therefore:
@@ -154,11 +156,16 @@ void pseudoClockHandler(pcb_PTR caller)
   */
   LDIT(PSECOND);
   pcb_PTR pcb;
-  while ((pcb = outProcQ(&pseudoClockList, caller)) !=
-         NULL)
-  { // non proprio sicuro della correttezza del outProcQ, da
+  while ((pcb = outProcQ(&pseudoClockList, current_process)) !=
+         NULL) { // non proprio sicuro della correttezza del outProcQ, da
     // ricontrollare
     insertProcQ(&ready_queue_list, pcb);
   }
-  LDST(&caller->p_s);
+  LDST(&current_process->p_s);
+}
+
+cpu_t deltaInterruptTime(){
+  cpu_t current_time;
+  STCK(current_time);
+  return current_time - time_interrupt_start;
 }

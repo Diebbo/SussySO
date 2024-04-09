@@ -5,10 +5,15 @@ them into appropriate messages for blocked PCBs.*/
 #define INTERRUPTS_H
 
 #include "nucleus.h"
+#include <uriscv/arch.h>
 
+// time interrupt started
+cpu_t time_interrupt_start;
+
+cpu_t deltaInterruptTime();
 void interruptHandler(void);
 void interruptHandlerNonTimer(int IntlineNo);
-void interruptHandlerPLT(pcb_PTR sender);
-void pseudoClockHandler(pcb_PTR sender);
+void interruptHandlerPLT();
+void pseudoClockHandler();
 
 #endif

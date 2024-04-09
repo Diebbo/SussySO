@@ -94,7 +94,7 @@ void initKernel() {
   first_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M;
   first_process->p_s.mie = MIE_ALL;
 
-  list_add_tail(&first_process->p_list, &ready_queue_list);
+  insertProcQ(&ready_queue_list, first_process);
 
   first_process->p_pid = SSIPID;
 
@@ -112,7 +112,7 @@ void initKernel() {
 
   process_count++;
 
-  list_add_tail(&second_process->p_list, &ready_queue_list);
+  insertProcQ(&ready_queue_list, second_process);
 
   setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M);
   setMIE(MIE_ALL);
