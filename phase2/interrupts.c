@@ -154,10 +154,10 @@ void pseudoClockHandler() {
     exception state (located at the start of the BIOS Data Page [Section 4]).
   */
   LDIT(PSECOND);
-  pcb_PTR pcb;
+  pcb_PTR pcb = NULL;
   while ((pcb = removeProcQ(&pseudoClockList)) !=
-         NULL) { // non proprio sicuro della correttezza del outProcQ, da
-    // ricontrollare
+         NULL) { 
+    // sblocco il processo - SYS2
     insertProcQ(&ready_queue_list, pcb);
 
     msg_PTR msg = allocMsg();
