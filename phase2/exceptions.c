@@ -189,7 +189,7 @@ void SYSCALLExceptionHandler() {
         // has a payload
         *((unsigned *)a2_reg) = (unsigned)msg->m_payload;
       }
-
+      
       break;
     }
     // Returning from SYSCALL1 or SYSCALL2 (no blocking)

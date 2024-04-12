@@ -39,6 +39,8 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
+      // no reponse otherwise exception cannot find it 
+      syscall_response_arg = (void *)NORESPONSE;  
       break;
     case DOIO:
       DoIO(sender, (ssi_do_io_PTR)arg);\
@@ -104,8 +106,10 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   arg should be a pcb_t pointer
   */
   if (target == NULL) {
+    outChild(sender);
     killProgeny(sender);
   } else {
+    outChild(target);
     killProgeny(target);
   }
 }
@@ -212,24 +216,21 @@ void killProgeny(pcb_t *sender) {
     return;
   }
 
-  if (headProcQ(&(sender->p_child)) != NULL) {
-    // has children
-    pcb_PTR son = headProcQ(&sender->p_child);
-    killProgeny(son);
+  // recurrsively kill childs
+  pcb_PTR child = NULL;
+  while ((child = headProcQ(&sender->p_child)) != NULL) {
+    outProcQ(&sender->p_child, child);
+    killProgeny(child);
   }
 
-  // save sib_next -> then recursively kill all sib
-  pcb_PTR sib_next = headProcQ(&sender->p_sib);
+  pcb_PTR removed = outProcQ(&ready_queue_list, sender);
 
-  if (isInList(&ready_queue_list, sender->p_pid)) {
-    outProcQ(&ready_queue_list, sender);
-  } else if (isInList(&msg_queue_list, sender->p_pid)) {
-    outProcQ(&msg_queue_list, sender);
-  } else {
+  if (outProcQ(&msg_queue_list, sender) != NULL) {
+    soft_block_count--;
+  } else if (removed == NULL) { // pcb not found in the ready queue so it must be blocked for a device
     /*check if is blocked for device response*/
     for (int i = 0; i < SEMDEVLEN - 1; i++) {
-      if (isInList(&blockedPCBs[i], sender->p_pid)) {
-        outProcQ(&blockedPCBs[i], sender);
+      if (outProcQ(&blockedPCBs[i], sender) != NULL) {
         soft_block_count--;
         break;
       }
@@ -237,11 +238,7 @@ void killProgeny(pcb_t *sender) {
   }
 
   // kill process
-  outChild(sender);
   freePcb(sender);
   process_count--;
-
-  // check if has sib
-  killProgeny(sib_next);
 }
 
