@@ -155,10 +155,17 @@ void pseudoClockHandler() {
   */
   LDIT(PSECOND);
   pcb_PTR pcb;
-  while ((pcb = outProcQ(&pseudoClockList, current_process)) !=
+  while ((pcb = removeProcQ(&pseudoClockList)) !=
          NULL) { // non proprio sicuro della correttezza del outProcQ, da
     // ricontrollare
     insertProcQ(&ready_queue_list, pcb);
+
+    msg_PTR msg = allocMsg();
+    msg->m_sender = ssi_pcb;
+    msg->m_payload = 0;
+    insertMessage(&pcb->msg_inbox, msg);
+
+    soft_block_count--;
   }
   LDST(&current_process->p_s);
 }

@@ -13,6 +13,7 @@
 #define SEMDEVLEN 49
 #define RECVD    5
 #define WAITINGMSG 0
+#define REGISTERNUMBER 32
 
 /* Hardware & software constants */
 #define PAGESIZE 4096 /* page size in bytes	*/

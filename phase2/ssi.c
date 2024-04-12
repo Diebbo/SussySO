@@ -51,6 +51,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
+      syscall_response_arg = (void *)NORESPONSE;
       break;
     case GETSUPPORTPTR:
       syscall_response_arg = Get_Support_Data(sender);
@@ -61,6 +62,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
     default:
       // no match with services so must end process and progeny
       killProgeny(sender);
+      syscall_response_arg = (void *)NORESPONSE;
       break;
     }
     // send back resoults - or just need to unblock sender
@@ -177,10 +179,7 @@ void Wait_For_Clock(pcb_t *sender) {
   save the list of PCBs waiting for the tick.*/
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
-  // send interrupt
-  SYSCALL(SENDMESSAGE, (unsigned int)sender, sender->p_s.reg_a2, 0);
-  // removing from clock list cause tick passed
-  removeProcQ(&pseudoClockList);
+  soft_block_count++;
 }
 
 support_t *Get_Support_Data(pcb_t *sender) {
@@ -225,7 +224,7 @@ void killProgeny(pcb_t *sender) {
 
   pcb_PTR removed = outProcQ(&ready_queue_list, sender);
 
-  if (outProcQ(&msg_queue_list, sender) != NULL) {
+  if (outProcQ(&msg_queue_list, sender) != NULL || outProcQ(&pseudoClockList, sender) != NULL) {
     soft_block_count--;
   } else if (removed == NULL) { // pcb not found in the ready queue so it must be blocked for a device
     /*check if is blocked for device response*/
