@@ -55,7 +55,9 @@ void pushMessage(struct list_head *head, msg_t *m) {
 }
 
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
-    return popMessageByPid(head, (p_ptr == NULL ? ANYMESSAGE : p_ptr->p_pid));
+    if (p_ptr == NULL)
+        return popMessageByPid(head, ANYMESSAGE);
+    return popMessageByPid(head, p_ptr->p_pid);
 }
 
 msg_t *popMessageByPid(struct list_head *head, int pid) {

@@ -35,8 +35,8 @@ extern struct list_head blockedPCBs[SEMDEVLEN - 1];
 extern struct list_head msg_queue_list;
 // pcb waiting for clock tick
 extern struct list_head pseudoClockList;
-// SSI id (the only process to have pid = 0)
-#define SSIPID 0
+// SSI process id 
+#define SSIPID 0xFFFFFFFE 
 // SSI process
 extern pcb_PTR ssi_pcb;
 //pid counter

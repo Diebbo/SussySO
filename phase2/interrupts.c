@@ -102,8 +102,10 @@ void interruptHandlerNonTimer(int IntlineNo) {
     // no process is blocked -> pass control to the scheduler
     soft_block_count--;
 
-    caller->p_s.reg_a0 = status;
-    *((unsigned *)caller->p_s.reg_a2) = status;
+    msg_PTR ack = allocMsg();
+    ack->m_sender = ssi_pcb;
+    ack->m_payload = status;
+    pushMessage(&caller->msg_inbox, ack);
     insertProcQ(&ready_queue_list, caller);
   }
 

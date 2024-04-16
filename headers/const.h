@@ -19,8 +19,6 @@
 #define PAGESIZE 4096 /* page size in bytes	*/
 #define WORDLEN  4    /* word size in bytes	*/
 
-#define SSI_PID 0 /* SSI process id */
-
 #define USERMODE 1
 
 #define MAXINT 0x7FFFFFFF

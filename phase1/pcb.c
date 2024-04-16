@@ -2,7 +2,7 @@
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
 LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
-int next_pid = 1; /* Next PID to be assigned */
+int next_pid = 0; /* Next PID to be assigned */
 
 int isInList(struct list_head *target_process, int pid) {
   pcb_PTR tmp;
@@ -34,7 +34,7 @@ void initPcb(pcb_PTR p){
     p->p_s.pc_epc = 0;
     p->p_s.mie = 0;
 
-    p->p_pid = 1;
+    p->p_pid = 0;
 }
 
 void initPcbs() {

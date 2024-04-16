@@ -153,7 +153,7 @@ void SYSCALLExceptionHandler() {
 
       if (a1_reg == ANYMESSAGE) { // if sender is anymessage I get the
                                   // first message in the inbox
-        msg = popMessage(&current_process->msg_inbox, NULL);
+        msg = popMessageByPid(&current_process->msg_inbox, ANYMESSAGE);
       } else { // otherwise I get the message from the desired sender
         msg = popMessage(&current_process->msg_inbox, sender);
       }

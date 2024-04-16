@@ -146,6 +146,7 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
 
   pcb_PTR blocked_for_message = outProcQ(&msg_queue_list, sender);
   
+  // in case the process has been eliminated in the meantime
   if (blocked_for_message == NULL) {
     // no message to send
     return NULL;
@@ -211,7 +212,7 @@ int Get_Process_ID(pcb_t *sender, int arg) {
 
 void killProgeny(pcb_t *sender) {
   // check if process exists and is not ssi
-  if (sender == NULL || sender->p_pid == SSI_PID || isFree(sender->p_pid)) {
+  if (sender == NULL || sender->p_pid == SSIPID || isFree(sender->p_pid)) {
     return;
   }
 
