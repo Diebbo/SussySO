@@ -185,7 +185,6 @@ pcb_t* outChild(pcb_t *p) {
             list_del(pos);
             // Reinitialize the removed child's sibling pointer and child's list head
             INIT_LIST_HEAD(&p->p_sib); 
-            INIT_LIST_HEAD(&p->p_child);              
             p->p_parent = NULL;
             return p;
         }

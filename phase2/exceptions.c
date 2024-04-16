@@ -109,9 +109,8 @@ void SYSCALLExceptionHandler() {
       msg->m_payload = (unsigned)a2_reg;
       msg->m_sender = current_process;
 
-      if (isInList(&msg_queue_list, dest_process_pid) == TRUE) {
+      if (outProcQ(&msg_queue_list, dest_process) != NULL) {
         // process is blocked waiting for a message, i unblock it
-        outProcQ(&msg_queue_list, dest_process);
         insertProcQ(&ready_queue_list, dest_process);
         soft_block_count--;
       }
@@ -161,6 +160,7 @@ void SYSCALLExceptionHandler() {
 
       // there is no correct message in the inbox, need to be frozen.
       if (msg == NULL) {
+        // i can assume the process is in running state
         insertProcQ(&msg_queue_list, current_process);
         soft_block_count++;
 

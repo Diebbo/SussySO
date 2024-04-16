@@ -65,7 +65,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
     }
     // send back resoults - or just need to unblock sender
     if((unsigned)syscall_response_arg != NORESPONSE)
-      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)(syscall_response_arg == NULL ? 0 : syscall_response_arg), 0);
+      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)syscall_response_arg, 0);
     
   }
 }
@@ -175,7 +175,7 @@ void Wait_For_Clock(pcb_t *sender) {
   message to the SSI, as for other interrupts. This service should allow the
   sender to suspend its execution until the next pseudo-clock tick. You need to
   save the list of PCBs waiting for the tick.*/
-  // il processo si trova ad aspettare risposta dal pseudo clock
+  // il processo si trova ad aspettare risposta dalla sys call per pseudo clock
   outProcQ(&msg_queue_list, sender); 
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, sender);
@@ -218,7 +218,7 @@ void killProgeny(pcb_t *sender) {
   // recurrsively kill childs
   pcb_PTR child = NULL;
   while ((child = headProcQ(&sender->p_child)) != NULL) {
-    outProcQ(&sender->p_child, child);
+    outChild(child);
     killProgeny(child);
   }
 
