@@ -115,7 +115,7 @@ void SYSCALLExceptionHandler() {
         soft_block_count--;
       }
 
-      pushMessage(&dest_process->msg_inbox, msg);
+      insertMessage(&dest_process->msg_inbox, msg);
       exception_state->reg_a0 = 0;
       /*on success returns/places 0 in the caller’s v0, otherwise
                       MSGNOGOOD is used to provide a meaningful error

@@ -59,7 +59,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     default:
       // no match with services so must end process and progeny
-      Terminate_Process(sender);
+      Terminate_Process(sender, NULL);
       syscall_response_arg = (void *)NORESPONSE;
       break;
     }
