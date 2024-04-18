@@ -135,9 +135,8 @@ void interruptHandlerPLT() {
   if (current_process != NULL) {
     copyState(exception_state, &current_process->p_s);
     // ! attenzione che il processo corrente è già in running
-    if (emptyProcQ(&current_process->p_list) == TRUE) {
-      insertProcQ(&ready_queue_list, current_process);
-    }
+    insertProcQ(&ready_queue_list, current_process);
+    
 
     // decrement the time that takes to the process to be interrupted
     current_process->p_time -= deltaInterruptTime();

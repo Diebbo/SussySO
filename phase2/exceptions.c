@@ -151,12 +151,8 @@ void SYSCALLExceptionHandler() {
       //state_t exception_state_prev;
       //copyState(exception_state, &exception_state_prev);
 
-      if (a1_reg == ANYMESSAGE) { // if sender is anymessage I get the
-                                  // first message in the inbox
-        msg = popMessageByPid(&current_process->msg_inbox, ANYMESSAGE);
-      } else { // otherwise I get the message from the desired sender
-        msg = popMessage(&current_process->msg_inbox, sender);
-      }
+      // if the sender is NULL, then the process is looking for the first
+      msg = popMessage(&current_process->msg_inbox, sender);
 
       // there is no correct message in the inbox, need to be frozen.
       if (msg == NULL) {

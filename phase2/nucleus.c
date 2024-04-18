@@ -118,14 +118,6 @@ void initKernel() {
   setMIE(MIE_ALL);
 }
 
-pcb_PTR findProcessPtr(struct list_head *target_process, int pid) {
-  pcb_PTR tmp;
-  list_for_each_entry(tmp, target_process, p_list) {
-    if (tmp->p_pid == pid)
-      return tmp;
-  }
-  return NULL;
-}
 
 void copyState(state_t *source, state_t *dest) {
     dest->entry_hi = source->entry_hi;

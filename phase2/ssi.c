@@ -24,7 +24,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
   int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
-  void *syscall_response_arg = NULL;
+  unsigned syscall_response_arg = NORESPONSE;
 
   if (is_user_mode) {
     // Must be in kernel mode otherwise trap!
@@ -33,39 +33,35 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   } else {
     switch (service) {
     case CREATEPROCESS:
-      syscall_response_arg = Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
+      syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
       // no reponse otherwise exception cannot find it 
-      syscall_response_arg = (void *)NORESPONSE;  
       break;
     case DOIO:
-      DoIO(sender, (ssi_do_io_PTR)arg);\
-      syscall_response_arg = (void *)NORESPONSE;
+      DoIO(sender, (ssi_do_io_PTR)arg);
       break;
     case GETTIME:
-      syscall_response_arg = (void *)Get_CPU_Time(sender);
+      syscall_response_arg = (unsigned)Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
-      syscall_response_arg = (void *)NORESPONSE;
       break;
     case GETSUPPORTPTR:
-      syscall_response_arg = Get_Support_Data(sender);
+      syscall_response_arg = (unsigned) Get_Support_Data(sender);
       break;
     case GETPROCESSID:
-      syscall_response_arg = (void *)Get_Process_ID(sender, (int)arg);
+      syscall_response_arg = (unsigned)Get_Process_ID(sender, (int)arg);
       break;
     default:
       // no match with services so must end process and progeny
       Terminate_Process(sender, NULL);
-      syscall_response_arg = (void *)NORESPONSE;
       break;
     }
     // send back resoults - or just need to unblock sender
     if((unsigned)syscall_response_arg != NORESPONSE)
-      SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)syscall_response_arg, 0);
+      SYSCALL(SENDMESSAGE, (unsigned int)sender, syscall_response_arg, 0);
     
   }
 }
@@ -106,10 +102,8 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   arg should be a pcb_t pointer
   */
   if (target == NULL) {
-    outChild(sender);
     killProgeny(sender);
   } else {
-    outChild(target);
     killProgeny(target);
   }
 }
@@ -215,11 +209,12 @@ void killProgeny(pcb_t *sender) {
   if (sender == NULL || sender->p_pid == SSIPID || isFree(sender->p_pid)) {
     return;
   }
+  
+  outChild(sender);
 
   // recurrsively kill childs
   pcb_PTR child = NULL;
   while ((child = headProcQ(&sender->p_child)) != NULL) {
-    outChild(child);
     killProgeny(child);
   }
 
