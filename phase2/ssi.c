@@ -24,12 +24,12 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   // state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // int user_state = exception_state->status;
   int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
-  unsigned syscall_response_arg = NORESPONSE;
+  unsigned syscall_response_arg = 0;
 
   if (is_user_mode) {
     // Must be in kernel mode otherwise trap!
     // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
-    Terminate_Process(ssi_pcb, sender);
+    Terminate_Process(sender, NULL);
   } else {
     switch (service) {
     case CREATEPROCESS:
@@ -37,16 +37,19 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
       break;
     case TERMPROCESS:
       Terminate_Process(sender, (pcb_t *)arg);
+      syscall_response_arg = NORESPONSE;
       // no reponse otherwise exception cannot find it 
       break;
     case DOIO:
       DoIO(sender, (ssi_do_io_PTR)arg);
+      syscall_response_arg = NORESPONSE;
       break;
     case GETTIME:
       syscall_response_arg = (unsigned)Get_CPU_Time(sender);
       break;
     case CLOCKWAIT:
       Wait_For_Clock(sender);
+      syscall_response_arg = NORESPONSE;
       break;
     case GETSUPPORTPTR:
       syscall_response_arg = (unsigned) Get_Support_Data(sender);
@@ -57,6 +60,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
     default:
       // no match with services so must end process and progeny
       Terminate_Process(sender, NULL);
+      syscall_response_arg = NORESPONSE;
       break;
     }
     // send back resoults - or just need to unblock sender
@@ -214,7 +218,7 @@ void killProgeny(pcb_t *sender) {
 
   // recurrsively kill childs
   pcb_PTR child = NULL;
-  while ((child = headProcQ(&sender->p_child)) != NULL) {
+  while ((child = removeChild(sender)) != NULL) {
     killProgeny(child);
   }
 
