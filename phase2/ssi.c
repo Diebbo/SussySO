@@ -177,10 +177,8 @@ void Wait_For_Clock(pcb_t *sender) {
   message to the SSI, as for other interrupts. This service should allow the
   sender to suspend its execution until the next pseudo-clock tick. You need to
   save the list of PCBs waiting for the tick.*/
-  // il processo si trova ad aspettare risposta dalla sys call per pseudo clock
-  outProcQ(&msg_queue_list, sender); 
-  // saving proc waiting for tick
-  insertProcQ(&pseudoClockList, sender);
+  // il processo si trova ad aspettare risposta dalla sys call per pseudo clock -> lo blocco
+  insertProcQ(&pseudoClockList, outProcQ(&msg_queue_list, sender));
   // !NO, e' gia;' in attesa di messaggio da ssi soft_block_count++;
 }
 
