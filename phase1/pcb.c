@@ -109,6 +109,7 @@ pcb_t* removeProcQ(struct list_head* head) {
     } 
     struct list_head *removed = head->next; 
     list_del(removed); // Remove the element from the queue       
+    INIT_LIST_HEAD(removed); // Reinitialize the list head of the removed PCB
     return container_of(removed, pcb_t, p_list); 
 }
 
@@ -123,6 +124,7 @@ pcb_t* outProcQ(struct list_head* head, pcb_t* p) {
         if (current_pcb->p_pid == p->p_pid) {
             // Found the PCB to be removed, delete it from the queue
             list_del(pos);
+            INIT_LIST_HEAD(pos); // Reinitialize the PCB's list head
             return p;
         }
     }
@@ -145,7 +147,6 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
         list_add_tail(&p->p_sib, &prnt->p_child);
     } else {
         // This is the first child, add it to the parent's child list
-        INIT_LIST_HEAD(&prnt->p_child);                                    
         list_add(&p->p_sib, &prnt->p_child);                               
     }
     
@@ -184,7 +185,7 @@ pcb_t* outChild(pcb_t *p) {
         if (current_child->p_pid == p->p_pid) {
             list_del(pos);
             // Reinitialize the removed child's sibling pointer and child's list head
-            INIT_LIST_HEAD(&p->p_sib); 
+            INIT_LIST_HEAD(pos); 
             p->p_parent = NULL;
             return p;
         }

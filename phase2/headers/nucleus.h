@@ -56,8 +56,6 @@ void TrapExceptionHandler(void);
 void Scheduler(void);
 void SSI_function_entry_point(void);
 void passUpOrDie(pcb_t *process, unsigned value);
-// Return pcb_ptr of a process given the list where it is and his pid, NULL if not found
-pcb_PTR findProcessPtr(struct list_head *target_process, int pid);
 /*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
 void copyState(state_t *source, state_t *dest);
 /*time accumulated function*/
