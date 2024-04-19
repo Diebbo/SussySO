@@ -52,10 +52,10 @@ void uTLB_RefillHandler(void);
 
 
 void exceptionHandler(void);
-void TrapExceptionHandler(void);
+void TrapExceptionHandler(state_t *);
 void Scheduler(void);
 void SSI_function_entry_point(void);
-void passUpOrDie(pcb_t *process, unsigned value);
+void passUpOrDie(unsigned , state_t *);
 /*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
 void copyState(state_t *source, state_t *dest);
 /*time accumulated function*/

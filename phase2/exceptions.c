@@ -27,6 +27,7 @@ void exceptionHandler() {
   unsigned is_interrupt_enabled = BIT_CHECKER(status, 7);
   unsigned is_interrupt = BIT_CHECKER(cause, 31);
 
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
   // guardare tesi di laurea per la spiegazione di come funziona
 
 
@@ -38,9 +39,8 @@ void exceptionHandler() {
 
   /*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
   if (exception_code >= 24 && exception_code <= 28) {
-    TLBExceptionHandler();
+    TLBExceptionHandler(exception_state);
   } else if (exception_code >= 8 && exception_code <= 11) {
-    state_t *exception_state = (state_t *)BIOSDATAPAGE;
     if (BIT_CHECKER(exception_state->status, 2) == USERMODE) {
       exception_state->cause = PRIVINSTR;
       exceptionHandler();
@@ -49,7 +49,7 @@ void exceptionHandler() {
     }
   } else if ((exception_code >= 0 && exception_code <= 7) ||
              (exception_code >= 12 && exception_code <= 23)) {
-    TrapExceptionHandler();
+    TrapExceptionHandler(exception_state);
   }
 }
 
@@ -196,24 +196,28 @@ void SYSCALLExceptionHandler() {
   }
 }
 
-void TrapExceptionHandler() { passUpOrDie(current_process, GENERALEXCEPT); }
+void TrapExceptionHandler(state_t *exec_state) { passUpOrDie(GENERALEXCEPT, exec_state); }
 
-void TLBExceptionHandler() { passUpOrDie(current_process, PGFAULTEXCEPT); }
+void TLBExceptionHandler(state_t *exec_state) { passUpOrDie(PGFAULTEXCEPT, exec_state); }
 
-void passUpOrDie(pcb_t *p, unsigned type) {
-  if (p == NULL || p->p_supportStruct == NULL) {
+void passUpOrDie(unsigned type, state_t *exec_state) {
+  if (current_process == NULL || current_process->p_supportStruct == NULL) {
     // then the process and the progeny of the process must be terminated
-    killProgeny(p);
+    killProgeny(current_process);
     Scheduler();
     return;
   }
 
   // 1st Save the processor state
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  copyState(exception_state, &(p->p_s));
+  copyState(exec_state, &current_process->p_supportStruct->sup_exceptState[type]);
 
   // 2nd Update the accumulated CPU time for the Current Process
-  LDCXT(p->p_supportStruct->sup_exceptContext[type].stackPtr,
-        p->p_supportStruct->sup_exceptContext[type].status,
-        p->p_supportStruct->sup_exceptContext[type].pc);
+  current_process->p_time -= deltaInterruptTime();
+  current_process->p_time += deltaTime();
+
+  // 3rd Pass up the exception
+  context_t context_pass_to = current_process->p_supportStruct->sup_exceptContext[type];
+  LDCXT(context_pass_to.stackPtr,
+        context_pass_to.status,
+        context_pass_to.pc);
 }
