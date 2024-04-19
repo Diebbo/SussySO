@@ -88,7 +88,7 @@ void SYSCALLExceptionHandler() {
 
       if (a1_reg == 0) {
         exception_state->reg_a0 = DEST_NOT_EXIST;
-        return;
+        break;
       }
 
       pcb_t *dest_process = (pcb_PTR)a1_reg;
@@ -96,14 +96,14 @@ void SYSCALLExceptionHandler() {
 
       if (isFree(dest_process_pid)) { // error!
         exception_state->reg_a0 = DEST_NOT_EXIST;
-        return;
+        break;
       }
 
       // push message
       msg = allocMsg();
       if (msg == NULL) {
         exception_state->reg_a0 = MSGNOGOOD;
-        return;
+        break;
       }
 
       msg->m_payload = (unsigned)a2_reg;

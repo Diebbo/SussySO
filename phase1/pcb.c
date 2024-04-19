@@ -54,10 +54,10 @@ int isFree(int p_pid){
 }
 
 void freePcb(pcb_t *p) {
-    if (list_empty(&pcbFree_h)) {                                           
-        // If the free list is empty, initialize it
-        INIT_LIST_HEAD(&pcbFree_h);
-    }
+    if(list_empty(&p->p_list) == FALSE){
+        list_del(&p->p_list);
+        INIT_LIST_HEAD(&p->p_list);
+    }    
     
     // Add the PCB to the tail of the existing free list
     list_add_tail(&p->p_list, &pcbFree_h);
