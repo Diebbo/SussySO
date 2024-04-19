@@ -19,9 +19,10 @@ void initPcb(pcb_PTR p){
     // Initialize p_child, p_sib, msg_inbox as an empty list
     INIT_LIST_HEAD(&p->p_child); 
     INIT_LIST_HEAD(&p->p_sib);   
+    INIT_LIST_HEAD(&p->msg_inbox); 
+    
     p->p_time = 0;
     p->p_time = 0;                                                          
-    INIT_LIST_HEAD(&p->msg_inbox); 
     p->p_supportStruct = NULL;
 
     // Update p_list for the allocated PCB
@@ -44,7 +45,8 @@ void initPcbs() {
     for (int i = 0; i < MAXPROC; ++i) {
         // Initialize the PCB array
         initPcb(&pcbTable[i]);
-        list_add(&pcbTable[i].p_list, &pcbFree_h);
+        // Add the PCB to the free list
+        freePcb(&pcbTable[i]);
     }
 
 }

@@ -15,6 +15,11 @@ void initMsgs() {
 
 void freeMsg(msg_t *m) {
     if (m) {
+        if (list_empty(&m->m_list) == FALSE){
+            list_del(&m->m_list); // Remove message from the list
+            INIT_LIST_HEAD(&m->m_list); // Initialize the list head
+        }
+        
         list_add(&m->m_list, &msgFree_h); 
     }    
 }
@@ -26,6 +31,9 @@ msg_t *allocMsg() {
         // Get the first entry from the list and obtain its address                         
         struct list_head *entry = msgFree_h.next;
         list_del(entry); // Remove message from msgFree list
+
+        // reset message list
+        INIT_LIST_HEAD(entry);
 
         // Retrieve the pointer to the actual message structure
         msg_t *m = container_of(entry, msg_t, m_list);
