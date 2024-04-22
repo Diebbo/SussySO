@@ -60,9 +60,6 @@ void initKernel() {
 
   INIT_LIST_HEAD(&msg_queue_list);
   
-  // load the system wide interval timer
-  LDIT(PSECOND);
-
   // init the first process
   pcb_t *first_process = allocPcb();
   /*state_t*/
@@ -91,7 +88,7 @@ void initKernel() {
      restarted, the stack is popped. [Section 7.4]*/
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
-  first_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  first_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK;
   first_process->p_s.mie = MIE_ALL;
 
   insertProcQ(&ready_queue_list, first_process);
@@ -107,17 +104,17 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; 
   second_process->p_s.pc_epc = (memaddr)test; 
-  second_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  second_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK;
   second_process->p_s.mie = MIE_ALL;
 
   process_count++;
 
   insertProcQ(&ready_queue_list, second_process);
 
-  setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M);
+  setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK);
   setMIE(MIE_ALL);
+  
 }
-
 
 void copyState(state_t *source, state_t *dest) {
     dest->entry_hi = source->entry_hi;

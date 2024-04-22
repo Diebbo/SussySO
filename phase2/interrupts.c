@@ -86,13 +86,13 @@ void interruptHandlerNonTimer(int IntlineNo) {
 
   termreg_t *term = (termreg_t *)dev_addr_base;
   // TODO: check con bit map quale terminale è
-  term->recv_command = RECEIVECHAR;
 
-  // a questo punto dovrebbe aver ricevuto il carattere
-  term->transm_command = RESET;
+  term->transm_command = ACK;
+  //term->recv_command = ACK;
 
   // 2. Save off the status code from the device’s device register
   unsigned status = RECVD;
+  //unsigned status = term->recv_status & 0xFF;
 
   unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
 
@@ -136,7 +136,6 @@ void interruptHandlerPLT() {
     copyState(exception_state, &current_process->p_s);
     // ! attenzione che il processo corrente è già in running
     insertProcQ(&ready_queue_list, current_process);
-    
 
     // decrement the time that takes to the process to be interrupted
     current_process->p_time -= deltaInterruptTime();
@@ -168,6 +167,13 @@ void pseudoClockHandler() {
 
     soft_block_count--;
   }
+
+  if (current_process == NULL){
+    Scheduler();
+    return;
+  }
+  
+  current_process->p_time -= deltaInterruptTime();
   LDST(&current_process->p_s);
 }
 

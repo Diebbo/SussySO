@@ -20,54 +20,43 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   terminate the process and its progeny. Also, when a process requires a service
   to the SSI, it must wait for the answer.*/
 
-  // finding if in user or kernel mode
-  // state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  // int user_state = exception_state->status;
-  int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
   unsigned syscall_response_arg = 0;
 
-  if (is_user_mode) {
-    // Must be in kernel mode otherwise trap!
-    // sbagliatissimo !!! TrapExceptionHandler(); -> cerco di uccidere l'ssi
+  switch (service) {
+  case CREATEPROCESS:
+    syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
+    break;
+  case TERMPROCESS:
+    Terminate_Process(sender, (pcb_t *)arg);
+    syscall_response_arg = NORESPONSE;
+    // no reponse otherwise exception cannot find it 
+    break;
+  case DOIO:
+    DoIO(sender, (ssi_do_io_PTR)arg);
+    syscall_response_arg = NORESPONSE;
+    break;
+  case GETTIME:
+    syscall_response_arg = (unsigned)Get_CPU_Time(sender);
+    break;
+  case CLOCKWAIT:
+    Wait_For_Clock(sender);
+    syscall_response_arg = NORESPONSE;
+    break;
+  case GETSUPPORTPTR:
+    syscall_response_arg = (unsigned) Get_Support_Data(sender);
+    break;
+  case GETPROCESSID:
+    syscall_response_arg = (unsigned)Get_Process_ID(sender, (int)arg);
+    break;
+  default:
+    // no match with services so must end process and progeny
     Terminate_Process(sender, NULL);
-  } else {
-    switch (service) {
-    case CREATEPROCESS:
-      syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
-      break;
-    case TERMPROCESS:
-      Terminate_Process(sender, (pcb_t *)arg);
-      syscall_response_arg = NORESPONSE;
-      // no reponse otherwise exception cannot find it 
-      break;
-    case DOIO:
-      DoIO(sender, (ssi_do_io_PTR)arg);
-      syscall_response_arg = NORESPONSE;
-      break;
-    case GETTIME:
-      syscall_response_arg = (unsigned)Get_CPU_Time(sender);
-      break;
-    case CLOCKWAIT:
-      Wait_For_Clock(sender);
-      syscall_response_arg = NORESPONSE;
-      break;
-    case GETSUPPORTPTR:
-      syscall_response_arg = (unsigned) Get_Support_Data(sender);
-      break;
-    case GETPROCESSID:
-      syscall_response_arg = (unsigned)Get_Process_ID(sender, (int)arg);
-      break;
-    default:
-      // no match with services so must end process and progeny
-      Terminate_Process(sender, NULL);
-      syscall_response_arg = NORESPONSE;
-      break;
-    }
-    // send back resoults - or just need to unblock sender
-    if((unsigned)syscall_response_arg != NORESPONSE)
-      SYSCALL(SENDMESSAGE, (unsigned int)sender, syscall_response_arg, 0);
-    
+    syscall_response_arg = NORESPONSE;
+    break;
   }
+  // send back resoults - or just need to unblock sender
+  if((unsigned)syscall_response_arg != NORESPONSE)
+    SYSCALL(SENDMESSAGE, (unsigned int)sender, syscall_response_arg, 0);
 }
 
 pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
@@ -152,7 +141,7 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
 
   insertProcQ(&blockedPCBs[dev_index], sender);
 
-  soft_block_count++;
+  //soft_block_count++;
 
   *arg->commandAddr = arg->commandValue;
  // !this should rise an interrupt exception from a device
@@ -175,9 +164,8 @@ void Wait_For_Clock(pcb_t *sender) {
   sender to suspend its execution until the next pseudo-clock tick. You need to
   save the list of PCBs waiting for the tick.*/
   // il processo si trova ad aspettare risposta dalla sys call per pseudo clock
-  outProcQ(&msg_queue_list, sender); 
   // saving proc waiting for tick
-  insertProcQ(&pseudoClockList, sender);
+  insertProcQ(&pseudoClockList, outProcQ(&msg_queue_list, sender));
   soft_block_count++;
 }
 

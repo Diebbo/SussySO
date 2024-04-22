@@ -102,7 +102,6 @@ pcb_t* headProcQ(struct list_head* head) {
     } 
     // Traverse to the first element and return its pointer
     return container_of(head->next, pcb_t, p_list);                    
-        
 }
 
 pcb_t* removeProcQ(struct list_head* head) {

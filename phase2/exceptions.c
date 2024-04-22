@@ -155,7 +155,7 @@ void SYSCALLExceptionHandler() {
       msg = popMessage(&current_process->msg_inbox, sender);
 
       // there is no correct message in the inbox, need to be frozen.
-      if (msg == NULL) {
+      if (msg == (msg_PTR)NULL) {
         // i can assume the process is in running state
         insertProcQ(&msg_queue_list, current_process);
         soft_block_count++;
