@@ -99,18 +99,14 @@ void interruptHandlerNonTimer(int IntlineNo) {
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
   if (caller != NULL) {
-    // !NO, il processo rimane bloccato ma in un'altra lista soft_block_count--;
-    insertProcQ(&msg_queue_list, caller);
+    // Simulating a SYS2 call to unblock the ssi  
+    msg_PTR ack = allocMsg();
+    ack->m_sender = ssi_pcb;
+    ack->m_payload = status;
+    pushMessage(&caller->msg_inbox, ack);
+    insertProcQ(&ready_queue_list, caller);
+    soft_block_count--; 
   }
-
-  // Simulating a SYS2 call to unblock the ssi  
-  msg_PTR ack = allocMsg();
-  ack->m_sender = ssi_pcb;
-  ack->m_payload = status;
-  pushMessage(&ssi_pcb->msg_inbox, ack);
-  outProcQ(&msg_queue_list, ssi_pcb);
-  insertProcQ(&ready_queue_list, ssi_pcb);
-  soft_block_count--; 
 
   // 7. Return control to the Current Process
   if (current_process == NULL)
@@ -140,7 +136,6 @@ void interruptHandlerPLT() {
     // ! attenzione che il processo corrente è già in running
     insertProcQ(&ready_queue_list, current_process);
     
-
     // decrement the time that takes to the process to be interrupted
     current_process->p_time -= deltaInterruptTime();
   }
@@ -168,8 +163,18 @@ void pseudoClockHandler() {
     msg->m_sender = ssi_pcb;
     msg->m_payload = 0;
     insertMessage(&pcb->msg_inbox, msg);
+    soft_block_count--;
   }
-  LDST(&current_process->p_s);
+
+  if (current_process == NULL) {
+    Scheduler();
+    return;
+  }
+
+  // decrement the time that takes to the process to be interrupted
+  current_process->p_time -= deltaInterruptTime();
+
+  LDST((state_t *)BIOSDATAPAGE);
 }
 
 cpu_t deltaInterruptTime(){

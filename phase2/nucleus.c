@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
 
 void initKernel() {
   // block interrupts
-  setSTATUS(ALLOFF);
+  //setSTATUS(ALLOFF);
+  //setMIE(ALLOFF);
 
   passupvector_t *passupvector = (passupvector_t *)PASSUPVECTOR;
   // populate the passup vector
@@ -113,9 +114,6 @@ void initKernel() {
   process_count++;
 
   insertProcQ(&ready_queue_list, second_process);
-
-  setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M);
-  setMIE(MIE_ALL);
 }
 
 

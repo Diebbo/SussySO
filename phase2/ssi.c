@@ -156,11 +156,7 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   // !this should rise an interrupt exception from a device
   *arg->commandAddr = arg->commandValue;
 
-  unsigned status;
-  // wait for response from device
-  SYSCALL(RECEIVEMESSAGE, (unsigned)ssi_pcb, (unsigned)&status, 0); 
-
-  return status;
+  return NORESPONSE;
 }
 
 cpu_t Get_CPU_Time(pcb_t *sender) {
