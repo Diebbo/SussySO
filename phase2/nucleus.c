@@ -127,7 +127,6 @@ void copyState(state_t *source, state_t *dest) {
     {
         dest->gpr[i] = source->gpr[i];
     }
-    
 }
 
 cpu_t deltaTime(void){
