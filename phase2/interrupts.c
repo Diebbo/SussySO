@@ -99,15 +99,18 @@ void interruptHandlerNonTimer(int IntlineNo) {
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
   if (caller != NULL) {
-    // no process is blocked -> pass control to the scheduler
-    soft_block_count--;
-
-    msg_PTR ack = allocMsg();
-    ack->m_sender = ssi_pcb;
-    ack->m_payload = status;
-    pushMessage(&caller->msg_inbox, ack);
-    insertProcQ(&ready_queue_list, caller);
+    // !NO, il processo rimane bloccato ma in un'altra lista soft_block_count--;
+    insertProcQ(&msg_queue_list, caller);
   }
+
+  // Simulating a SYS2 call to unblock the ssi  
+  msg_PTR ack = allocMsg();
+  ack->m_sender = ssi_pcb;
+  ack->m_payload = status;
+  pushMessage(&ssi_pcb->msg_inbox, ack);
+  outProcQ(&msg_queue_list, ssi_pcb);
+  insertProcQ(&ready_queue_list, ssi_pcb);
+  soft_block_count--; 
 
   // 7. Return control to the Current Process
   if (current_process == NULL)
@@ -164,8 +167,6 @@ void pseudoClockHandler() {
     msg->m_sender = ssi_pcb;
     msg->m_payload = 0;
     insertMessage(&pcb->msg_inbox, msg);
-
-    soft_block_count--;
   }
 
   if (current_process == NULL){

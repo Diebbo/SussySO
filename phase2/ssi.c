@@ -101,7 +101,7 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
-void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
+unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
     process will wait for a response from the SSI; • the SSI will eventually
@@ -135,18 +135,20 @@ void *DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   
   // in case the process has been eliminated in the meantime
   if (blocked_for_message == NULL) {
-    // no message to send
-    return NULL;
+    // no message to send back
+    return NORESPONSE;
   } 
 
   insertProcQ(&blockedPCBs[dev_index], sender);
 
-  //soft_block_count++;
-
+  // !this should rise an interrupt exception from a device
   *arg->commandAddr = arg->commandValue;
- // !this should rise an interrupt exception from a device
 
-  return NULL;
+  unsigned status;
+  // wait for response from device
+  SYSCALL(RECEIVEMESSAGE, (unsigned)ssi_pcb, (unsigned)&status, 0); 
+
+  return status;
 }
 
 cpu_t Get_CPU_Time(pcb_t *sender) {
@@ -167,6 +169,7 @@ void Wait_For_Clock(pcb_t *sender) {
   // saving proc waiting for tick
   insertProcQ(&pseudoClockList, outProcQ(&msg_queue_list, sender));
   soft_block_count++;
+
 }
 
 support_t *Get_Support_Data(pcb_t *sender) {
