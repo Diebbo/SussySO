@@ -20,10 +20,6 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   terminate the process and its progeny. Also, when a process requires a service
   to the SSI, it must wait for the answer.*/
 
-  // finding if in user or kernel mode
-  // state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  // int user_state = exception_state->status;
-  int is_user_mode = BIT_CHECKER(getSTATUS(), 1);
   unsigned syscall_response_arg = 0;
 
   switch (service)
@@ -77,16 +73,16 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   // ssi_create_process_PTR new_prole_support = arg;
   if (new_prole == NULL) // no more free PBCs
     return (pcb_PTR)NOPROC;
-  else {
-    // initialization of new prole
-    copyState(arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
-    new_prole->p_supportStruct = arg->support; // even if optional -> will be null
-    new_prole->p_time = 0;
-    process_count++;
-    insertProcQ(&ready_queue_list, new_prole);
-    insertChild(sender, new_prole);
-    return new_prole;
-  }
+  
+  // initialization of new prole
+  copyState(arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
+  new_prole->p_supportStruct = arg->support; // even if optional -> will be null
+  new_prole->p_time = 0;
+  process_count++;
+  insertProcQ(&ready_queue_list, new_prole);
+  insertChild(sender, new_prole);
+  return new_prole;
+  
 }
 
 void Terminate_Process(pcb_t *sender, pcb_t *target) {
