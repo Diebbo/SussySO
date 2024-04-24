@@ -139,9 +139,13 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   
   // in case the process has been eliminated in the meantime
   if (blocked_for_message == NULL) {
-    // no message to send back
-    return NORESPONSE;
-  } 
+    // need to check if for some reasons it's been unblocked in the meantime too
+    if ((blocked_for_message = outProcQ(&ready_queue_list, sender)) == NULL)
+      return NORESPONSE;
+    else
+      soft_block_count++;
+  }
+   
 
   insertProcQ(&blockedPCBs[dev_index], sender);
 

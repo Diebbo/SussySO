@@ -92,9 +92,8 @@ void SYSCALLExceptionHandler() {
       }
 
       pcb_t *dest_process = (pcb_PTR)a1_reg;
-      int dest_process_pid = dest_process->p_pid;
 
-      if (isFree(dest_process_pid)) { // error!
+      if (isFree(dest_process->p_pid)) { // error!
         exception_state->reg_a0 = DEST_NOT_EXIST;
         break;
       }
@@ -193,7 +192,12 @@ void SYSCALLExceptionHandler() {
     // updated interrupted state
     exception_state->pc_epc += WORDLEN;
     LDST(exception_state);
+  } else {
+    // invalid syscall
+    killProgeny(current_process);
+    Scheduler();
   }
+
 }
 
 void TrapExceptionHandler(state_t *exec_state) { passUpOrDie(GENERALEXCEPT, exec_state); }
