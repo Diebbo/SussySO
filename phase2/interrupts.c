@@ -86,10 +86,8 @@ void interruptHandlerNonTimer(int IntlineNo) {
 
   termreg_t *term = (termreg_t *)dev_addr_base;
   // TODO: check con bit map quale terminale è
-  term->recv_command = RECEIVECHAR;
 
-  // a questo punto dovrebbe aver ricevuto il carattere
-  term->transm_command = RESET;
+  term->transm_command = ACK;
 
   // 2. Save off the status code from the device’s device register
   unsigned status = RECVD;

@@ -21,6 +21,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   to the SSI, it must wait for the answer.*/
 
   unsigned syscall_response_arg = 0;
+  unsigned has_response = TRUE;
 
   switch (service)
   {
@@ -29,18 +30,19 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
     break;
   case TERMPROCESS:
     Terminate_Process(sender, (pcb_t *)arg);
-    syscall_response_arg = NORESPONSE;
+    has_response = FALSE;
     // no reponse otherwise exception cannot find it
     break;
   case DOIO:
-    syscall_response_arg = DoIO(sender, (ssi_do_io_PTR)arg);
+    DoIO(sender, (ssi_do_io_PTR)arg);
+    has_response = FALSE;
     break;
   case GETTIME:
     syscall_response_arg = (unsigned)Get_CPU_Time(sender);
     break;
   case CLOCKWAIT:
     Wait_For_Clock(sender);
-    syscall_response_arg = NORESPONSE;
+    has_response = FALSE;
     break;
   case GETSUPPORTPTR:
     syscall_response_arg = (unsigned)Get_Support_Data(sender);
@@ -51,11 +53,11 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   default:
     // no match with services so must end process and progeny
     Terminate_Process(sender, NULL);
-    syscall_response_arg = NORESPONSE;
+    has_response = FALSE;
     break;
   }
   // send back resoults - or just need to unblock sender
-  if ((unsigned)syscall_response_arg != NORESPONSE)
+  if (has_response)
     SYSCALL(SENDMESSAGE, (unsigned int)sender, syscall_response_arg, 0);
 }
 
@@ -78,6 +80,8 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   copyState(arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
   new_prole->p_supportStruct = arg->support; // even if optional -> will be null
   new_prole->p_time = 0;
+  // enalbe interrupts
+  new_prole->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
   process_count++;
   insertProcQ(&ready_queue_list, new_prole);
   insertChild(sender, new_prole);

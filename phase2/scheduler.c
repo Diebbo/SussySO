@@ -25,9 +25,8 @@ void Scheduler() {
       }
 
       if (process_count > 0 && soft_block_count > 0) {
-        // enable interrupts
+        // enable interrupts                                    // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         setTIMER(MAXINT);
-                                              // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
         setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M); // enable interrupts
         setMIE(MIE_ALL);
         

@@ -92,7 +92,7 @@ void initKernel() {
      restarted, the stack is popped. [Section 7.4]*/
 
   first_process->p_s.pc_epc = (memaddr)SSI_function_entry_point; 
-  first_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  first_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   first_process->p_s.mie = MIE_ALL;
 
   insertProcQ(&ready_queue_list, first_process);
@@ -108,7 +108,7 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE; 
   second_process->p_s.pc_epc = (memaddr)test; 
-  second_process->p_s.status = MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  second_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   second_process->p_s.mie = MIE_ALL;
 
   process_count++;
