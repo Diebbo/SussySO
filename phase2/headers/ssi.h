@@ -11,7 +11,7 @@ void SSI_Request(pcb_t *sender, int service, void *arg);
 // the sender, to be created.
 pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg);
 // When requested terminate a process and his progeny
-void Terminate_Process(pcb_t *sender, pcb_t *target);
+unsigned Terminate_Process(pcb_t *sender, pcb_t *target);
 // I/O operation
 unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg);
 // This service should allow the sender to get back the accumulated processor

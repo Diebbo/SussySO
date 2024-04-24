@@ -29,8 +29,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
     syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
     break;
   case TERMPROCESS:
-    Terminate_Process(sender, (pcb_t *)arg);
-    has_response = FALSE;
+    has_response = Terminate_Process(sender, (pcb_t *)arg);
     // no reponse otherwise exception cannot find it
     break;
   case DOIO:
@@ -89,7 +88,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   
 }
 
-void Terminate_Process(pcb_t *sender, pcb_t *target) {
+unsigned Terminate_Process(pcb_t *sender, pcb_t *target) {
   /*
   This services causes the sender process or another process to cease to exist
   [Section 11]. In addition, recursively, all progeny of that process are
@@ -100,8 +99,10 @@ void Terminate_Process(pcb_t *sender, pcb_t *target) {
   */
   if (target == NULL) {
     killProgeny(sender);
+    return FALSE;
   } else {
     killProgeny(target);
+    return TRUE;
   }
 }
 
