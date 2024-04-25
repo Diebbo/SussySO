@@ -28,7 +28,7 @@ void interruptHandler(void) {
   }
 }
 
-void interruptHandlerNonTimer(int IntlineNo) {
+void interruptHandlerNonTimer(unsigned ip_line) {
   /*  1. Calculate the address for this device’s device register
       2. Save off the status code from the device’s device register
       3. Acknowledge the outstanding interrupt
@@ -45,10 +45,10 @@ void interruptHandlerNonTimer(int IntlineNo) {
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device snumber you can use a switch among constants
   // DEVxON
-  IntlineNo -= 14;
+  // ip_line -= 14;
   int dev_no = 0;
-  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
-  unsigned *devices_bit_map = (unsigned *)(0x10000040 + 0x10);
+  
+  unsigned *devices_bit_map = (unsigned *)CDEV_BITMAP_ADDR(ip_line);
   switch (*devices_bit_map) {
   case DEV0ON:
     dev_no = 0;
@@ -74,25 +74,41 @@ void interruptHandlerNonTimer(int IntlineNo) {
   case DEV7ON:
     dev_no = 7;
     break;
-  default:
-    // Error
-    // TrapExceptionHandler();
+  default: 
     break;
   }
 
-  // Interrupt line number da calcolare
-  unsigned dev_addr_base =
-      (unsigned)0x10000054 + ((IntlineNo - 3) * 0x80) + (dev_no * 0x10);
+  // Interrupt line number
+  unsigned dev_addr_base = (unsigned)DEV_REG_ADDR(ip_line, dev_no);
+  unsigned dev_index = 0, status = 0;
 
-  termreg_t *term = (termreg_t *)dev_addr_base;
-  // TODO: check con bit map quale terminale è
 
-  term->transm_command = ACK;
+  // diffrent device interrupts
+  switch (ip_line)
+  {
+  case IL_TERMINAL:
+    termreg_t *term = (termreg_t *)dev_addr_base;
+    unsigned sub_dev_off = NOOFFSET;
 
-  // 2. Save off the status code from the device’s device register
-  unsigned status = RECVD;
+    // check if the interrupt is coused from the second subdevice
+    if (term->transm_status & (0x7 << SUBDEVOFF)) {
+      sub_dev_off = SUBDEVOFF;
+    }
 
-  unsigned dev_index = (IntlineNo - 3) * 8 + dev_no;
+    // 2. Save off the status code from the device’s device register
+    status = (term->transm_status >> sub_dev_off) & 0x7;
+
+    // 3. Acknowledge the outstanding interrupt
+    term->transm_command = (ACK  << sub_dev_off);
+
+    // 4. Send a message and unblock the PCB waiting the status
+    dev_index = DEVINDEX(ip_line, dev_no);
+
+    break;
+  default:
+    // Check for other types of devices (TODO)
+    break;
+  }
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
@@ -126,7 +142,6 @@ void interruptHandlerPLT() {
     - Call the Scheduler.
   */
   setTIMER(TIMESLICE);
-  // STST(&caller->p_s);
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
 
   if (current_process != NULL) {

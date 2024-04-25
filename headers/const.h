@@ -23,6 +23,11 @@
 
 #define MAXINT 0x7FFFFFFF
 
+#define SUBDEVOFF 0x10
+#define NOOFFSET  0x0
+
+#define DEVINDEX(ip_line, dev_no) ((ip_line - 17) * 8 + dev_no)
+
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
 #define RAMBASESIZE   0x10000004

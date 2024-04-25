@@ -11,7 +11,7 @@ cpu_t time_interrupt_start;
 
 cpu_t deltaInterruptTime(void);
 void interruptHandler(void);
-void interruptHandlerNonTimer(int IntlineNo);
+void interruptHandlerNonTimer(unsigned);
 void interruptHandlerPLT();
 void pseudoClockHandler();
 
