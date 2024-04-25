@@ -7,13 +7,14 @@ interrupts and convert them into appropriate messages for blocked PCBs.*/
     // 1. Read the interrupt lines from the interrupting devices
     // 2. Return the interrupt lines
     return getCAUSE() & IOINTERRUPTS & TIMERINTERRUPT & DISKINTERRUPT &
-FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
+    FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
 }*/
 
 void interruptHandler(void) {
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
-  unsigned ip = exce_mie & exce_mip; // interrupt pending
+  // pending interrupt
+  unsigned ip = exce_mie & exce_mip; 
   if (BIT_CHECKER(ip, 7)) {
     interruptHandlerPLT();
   }
@@ -39,15 +40,14 @@ void interruptHandlerNonTimer(int IntlineNo) {
           transitioning this process from the “blocked” state to the
           “ready” state
       7. Return control to the Current Process
-*/
+    */
 
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device snumber you can use a switch among constants
   // DEVxON
   IntlineNo -= 14;
   int dev_no = 0;
-  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo -
-  // 3);
+  // unsigned *devices_bit_map = (unsigned *)0x10000040 + 0x04 * (IntlineNo - 3);
   unsigned *devices_bit_map = (unsigned *)(0x10000040 + 0x10);
   switch (*devices_bit_map) {
   case DEV0ON:
@@ -131,7 +131,7 @@ void interruptHandlerPLT() {
 
   if (current_process != NULL) {
     copyState(exception_state, &current_process->p_s);
-    // ! attenzione che il processo corrente è già in running
+    // ! WARNING: process already running
     insertProcQ(&ready_queue_list, current_process);
     
     // decrement the time that takes to the process to be interrupted
@@ -154,7 +154,7 @@ void pseudoClockHandler() {
   pcb_PTR pcb = NULL;
   while ((pcb = removeProcQ(&pseudoClockList)) !=
          NULL) { 
-    // sblocco il processo - SYS2
+    // unlock process - SYS2
     insertProcQ(&ready_queue_list, pcb);
 
     msg_PTR msg = allocMsg();

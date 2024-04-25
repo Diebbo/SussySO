@@ -1,10 +1,8 @@
 #include "./headers/exceptions.h"
 
 extern cpu_t time_interrupt_start;
-/*
-given an unsigned int and an integer representing the bit you want to check
-(0-indexed) and return 1 if the bit is 1, 0 otherwise
-*/
+/* given an unsigned int and an integer representing the bit you want to check
+ (0-indexed) and return 1 if the bit is 1, 0 otherwise */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
 void uTLB_RefillHandler() {
@@ -28,16 +26,13 @@ void exceptionHandler() {
   unsigned is_interrupt = BIT_CHECKER(cause, 31);
 
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  // guardare tesi di laurea per la spiegazione di come funziona
 
-
-  // else are exceptions
+  // check if interrupts first
   if (is_interrupt_enabled && is_interrupt) {
     interruptHandler();
     return;
   }
-
-  /*fare riferimento a sezione 12 delle slide 'phase2spec' x riscv*/
+  /*specific code for uRISCV*/
   if (exception_code >= 24 && exception_code <= 28) {
     TLBExceptionHandler(exception_state);
   } else if (exception_code >= 8 && exception_code <= 11) {
@@ -117,8 +112,8 @@ void SYSCALLExceptionHandler() {
       insertMessage(&dest_process->msg_inbox, msg);
       exception_state->reg_a0 = 0;
       /*on success returns/places 0 in the caller’s v0, otherwise
-                      MSGNOGOOD is used to provide a meaningful error
-        condition on return*/
+        MSGNOGOOD is used to provide a meaningful error condition 
+        on return*/
 
       break;
     case RECEIVEMESSAGE:
@@ -138,17 +133,16 @@ void SYSCALLExceptionHandler() {
       process is looking for the first message in its inbox, without any
       restriction about the sender. In this case it will be frozen only if
       the queue is empty, and the first message sent to it will wake up it
-      and put it in the Ready Queue.
-    */
+      and put it in the Ready Queue.*/
 
       /*
-       * NOTA implementativa:
-       * 1. messaggio gia' in inbox -> restituire il messaggio
-       * 2. messaggio non presente -> bloccare il processo
-       * */
-      pcb_t *sender = (pcb_PTR)a1_reg; // the desired sender pid
-      //state_t exception_state_prev;
-      //copyState(exception_state, &exception_state_prev);
+       * NOTE:
+       * 1. msg already in inbox -> give back msg
+       * 2. msg not found -> blocck process
+       *
+       */
+      //desired sender pid
+      pcb_t *sender = (pcb_PTR)a1_reg;
 
       // if the sender is NULL, then the process is looking for the first
       msg = popMessage(&current_process->msg_inbox, sender);
@@ -158,13 +152,10 @@ void SYSCALLExceptionHandler() {
         // i can assume the process is in running state
         insertProcQ(&msg_queue_list, current_process);
         soft_block_count++;
-
         // save the processor state
         copyState(exception_state, &(current_process->p_s));
-
         // update the accumulated CPU time for the Current Process
         current_process->p_time -= deltaInterruptTime();
-
         // get the next process
         Scheduler();
         return;
@@ -197,7 +188,6 @@ void SYSCALLExceptionHandler() {
     killProgeny(current_process);
     Scheduler();
   }
-
 }
 
 void TrapExceptionHandler(state_t *exec_state) { passUpOrDie(GENERALEXCEPT, exec_state); }
@@ -211,17 +201,12 @@ void passUpOrDie(unsigned type, state_t *exec_state) {
     Scheduler();
     return;
   }
-
   // 1st Save the processor state
   copyState(exec_state, &current_process->p_supportStruct->sup_exceptState[type]);
-
   // 2nd Update the accumulated CPU time for the Current Process
   current_process->p_time -= deltaInterruptTime();
   current_process->p_time += deltaTime();
-
   // 3rd Pass up the exception
   context_t context_pass_to = current_process->p_supportStruct->sup_exceptContext[type];
-  LDCXT(context_pass_to.stackPtr,
-        context_pass_to.status,
-        context_pass_to.pc);
+  LDCXT(context_pass_to.stackPtr, context_pass_to.status, context_pass_to.pc);
 }

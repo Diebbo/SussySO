@@ -1,17 +1,14 @@
 #include "./headers/ssi.h"
-
+/* given an unsigned int and an integer representing the bit you want to check
+ (0-indexed) and return 1 if the bit is 1, 0 otherwise */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
 void SSI_function_entry_point() {
   while (TRUE) {
-    // find msg payload in modo sensato magari
     ssi_payload_PTR process_request_payload;
-
     pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
-
     // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
-    SSI_Request(process_request_ptr, process_request_payload->service_code,
-                process_request_payload->arg);
+    SSI_Request(process_request_ptr, process_request_payload->service_code,process_request_payload->arg);
   }
 }
 
@@ -26,7 +23,7 @@ void SSI_Request(pcb_PTR sender, int service, void *arg) {
   switch (service)
   {
   case CREATEPROCESS:
-    syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg); // giusta fare una roba de genere per 2
+    syscall_response_arg = (unsigned)Create_Process(sender, (ssi_create_process_t *)arg);
     break;
   case TERMPROCESS:
     has_response = Terminate_Process(sender, (pcb_t *)arg);
@@ -76,7 +73,7 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
     return (pcb_PTR)NOPROC;
   
   // initialization of new prole
-  copyState(arg->state,&new_prole->p_s);//non mi avete cagato e allora io inverto i parametri.
+  copyState(arg->state,&new_prole->p_s);
   new_prole->p_supportStruct = arg->support; // even if optional -> will be null
   new_prole->p_time = 0;
   // enalbe interrupts
@@ -129,8 +126,8 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     elaborate the request from the device; • given the device address, the SSI
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
-  // unsigned dev_no = 7; // da specifiche per terminale
-  unsigned dev_line = IL_TERMINAL - IL_OFFSET; // da specifiche per terminale  
+  // unsigned dev_no = 7;                       // *specs for terminal *
+  unsigned dev_line = IL_TERMINAL - IL_OFFSET;  // *                   *
   unsigned dev_no = (unsigned)arg->commandAddr - 0x10000054 - ((dev_line-3) * 0x80);
   dev_no = dev_no / 0x10;
 
@@ -150,7 +147,7 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
 
   insertProcQ(&blockedPCBs[dev_index], sender);
 
-  // !NO, il dispositivo e' gia bloccato in attesa di messaggio, soft_block_count++;
+  // !NO, device is already blocked (need msg), soft_block_count++;
 
   // !this should rise an interrupt exception from a device
   *arg->commandAddr = arg->commandValue;
@@ -174,7 +171,7 @@ void Wait_For_Clock(pcb_t *sender) {
   save the list of PCBs waiting for the tick.*/
   // il processo si trova ad aspettare risposta dalla sys call per pseudo clock -> lo blocco
   insertProcQ(&pseudoClockList, outProcQ(&msg_queue_list, sender));
-  // !NO, e' gia;' in attesa di messaggio da ssi soft_block_count++;
+  // !NO, e' already waiting mdg from ssi, soft_block_count++;
 }
 
 support_t *Get_Support_Data(pcb_t *sender) {

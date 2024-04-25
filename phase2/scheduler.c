@@ -25,14 +25,14 @@ void Scheduler() {
       }
 
       if (process_count > 0 && soft_block_count > 0) {
-        // enable interrupts                                    // dal generare interrupt, guardare sezione "important" del paragrafo 2 di spec
+        // enable interrupts                                    
         setTIMER(MAXINT);
         setSTATUS(MSTATUS_MIE_MASK | MSTATUS_MPP_M); // enable interrupts
         setMIE(MIE_ALL);
         
         // wait for an interrupt
         WAIT();
-      } else if(process_count > 0 && soft_block_count == 0) { // process count > 0 soft block count = 0
+      } else if(process_count > 0 && soft_block_count == 0) { 
         PANIC();
       }
 
@@ -42,5 +42,4 @@ void Scheduler() {
       setTIMER(TIMESLICE);
       LDST(&current_process->p_s);
     }
-  
 }
