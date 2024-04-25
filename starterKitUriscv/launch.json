@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "URISC-V GDB",
+            "type": "gdb",
+            "request": "attach",
+            "executable": "${workspaceRoot}/project/uriscv/kernel",
+            "target": "localhost:8080",
+            "remote": true,
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "gdbpath": "/opt/riscv/bin/riscv32-unknown-linux-gnu-gdb",
+            "stopAtEntry": true
+        }
+    ]
+}

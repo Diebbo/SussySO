@@ -15,6 +15,11 @@ void initMsgs() {
 
 void freeMsg(msg_t *m) {
     if (m) {
+        if (list_empty(&m->m_list) == FALSE){
+            list_del(&m->m_list); // Remove message from the list
+            INIT_LIST_HEAD(&m->m_list); // Initialize the list head
+        }
+        
         list_add(&m->m_list, &msgFree_h); 
     }    
 }
@@ -26,6 +31,9 @@ msg_t *allocMsg() {
         // Get the first entry from the list and obtain its address                         
         struct list_head *entry = msgFree_h.next;
         list_del(entry); // Remove message from msgFree list
+
+        // reset message list
+        INIT_LIST_HEAD(entry);
 
         // Retrieve the pointer to the actual message structure
         msg_t *m = container_of(entry, msg_t, m_list);
@@ -55,6 +63,12 @@ void pushMessage(struct list_head *head, msg_t *m) {
 }
 
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
+    if (p_ptr == NULL)
+        return popMessageByPid(head, ANYMESSAGE);
+    return popMessageByPid(head, p_ptr->p_pid);
+}
+
+msg_t *popMessageByPid(struct list_head *head, int pid) {
     struct list_head *pos;
     msg_t *msg = NULL;
 
@@ -64,8 +78,10 @@ msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
 
     list_for_each(pos, head) {
         msg = container_of(pos, msg_t, m_list);
-        if (p_ptr == NULL || msg->m_sender == p_ptr) {                                      
+        if (msg->m_sender->p_pid == pid || pid == ANYMESSAGE) {                                      
             list_del(pos); // Remove the message from the list                              
+            INIT_LIST_HEAD(pos); // Initialize the list head
+            freeMsg(msg); // Free the message
             return msg;
         }
     }

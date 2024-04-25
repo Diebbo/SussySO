@@ -18,6 +18,6 @@
         "asid": 64,
         "file": "kernel.stab.uriscv"
     },
-    "tlb-floor-address": "0xffffffff",
+    "tlb-floor-address": "0x80000000",
     "tlb-size": 16
 }

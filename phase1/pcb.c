@@ -1,54 +1,68 @@
 #include "./headers/pcb.h"
 
 static pcb_t pcbTable[MAXPROC];  /* PCB array with maximum size 'MAXPROC' */
-LIST_HEAD(pcbFree_h);            /* List of free PCBs                     */
-static int next_pid = 1;
+LIST_HEAD(pcbFree_h); /* List head for the free PCBs */
+int next_pid = 1; /* Next PID to be assigned */
+
+int isInList(struct list_head *target_process, int pid) {
+  pcb_PTR tmp;
+  list_for_each_entry(tmp, target_process, p_list) {
+    if (tmp->p_pid == pid)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+void initPcb(pcb_PTR p){
+    // Reset PCB members if needed
+    p->p_parent = NULL;
+    // Initialize p_child, p_sib, msg_inbox as an empty list
+    INIT_LIST_HEAD(&p->p_child); 
+    INIT_LIST_HEAD(&p->p_sib);   
+    INIT_LIST_HEAD(&p->msg_inbox); 
+    
+    p->p_time = 0;
+    p->p_time = 0;                                                          
+    p->p_supportStruct = NULL;
+
+    // Update p_list for the allocated PCB
+    INIT_LIST_HEAD(&p->p_list);                                            
+
+    // Reset the processor state
+    p->p_s.entry_hi = 0;
+    p->p_s.cause = 0;
+    p->p_s.status = 0;
+    p->p_s.pc_epc = 0;
+    p->p_s.mie = 0;
+
+    p->p_pid = 0;
+}
 
 void initPcbs() {
-    // Initialize the list head for the free PCBs                           
-    INIT_LIST_HEAD(&pcbFree_h);
+    // Initialize the list head for the free 
+    // assum to be already initialized
 
     for (int i = 0; i < MAXPROC; ++i) {
-        INIT_LIST_HEAD(&pcbTable[i].p_list);
+        // Initialize the PCB array
+        initPcb(&pcbTable[i]);
+        // Add the PCB to the free list
+        freePcb(&pcbTable[i]);
+    }
 
-        // Reset PCB fields to initial values:                              
-        // Initializing p_child, p_sib, msg_inbox as an empty list          
-        // Resetting processor state, cpu time, process ID to 0             
-        // Resetting p_supportStruct to NULL                                
-        pcbTable[i].p_parent = NULL;                                        
-        INIT_LIST_HEAD(&pcbTable[i].p_child);                               
-        INIT_LIST_HEAD(&pcbTable[i].p_sib);      
+}
 
-        // init null state of the cpu
-        pcbTable[i].p_s.entry_hi = 0;
-        pcbTable[i].p_s.cause = 0;
-        pcbTable[i].p_s.status = 0;
-        pcbTable[i].p_s.pc_epc = 0;
-        pcbTable[i].p_s.mie = 0;
-
-        for(int i = 0; i < STATE_GPR_LEN; i++) {
-            pcbTable[i].p_s.gpr[i] = 0;
-        }
-
-        pcbTable[i].p_time = 0;                                             
-        INIT_LIST_HEAD(&pcbTable[i].msg_inbox);                             
-        pcbTable[i].p_supportStruct = NULL;                                 
-        pcbTable[i].p_pid = 0;                                              
-
-        list_add(&pcbTable[i].p_list, &pcbFree_h);
-    }  
+int isFree(int p_pid){
+    return isInList(&pcbFree_h, p_pid);
 }
 
 void freePcb(pcb_t *p) {
-    if (list_empty(&pcbFree_h)) {                                           
-        // If the free list is empty, initialize it
-        INIT_LIST_HEAD(&pcbFree_h);
-    }
+    if(list_empty(&p->p_list) == FALSE){
+        list_del(&p->p_list);
+        INIT_LIST_HEAD(&p->p_list);
+    }    
     
     // Add the PCB to the tail of the existing free list
     list_add_tail(&p->p_list, &pcbFree_h);
-    
-
 }
 
 pcb_t *allocPcb() {                                                         
@@ -61,19 +75,11 @@ pcb_t *allocPcb() {
     // Convert the list_head to the PCB type
     pcb_t *p = container_of(head, pcb_t, p_list);                           
 
-    // Reset PCB members if needed
-    p->p_parent = NULL;
-    // Initialize p_child, p_sib, msg_inbox as an empty list
-    INIT_LIST_HEAD(&p->p_child); 
-    INIT_LIST_HEAD(&p->p_sib);   
-    p->p_time = 0;
-    p->p_time = 0;                                                          
-    INIT_LIST_HEAD(&p->msg_inbox); 
-    p->p_supportStruct = NULL;
-    p->p_pid = next_pid++;
+    // Initialize the PCB fields
+    initPcb(p);
 
-    // Update p_list for the allocated PCB
-    INIT_LIST_HEAD(&p->p_list);                                            
+    // Assign the next PID to the PCB
+    p->p_pid = next_pid++;
 
     return p;
 }
@@ -105,11 +111,12 @@ pcb_t* removeProcQ(struct list_head* head) {
     } 
     struct list_head *removed = head->next; 
     list_del(removed); // Remove the element from the queue       
+    INIT_LIST_HEAD(removed); // Reinitialize the list head of the removed PCB
     return container_of(removed, pcb_t, p_list); 
 }
 
 pcb_t* outProcQ(struct list_head* head, pcb_t* p) {
-    if (!p || list_empty(head)) {
+    if (p == NULL || list_empty(head)) {
         return NULL; // Invalid PCB pointer or empty queue, return NULL
     }
 
@@ -119,6 +126,7 @@ pcb_t* outProcQ(struct list_head* head, pcb_t* p) {
         if (current_pcb->p_pid == p->p_pid) {
             // Found the PCB to be removed, delete it from the queue
             list_del(pos);
+            INIT_LIST_HEAD(pos); // Reinitialize the PCB's list head
             return p;
         }
     }
@@ -141,7 +149,6 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
         list_add_tail(&p->p_sib, &prnt->p_child);
     } else {
         // This is the first child, add it to the parent's child list
-        INIT_LIST_HEAD(&prnt->p_child);                                    
         list_add(&p->p_sib, &prnt->p_child);                               
     }
     
@@ -150,7 +157,7 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
 }
 
 pcb_t* removeChild(pcb_t *p) {
-    if (list_empty(&p->p_child)) {
+    if (p == NULL || list_empty(&p->p_child)) {
         // No children to remove
         return NULL;
     }
@@ -160,7 +167,7 @@ pcb_t* removeChild(pcb_t *p) {
 
     list_del(first_child);
     // Reinitialize the removed child's sibling pointer
-    INIT_LIST_HEAD(&removed_child->p_sib);                                 
+    INIT_LIST_HEAD(first_child);                                 
 
     removed_child->p_parent = NULL;
 
@@ -168,7 +175,7 @@ pcb_t* removeChild(pcb_t *p) {
 }
 
 pcb_t* outChild(pcb_t *p) {
-    if (!p->p_parent) {
+    if (p == NULL || !p->p_parent) {
         // No parent, return NULL
         return NULL;
     }
@@ -180,8 +187,7 @@ pcb_t* outChild(pcb_t *p) {
         if (current_child->p_pid == p->p_pid) {
             list_del(pos);
             // Reinitialize the removed child's sibling pointer and child's list head
-            INIT_LIST_HEAD(&p->p_sib); 
-            INIT_LIST_HEAD(&p->p_child);              
+            INIT_LIST_HEAD(pos);
             p->p_parent = NULL;
             return p;
         }

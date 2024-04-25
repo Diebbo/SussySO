@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "complex": "cpp",
+        "types.h": "c",
+        "pcb.h": "c",
+        "stdlib.h": "c",
+        "listx.h": "c",
+        "liburiscv.h": "c",
+        "nucleus.h": "c",
+        "executor": "c",
+        "ssi.h": "c",
+        "*.inc": "c",
+        "const.h": "c",
+        "interrupts.h": "c",
+        "exceptions.h": "c"
+    }
+}
