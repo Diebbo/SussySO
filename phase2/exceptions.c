@@ -36,9 +36,10 @@ void exceptionHandler() {
   if (exception_code >= 24 && exception_code <= 28) {
     TLBExceptionHandler(exception_state);
   } else if (exception_code >= 8 && exception_code <= 11) {
-    if (BIT_CHECKER(exception_state->status, 2) == USERMODE) {
+    // check if user mode
+    if ((exception_state->status & MSTATUS_MPP_MASK) == MSTATUS_MPP_U) {
       exception_state->cause = PRIVINSTR;
-      exceptionHandler();
+      TrapExceptionHandler(exception_state);
     } else {
       SYSCALLExceptionHandler();
     }
@@ -185,8 +186,7 @@ void SYSCALLExceptionHandler() {
     LDST(exception_state);
   } else {
     // invalid syscall
-    killProgeny(current_process);
-    Scheduler();
+    TrapExceptionHandler(exception_state);
   }
 }
 
@@ -206,6 +206,7 @@ void passUpOrDie(unsigned type, state_t *exec_state) {
   // 2nd Update the accumulated CPU time for the Current Process
   current_process->p_time -= deltaInterruptTime();
   current_process->p_time += deltaTime();
+  
   // 3rd Pass up the exception
   context_t context_pass_to = current_process->p_supportStruct->sup_exceptContext[type];
   LDCXT(context_pass_to.stackPtr, context_pass_to.status, context_pass_to.pc);

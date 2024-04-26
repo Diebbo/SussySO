@@ -819,7 +819,7 @@ void child1()
 {
     print_term0("child1 starts\n");
 
-    int pidc1;        print_term0("Address Error (as expected): non-kuseg access w/KU=1\n");
+    int pidc1;
     ssi_payload_t get_process_payload = {
         .service_code = GETPROCESSID,
         .arg = (void *)1,
