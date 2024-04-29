@@ -6,14 +6,106 @@
     "bootstrap-rom": "/usr/local/share/uriscv/coreboot.rom.uriscv",
     "clock-rate": 1,
     "devices": {
+        "flash0": {
+            "enabled": true,
+            "file": "./testers/todTest.uriscv"
+        },
+        "flash1": {
+            "enabled": true,
+            "file": "./testers/terminalTest1.uriscv"
+        },
+        "flash2": {
+            "enabled": true,
+            "file": "./testers/terminalTest2.uriscv"
+        },
+        "flash3": {
+            "enabled": true,
+            "file": "./testers/terminalTest3.uriscv"
+        },
+        "flash4": {
+            "enabled": true,
+            "file": "./testers/terminalTest4.uriscv"
+        },
+        "flash5": {
+            "enabled": true,
+            "file": "./testers/fibEight.uriscv"
+        },
+        "flash6": {
+            "enabled": true,
+            "file": "./testers/fibEleven.uriscv"
+        },
+        "flash7": {
+            "enabled": true,
+            "file": "./testers/printerTest.uriscv"
+        },
+        "printer0": {
+            "enabled": true,
+            "file": "printer0.uriscv"
+        },
+        "printer1": {
+            "enabled": true,
+            "file": "printer1.uriscv"
+        },
+        "printer2": {
+            "enabled": true,
+            "file": "printer2.uriscv"
+        },
+        "printer3": {
+            "enabled": true,
+            "file": "printer3.uriscv"
+        },
+        "printer4": {
+            "enabled": true,
+            "file": "printer4.uriscv"
+        },
+        "printer5": {
+            "enabled": true,
+            "file": "printer5.uriscv"
+        },
+        "printer6": {
+            "enabled": true,
+            "file": "printer6.uriscv"
+        },
+        "printer7": {
+            "enabled": true,
+            "file": "printer7.uriscv"
+        },
         "terminal0": {
             "enabled": true,
             "file": "term0.uriscv"
+        },
+        "terminal1": {
+            "enabled": true,
+            "file": "term1.uriscv"
+        },
+        "terminal2": {
+            "enabled": true,
+            "file": "term2.uriscv"
+        },
+        "terminal3": {
+            "enabled": true,
+            "file": "term3.uriscv"
+        },
+        "terminal4": {
+            "enabled": true,
+            "file": "term4.uriscv"
+        },
+        "terminal5": {
+            "enabled": true,
+            "file": "term5.uriscv"
+        },
+        "terminal6": {
+            "enabled": true,
+            "file": "term6.uriscv"
+        },
+        "terminal7": {
+            "enabled": true,
+            "file": "term7.uriscv"
         }
     },
     "execution-rom": "/usr/local/share/uriscv/exec.rom.uriscv",
     "num-processors": 1,
-    "num-ram-frames": 64,
+    "num-ram-frames": 256,
     "symbol-table": {
         "asid": 64,
         "file": "kernel.stab.uriscv"
@@ -21,3 +113,4 @@
     "tlb-floor-address": "0x80000000",
     "tlb-size": 16
 }
+

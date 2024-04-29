@@ -15,28 +15,37 @@ typedef signed int cpu_t;
 typedef unsigned int memaddr;
 
 /* Page Table Entry descriptor */
-typedef struct pteEntry_t {
+typedef struct pteEntry_t
+{
     unsigned int pte_entryHI;
     unsigned int pte_entryLO;
 } pteEntry_t;
 
-
 /* Support level context */
-typedef struct context_t {
+typedef struct context_t
+{
     unsigned int stackPtr;
     unsigned int status;
     unsigned int pc;
 } context_t;
 
-
 /* Support level descriptor */
-typedef struct support_t {
-    int        sup_asid;                        /* process ID					*/
-    state_t    sup_exceptState[2];              /* old state exceptions			*/
-    context_t  sup_exceptContext[2];            /* new contexts for passing up	*/
+typedef struct support_t
+{
+    int sup_asid;                               /* process ID					*/
+    state_t sup_exceptState[2];                 /* old state exceptions			*/
+    context_t sup_exceptContext[2];             /* new contexts for passing up	*/
     pteEntry_t sup_privatePgTbl[USERPGTBLSIZE]; /* user page table				*/
     struct list_head s_list;
 } support_t;
+
+/* Page swap pool information structure type */
+typedef struct swap_t
+{
+    int sw_asid;        /* ASID number			*/
+    int sw_pageNo;      /* page's virt page no.	*/
+    pteEntry_t *sw_pte; /* page's PTE entry.	*/
+} swap_t;
 
 /* process table entry type */
 typedef struct pcb_t
@@ -50,18 +59,6 @@ typedef struct pcb_t
     struct list_head p_sib;   /* sibling list  */
 
     /* process status information */
-    /** state_t informations
-     * 
-     * s_entryHI: This field likely represents the value of the EntryHi register. In the context of MIPS architecture, the EntryHi register holds the high-order address bits of the virtual address being translated.
-     * 
-     * s_cause: This field probably corresponds to the Cause register. In MIPS, the Cause register holds information about exceptions and interrupts, indicating the cause of the most recent exception or interrupt.
-     * 
-     * s_status: This field is likely associated with the Status register. In MIPS, the Status register contains various control and status bits, including interrupt enable/disable bits and the current processor mode.
-     * 
-     * s_pc: This field likely represents the Program Counter (PC), which holds the address of the next instruction to be executed.
-     * 
-     * s_reg[STATEREGNUM]: This is an array of integers (int) representing general-purpose registers. The size of the array is defined by the constant STATEREGNUM. Each element in this array likely corresponds to a specific general-purpose register in the processor.
-    */
     state_t p_s;  /* processor state */
     cpu_t p_time; /* cpu time used by proc */
 
@@ -85,7 +82,7 @@ typedef struct msg_t
     struct pcb_t *m_sender;
 
     /* the payload of the message */
-	unsigned int m_payload;
+    unsigned int m_payload;
 } msg_t, *msg_PTR;
 
 typedef struct ssi_payload_t
@@ -102,8 +99,14 @@ typedef struct ssi_create_process_t
 
 typedef struct ssi_do_io_t
 {
-    memaddr* commandAddr;
+    memaddr *commandAddr;
     unsigned int commandValue;
 } ssi_do_io_t, *ssi_do_io_PTR;
+
+typedef struct sst_print_t
+{
+    int length;
+    char *string;
+} sst_print_t, *sst_print_PTR;
 
 #endif
