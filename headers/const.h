@@ -9,15 +9,25 @@
 
 #include <uriscv/const.h>
 
-/* Number of semaphore's device */
-#define SEMDEVLEN 49
-#define RECVD    5
+ /* Number of semaphore's device */
+ #define SEMDEVLEN 49
+ #define RECVD    5
+ #define WAITINGMSG 0
+ #define REGISTERNUMBER 32
+ 
+ /* Hardware & software constants */
+ #define PAGESIZE 4096 /* page size in bytes	*/
+ #define WORDLEN  4    /* word size in bytes	*/
+ 
+ #define USERMODE 1
 
-/* Hardware & software constants */
-#define PAGESIZE 4096 /* page size in bytes	*/
-#define WORDLEN  4    /* word size in bytes	*/
+ #define MAXINT 0x7FFFFFFF
 
+ #define SUBDEVOFF 0x10
+ #define NOOFFSET  0x0
 
+ #define DEVINDEX(ip_line, dev_no) ((ip_line - 17) * 8 + dev_no)
+ 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
 #define RAMBASESIZE   0x10000004
@@ -49,6 +59,7 @@
 #define SENDMESSAGE -1
 #define RECEIVEMESSAGE -2
 
+#define NORESPONSE -1
 #define CREATEPROCESS 1
 #define TERMPROCESS   2
 #define DOIO          3
@@ -57,6 +68,8 @@
 #define GETSUPPORTPTR 6
 #define GETPROCESSID  7
 
+#define NORESPONSE -1
+
 /* Status register constants */
 #define ALLOFF      0x00000000
 #define USERPON     0x00000008
@@ -64,11 +77,13 @@
 #define IECON       0x00000001
 #define IMON        0x0000FF00
 #define TEBITON     0x08000000
+#define TEBITOFF    0xF7FFFFFF
 #define DISABLEINTS 0xFFFFFFFE
 
 #define IL_TIMER 3
 #define IL_CPUTIMER 7
 
+#define IL_OFFSET 14
 #define IL_IPI 16
 #define IL_DISK 17
 #define IL_FLASH 18
