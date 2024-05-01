@@ -26,9 +26,7 @@ all : kernel.core.uriscv
 kernel.core.uriscv : kernel
 	uriscv-elf2uriscv -k $<
 
-OBJ_DIRS := ./phase1 ./phase2 ./phase3
-OBJ_FILES := $(wildcard $(addsuffix /*.o,$(OBJ_DIRS)))
-kernel: $(OBJ_FILES) crtso.o liburiscv.o
+kernel: ./phase1/msg.o ./phase1/pcb.o ./phase2/ssi.o ./phase2/exceptions.o ./phase2/interrupts.o ./phase2/scheduler.o ./phase2/nucleus.o ./phase3/sst.o ./phase3/vmmenager.o crtso.o liburiscv.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
