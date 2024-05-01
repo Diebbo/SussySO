@@ -5,7 +5,15 @@ various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 #define SSI_H
 #include "nucleus.h"
 
-
+// SSI process
+extern pcb_PTR ssi_pcb;
+// SSI process id 
+#define SSIPID 0xFFFFFFFE 
+//ssi init
+void initSSI(void);
+// SSI enty point
+void SSI_function_entry_point(void);
+// SSI processing request
 void SSI_Request(pcb_t *sender, int service, void *arg);
 // When requested, this service causes a new process, said to be a progeny of
 // the sender, to be created.

@@ -1,7 +1,32 @@
 #include "./headers/ssi.h"
-/* given an unsigned int and an integer representing the bit you want to check
- (0-indexed) and return 1 if the bit is 1, 0 otherwise */
-#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
+
+void initSSI(){
+    // init the first process
+  ssi_pcb = allocPcb();
+  /*init first process state */
+  RAMTOP(ssi_pcb->p_s.reg_sp); // Set SP to RAMTOP
+
+  /*FROM MANUAL:
+          IEc: bit 0 - The “current” global interrupt enable bit. When 0,
+     regardless of the settings in Status.IM all interrupts are disabled. When
+     1, interrupt acceptance is controlled by Status.IM. • KUc: bit 1 - The
+     “current” kernel-mode user-mode control bit. When Sta- tus.KUc=0 the
+     processor is in kernel-mode. • IEp & KUp: bits 2-3 - the “previous”
+     settings of the Status.IEc and Sta- tus.KUc. • IEo & KUo: bits 4-5 - the
+     “previous” settings of the Status.IEp and Sta- tus.KUp - denoted the “old”
+     bit settings. These six bits; IEc, KUc, IEp, KUp, IEo, and KUo act as
+     3-slot deep KU/IE bit stacks. Whenever an exception is raised the stack is
+     pushed [Section 3.1] and whenever an interrupted execution stream is
+     restarted, the stack is popped. [Section 7.4]*/
+
+  ssi_pcb->p_s.pc_epc = (memaddr)SSI_function_entry_point;
+  ssi_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+  ssi_pcb->p_s.mie = MIE_ALL;
+
+  insertProcQ(&ready_queue_list, ssi_pcb);
+
+  ssi_pcb->p_pid = SSIPID;
+}
 
 void SSI_function_entry_point() {
   while (TRUE) {

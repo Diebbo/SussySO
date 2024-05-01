@@ -8,6 +8,9 @@ This module should also contain the provided skeleton TLB-Refill event handler.*
 
 void TLBExceptionHandler(state_t *);
 void SYSCALLExceptionHandler(void);
+void passUpOrDie(unsigned , state_t *);
+void exceptionHandler(void);
+void TrapExceptionHandler(state_t *);
 extern unsigned Terminate_Process(pcb_t *sender, pcb_t *target);
 extern void interruptHandler(void);
 extern cpu_t deltaInterruptTime(void);

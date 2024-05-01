@@ -1,9 +1,6 @@
 #include "./headers/exceptions.h"
 
 extern cpu_t time_interrupt_start;
-/* given an unsigned int and an integer representing the bit you want to check
- (0-indexed) and return 1 if the bit is 1, 0 otherwise */
-#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 
 void uTLB_RefillHandler() {
   setENTRYHI(0x80000000);
