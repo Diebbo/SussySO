@@ -39,6 +39,7 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.tar.gz
 
 # CocoaPods
 #

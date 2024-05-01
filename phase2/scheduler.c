@@ -19,7 +19,7 @@ void Scheduler() {
 
     if (current_process == NULL) {
       // ready_queue_head is empty
-      if(process_count == 0){
+      if(process_count == 0 || (process_count == 1 && isInList(&msg_queue_list, ssi_pcb->p_pid))){
         // no process in the system
         HALT();
       }
