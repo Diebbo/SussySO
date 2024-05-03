@@ -6,4 +6,8 @@
 extern pcb_PTR sst_pcb;
 void initSST(void);
 
+void sstEntry(void);
+void sstRequestHandler();
+
+
 #endif
