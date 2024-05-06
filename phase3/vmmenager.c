@@ -2,6 +2,10 @@
 
 pcb_PTR swap_mutex;
 
+// swap pool
+unsigned swap_pool[2 * UPROCMAX];
+
+
 void mutexSwap(){
   while (TRUE) {
     unsigned *req_payload, *res_payload;
