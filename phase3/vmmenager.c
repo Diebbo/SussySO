@@ -1,4 +1,6 @@
 #include "./headers/vmmenager.h"
+#include <uriscv/liburiscv.h>
+#include <uriscv/types.h>
 
 pcb_PTR swap_mutex;
 
@@ -30,4 +32,21 @@ void uTLB_RefillHandler() {
       (c) TLBWR
     4. Return control to the Current Process to retry the instruction that caused the TLB-Refill event: LDST on the saved exception state located at the start of the BIOS Data Page.
   */
+  state_t *exception_state = (state_t*) BIOSDATAPAGE;
+  // page number
+  unsigned p = exception_state->entry_hi & 0xFFFFF000;
+  // check if the page is in the TLB
+  if (){ // TODO:
+
+  }
+  // get the page table entry for the current process
+  unsigned index = (p - KUSEG) >> VPNSHIFT;
+
+  // write the entry into the TLB
+  setENTRYHI(current_process->p_supportStruct->sup_privatePgTbl[index].pte_entryHI);
+  setENTRYLO(current_process->p_supportStruct->sup_privatePgTbl[index].pte_entryLO);
+  TLBWR();
+
+  // return control to the current process
+  LDST(current_process->p_s);
 }
