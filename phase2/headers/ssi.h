@@ -7,8 +7,6 @@ various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 
 // SSI process
 extern pcb_PTR ssi_pcb;
-// SSI process id 
-#define SSIPID 0xFFFFFFFE 
 //ssi init
 void initSSI(void);
 // SSI enty point
