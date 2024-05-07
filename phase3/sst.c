@@ -20,13 +20,13 @@ void sstEntry(){
 
 void sstRequestHandler(pcb_PTR sender, int service, void* arg){
   //ask service to ssi
-  SYSCALL(SENDMESSAGE, SSIPID, service, 0);
+  SYSCALL(SENDMSG, SSIPID, service, 0);
   unsigned *response = SYSCALL(RECEIVEMESSAGE, SSIPID, 0, 0);
   unsigned *blank = 0;
   switch (service){
   case GET_TOD:
     //sends back micro seconds received
-    SYSCALL(SENDMESSAGE, sender, response, 0);
+    SYSCALL(SENDMSG, sender, response, 0);
     break;
   case TERMINATE:
     /*Send a message to the test process to communicate the termination of the SST.*/
@@ -34,15 +34,15 @@ void sstRequestHandler(pcb_PTR sender, int service, void* arg){
     break;
   case WRITEPRINTER:
     /*The sender must wait an empty response from the SST signaling the completion of the write.*/
-    SYSCALL(SENDMESSAGE, sender, blank, 0);
+    SYSCALL(SENDMSG, sender, blank, 0);
     break;
   case WRITETERMINAL:
     /*The sender must wait an empty response from the SST signaling the completion of the write.*/
-    SYSCALL(SENDMESSAGE, sender, blank, 0);
+    SYSCALL(SENDMSG, sender, blank, 0);
     break;      
   default:
     //error
-    SYSCALL(SENDMESSAGE, SSIPID, TERMINATE, 0);
+    SYSCALL(SENDMSG, SSIPID, TERMINATE, 0);
     break;
   }
 }
