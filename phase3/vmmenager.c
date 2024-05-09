@@ -80,10 +80,12 @@ on the saved exception state.
 
   state_t *exception_state = &(support_data->sup_exceptState[0]);
   
-  unsigned p = exception_state->entry_hi & 0xFFFFF000;
-  // check if the page is in the TLB
-  if () { // TODO:
+  // check if the exception is a TLB-Modification exception
+  if (exception_state->cause == ) {
+    // treat this exception as a program trap
+    TrapExceptionHandler(exception_state);
   }
+  
   // get the page table entry for the current process
   unsigned index = (p - KUSEG) >> VPNSHIFT;
 

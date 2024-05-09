@@ -25,8 +25,9 @@
 extern pcb_PTR swap_mutex;
 extern unsigned swap_pool[UPROCMAX][UPROCMAX];
 
-// internal phase2 global variables
+// internal phase2 global variables & functions
 extern pcb_PTR ssi_pcb;
+extern void TrapExceptionHandler(state_t *);
 
 // support level TLB handler
 void sTLB_RefillHandler(void);
