@@ -11,14 +11,13 @@ void entrySwapFunctio() {
     unsigned *req_payload, *res_payload;
     swap_t swap_message;
     unsigned *process_requesting_swap;
+    // wait for a swap request
     process_requesting_swap = (unsigned *)SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned *)(&swap_message), 0);
     
-    // swap the page
-    
-
-
-
-    SYSCALL(SENDMSG, process_requesting_swap, (unsigned)res_payload, 0);
+    // giving the process the swap mutex
+    SYSCALL(SENDMSG, (unsigned)process_requesting_swap, 0, 0);
+    // wait for the process to finish the swap
+    SYSCALL(RECEIVEMSG, process_requesting_swap, 0, 0);
   }
 }
 
