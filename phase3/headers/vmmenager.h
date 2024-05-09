@@ -5,8 +5,16 @@
 
 extern pcb_PTR swap_mutex;
 
-void uTLB_RefillHandler();
+extern unsigned swap_pool[UPROCMAX][UPROCMAX];
 
-void mutexSwap();
+// support level TLB handler
+void sTLB_RefillHandler();
 
-#endif
+// entry point function for mutex swap process
+void entrySwapFunction();
+
+// TODO: giuca
+void pager();
+
+
+#endif 
