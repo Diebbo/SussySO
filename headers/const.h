@@ -122,6 +122,7 @@
 #define BREAKEXCEPTION 9
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
+#define TLBMOD         24
 
 
 /* EntryLO register (NDVG) constants */

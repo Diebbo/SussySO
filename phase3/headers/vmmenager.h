@@ -23,7 +23,7 @@
 
 // internal global variables
 extern pcb_PTR swap_mutex;
-extern unsigned swap_pool[UPROCMAX][UPROCMAX];
+extern pteEntry_t *swap_pool[2 * UPROCMAX];
 
 // internal phase2 global variables & functions
 extern pcb_PTR ssi_pcb;
@@ -37,5 +37,7 @@ support_t *getSupportData(void);
 // entry point function for mutex swap process
 void entrySwapFunction();
 
+// 
+unsigned getFrameFromSwapPool();
 
 #endif 

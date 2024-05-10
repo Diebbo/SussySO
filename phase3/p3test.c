@@ -30,7 +30,8 @@ void initUprocPageTable(pcb_PTR p) {
 
   for (int i = 0; i < MAXPAGES; i++) {
     p->p_supportStruct->sup_privatePgTbl[i].pte_entryHI =
-        (KUSEG + i << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
+        ((KUSEG + i) << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
     p->p_supportStruct->sup_privatePgTbl[i].pte_entryLO = DIRTYON;
   }
+  p->p_supportStruct->sup_privatePgTbl[31].pte_entryHI  = (0xbffff << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
 }
