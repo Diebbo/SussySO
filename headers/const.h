@@ -244,8 +244,9 @@
 /* Inizio indirizzo di device registers */
 #define START_DEVREG		0x10000054
 
-// SSI process id 
+// important id process 
 #define SSIPID 0xFFFFFFFE 
+#define sstPID 0xFFFFFFFC
 
 #endif
 
