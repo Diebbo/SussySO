@@ -37,7 +37,10 @@ support_t *getSupportData(void);
 // entry point function for mutex swap process
 void entrySwapFunction();
 
-// 
+// get frame from swap pool
 unsigned getFrameFromSwapPool();
+
+// get page from device
+pteEntry_t *readBackingStore(unsigned , unsigned );
 
 #endif 

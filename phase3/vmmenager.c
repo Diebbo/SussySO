@@ -11,8 +11,8 @@ void entrySwapFunctio() {
     unsigned *req_payload, *res_payload;
     swap_t swap_message;
     // wait for a swap request
-    unsigned int process_requesting_swap = SYSCALL(
-        RECEIVEMSG, ANYMESSAGE, (unsigned int)(&swap_message), 0);
+    unsigned int process_requesting_swap =
+        SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned int)(&swap_message), 0);
 
     // giving the process the swap mutex
     SYSCALL(SENDMSG, (unsigned int)process_requesting_swap, 0, 0);
@@ -97,9 +97,11 @@ the page fault: LDST on the saved exception state.
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
   SYSCALL(RECEIVEMSG, (unsigned int)swap_mutex, 0, 0);
 
+  /* enter the critical section */
+
   // get the missing page number
   unsigned missing_page = (getENTRYHI() & GETPAGENO) >> VPNSHIFT;
-  
+
   // pick a frame from the swap pool
   unsigned frame = getFrameFromSwapPool();
 
@@ -127,7 +129,8 @@ the page fault: LDST on the saved exception state.
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO |= VALIDON;
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= (frame << 0x0); // TODO: check this
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO |=
+      (frame << 0x0); // TODO: check this
 
   // update the TLB
   TLBWR();
@@ -135,11 +138,17 @@ the page fault: LDST on the saved exception state.
   // release mutual exclusion over the swap pool
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
 
+  /* exit the critical section */
+
   // return control to the current process
   LDST(exception_state);
 }
 
-unsigned getFrameFromSwapPool(){
-  // TODO: implement the page replacement algorithm
+pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
+  
+
 }
 
+unsigned getFrameFromSwapPool() {
+  // TODO: implement the page replacement algorithm
+}
