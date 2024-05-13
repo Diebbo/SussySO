@@ -150,5 +150,8 @@ pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
 }
 
 unsigned getFrameFromSwapPool() {
-  // TODO: implement the page replacement algorithm
+  // implement the page replacement algorithm FIFO
+  static unsigned frame = 0;
+  frame = (frame + 1) % (2 * UPROCMAX);
+  return frame;
 }

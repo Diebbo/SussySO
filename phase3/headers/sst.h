@@ -6,6 +6,8 @@
 extern pcb_PTR ith_sst_child;
 extern pcb_PTR ith_sst_pcb;
 
+extern pcb_PTR ssi_pcb;
+
 /*initialize ith SST and its process*/
 void initSST(void);
 /*SST utility*/
