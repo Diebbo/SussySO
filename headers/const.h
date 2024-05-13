@@ -246,7 +246,7 @@
 
 // important id process 
 #define SSIPID 0xFFFFFFFE 
-#define sstPID 0xFFFFFFFC
+#define SSTPID 0xFFFFFFFC
 
 #endif
 

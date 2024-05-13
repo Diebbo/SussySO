@@ -5,7 +5,6 @@
 
 extern pcb_PTR ith_sst_child;
 extern pcb_PTR ith_sst_pcb;
-
 extern pcb_PTR ssi_pcb;
 
 /*initialize ith SST and its process*/
@@ -17,6 +16,11 @@ void sstRequestHandler();
 void getTOD(pcb_PTR sender);
 /*kill SST and its child*/
 void killSST(pcb_PTR sender);
-
+/*This service cause the print of a string of characters to the printer 
+with the same number of the sender ASID*/
+void writePrinter(pcb_PTR sender, ssi_payload_PTR arg);
+/*This service cause the print of a string of characters to the terminal 
+with the same number of the sender ASID.*/
+void writeTerminal(pcb_PTR sender);
 
 #endif
