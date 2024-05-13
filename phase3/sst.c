@@ -16,7 +16,7 @@ void initSST(){
   //init of sst child
   ssi_payload_PTR ith_sst_child_payload;
   ith_sst_child_payload->service_code = CREATEPROCESS;
-  ith_sst_child = SYSCALL(SENDMSG, SSIPID, (unsigned)(&ith_sst_child_payload), 0);
+  ith_sst_child = (pcb_PTR)SYSCALL(SENDMSG, SSIPID, (unsigned)(&ith_sst_child_payload), 0);
   //same ASID!
   ith_sst_child->p_supportStruct->sup_asid = ith_sst_pcb->p_supportStruct->sup_asid;
   ith_sst_child->p_time;
@@ -94,7 +94,7 @@ void killSST(pcb_PTR sender){
   input_payload->arg = NULL;
   input_payload->service_code = TERMPROCESS;
   SYSCALL(SENDMSG, SSIPID, (unsigned)(&input_payload), 0);
-  response_payload->arg = (unsigned) 'SST TERMINATED!';
+  response_payload->arg = (unsigned) "SST TERMINATED!\n";
   response = response_payload->arg;
 
   /*Send a message to the test process to communicate the termination of the SST.*/

@@ -1,6 +1,5 @@
 #include "../headers/const.h"
 #include "../headers/types.h"
-#include <memory>
 #include <uriscv/arch.h>
 #include <uriscv/liburiscv.h>
 
