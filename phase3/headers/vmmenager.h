@@ -43,4 +43,6 @@ unsigned getFrameFromSwapPool();
 // get page from device
 pteEntry_t *readBackingStore(unsigned , unsigned );
 
+// write page into device
+void writeBackingStore(pteEntry_t *);
 #endif 
