@@ -49,7 +49,7 @@
 #define GENERALEXCEPT 1
 
 /* Mikeyg Added constants */
-#define MAXXSSTNUM 8
+#define MAXSSTNUM 8
 #define MAXPROC 50
 #define MAXMESSAGES 50
 
@@ -254,6 +254,9 @@
 #define SIXTHSSTPID     0xFFFFFFFC - 5
 #define SEVENTHSSTPID   0xFFFFFFFC - 6
 #define EIGHTHSSTPID    0xFFFFFFFC - 7
+
+// important mask
+#define TERMSTATMASK 0xFF
 
 #endif
 

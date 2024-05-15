@@ -5,7 +5,7 @@ pcb_PTR ith_sst_child;
 
 void initSST() {
   // init of ith sst process
-  for(int i=0; i < MAXXSSTNUM; i++){
+  for(int i=0; i < MAXSSTNUM; i++){
     ith_sst_pcb = allocPcb();
     RAMTOP(ith_sst_pcb->p_s.reg_sp);
     ith_sst_pcb->p_s.pc_epc = (memaddr)sstEntry;
@@ -13,7 +13,7 @@ void initSST() {
     ith_sst_pcb->p_s.mie = MIE_ALL;
     insertProcQ(&ready_queue_list, ith_sst_pcb);
     ith_sst_pcb->p_pid = FIRSTSSTPID - i;
-    ith_sst_pcb->p_supportStruct->sup_asid = ith_sst_pcb->p_pid;
+    ith_sst_pcb->p_supportStruct->sup_asid = i;
     // init of sst child
     ssi_payload_PTR ith_sst_child_payload;
     ith_sst_child_payload->service_code = CREATEPROCESS;
@@ -37,7 +37,6 @@ void sstEntry() {
 }
 
 void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
-  unsigned *blank = 0, *response;
   switch (service) {
   case GET_TOD:
     /* This service should allow the sender to get back the
@@ -94,19 +93,22 @@ void killSST(pcb_PTR sender) {
 
   /*Send a message to the test process to communicate the termination of the
    * SST.*/
-  SYSCALL(SENDMSG, (unsigned int)sender, (unsigned)(&response), 0);
+  //SYSCALL(SENDMSG, (unsigned int)tester, (unsigned)(&response), 0);
 }
 
-void writeOnDevice(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int ip_line){
+void writeOnDevice(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_line){
   //obtain string and lenght of arg
   sst_print_PTR print_payload  = (sst_print_PTR) pcb_payload;
   int lenght = (int) print_payload->length;
   char *string = (char*) print_payload->string;
+  unsigned int IntlineNo = i_line;
+  unsigned int DevNo = sender->p_supportStruct->sup_asid;
   //indexes to check
   int i = 0;
   char *msg = string;
   //obtain other info
   devreg_t *status = (devreg_t*) sender->p_supportStruct->sup_exceptState;
+  memaddr devAddrBase = START_DEVREG + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
 
   while(TRUE){
     if((*msg == EOS) || (i >= lenght)){
@@ -114,7 +116,7 @@ void writeOnDevice(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int ip_
     }
     unsigned int value = PRINTCHR | (((unsigned int)*msg) << 8);           
     ssi_do_io_t do_io = {
-        .commandAddr = ip_line,
+        .commandAddr = devAddrBase,
         .commandValue = value,
     };
     ssi_payload_t payload = {
@@ -124,9 +126,10 @@ void writeOnDevice(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int ip_
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
-    /*if (((unsigned int)status & TERMSTATMASK) != RECVD)                   //NECESSITO della mask dei printer!
-        PANIC();
-    */
+    if(i_line == IL_TERMINAL)
+      if (((unsigned int)status & TERMSTATMASK) != RECVD)                   //NECESSITO della mask dei printer!
+          PANIC();
+    
     msg++;
     i++;
   }
