@@ -49,7 +49,7 @@
 #define GENERALEXCEPT 1
 
 /* Mikeyg Added constants */
-
+#define MAXXSSTNUM 8
 #define MAXPROC 50
 #define MAXMESSAGES 50
 
@@ -245,8 +245,15 @@
 #define START_DEVREG		0x10000054
 
 // important id process 
-#define SSIPID 0xFFFFFFFE 
-#define SSTPID 0xFFFFFFFC
+#define SSIPID          0xFFFFFFFE 
+#define FIRSTSSTPID     0xFFFFFFFC
+#define SECONDSSTPID    0xFFFFFFFC - 1
+#define THIRDSSTPID     0xFFFFFFFC - 2
+#define FOURTHSSTPID    0xFFFFFFFC - 3
+#define FIFTHSSTPID     0xFFFFFFFC - 4
+#define SIXTHSSTPID     0xFFFFFFFC - 5
+#define SEVENTHSSTPID   0xFFFFFFFC - 6
+#define EIGHTHSSTPID    0xFFFFFFFC - 7
 
 #endif
 
