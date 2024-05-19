@@ -11,7 +11,6 @@
 
  /* Number of semaphore's device */
  #define SEMDEVLEN 49
- #define RECVD    5
  #define WAITINGMSG 0
  #define REGISTERNUMBER 32
  
@@ -256,7 +255,13 @@
 #define EIGHTHSSTPID    0xFFFFFFFC - 7
 
 // important mask
-#define TERMSTATMASK 0xFF
+#define STATMASK 0xFF
+
+// important state register
+#define DEVRDY      1           /*printer*/
+#define DEVBSY      3
+
+#define RECVD       5           /*terminal*/
 
 #endif
 
