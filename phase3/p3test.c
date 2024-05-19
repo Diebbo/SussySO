@@ -13,8 +13,9 @@ void test3() {
 
 int getASID(void) {
   unsigned asid = next_asid;
-  if (asid > 7) {
+  if (asid > 8) {
     /*function cannot be called more than 8 time*/
+    next_asid = 1;
     return NOPROC;
   }
   next_asid++;

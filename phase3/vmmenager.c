@@ -109,6 +109,7 @@ void writeBackingStore(pteEntry_t *page) {
   unsigned missing_page = (page->pte_entryHI >> VPNSHIFT) & 0x0F;
   unsigned value = page->pte_entryLO;
   unsigned command = 0;
+  unsigned status;
 
   ssi_do_io_t do_io = {
       .commandAddr = command,

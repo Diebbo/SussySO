@@ -13,7 +13,7 @@ void initSST() {
     ith_sst_pcb->p_s.mie = MIE_ALL;
     insertProcQ(&ready_queue_list, ith_sst_pcb);
     ith_sst_pcb->p_pid = FIRSTSSTPID - i;
-    ith_sst_pcb->p_supportStruct->sup_asid = i;
+    ith_sst_pcb->p_supportStruct->sup_asid = i + 1;
     // init of sst child
     ssi_payload_PTR ith_sst_child_payload;
     ith_sst_child_payload->service_code = CREATEPROCESS;
