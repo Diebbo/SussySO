@@ -7,6 +7,11 @@ pcb_PTR swap_mutex;
 pteEntry_t *swap_pool[2 * UPROCMAX];
 
 void entrySwapFunctio() {
+  // initialize the swap pool
+  for (int i = 0; i < 2 * UPROCMAX; i++) {
+    swap_pool[i] = NULL;
+  }
+
   while (TRUE) {
     unsigned *req_payload, *res_payload;
     swap_t swap_message;
@@ -123,7 +128,28 @@ void writeBackingStore(pteEntry_t *page) {
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 }
 
-pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {}
+
+pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
+  unsigned command = START_DEVREG + (asid << 4) + 0x1; // i actually don't know
+  unsigned status;
+  unsigned value;
+
+  ssi_do_io_t do_io = {
+      .commandAddr = command,
+      .commandValue = missing_page,
+  };
+  ssi_payload_t payload = {
+      .service_code = DOIO,
+      .arg = &do_io,
+  };
+  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&value), 0);
+
+  pteEntry_t *new_page = (pteEntry_t *)value;
+  new_page->pte_entryHI = (asid << ASIDSHIFT) | (missing_page << VPNSHIFT);
+  return new_page;
+
+}
 
 unsigned getFrameFromSwapPool() {
   // implement the page replacement algorithm FIFO
