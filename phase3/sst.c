@@ -3,25 +3,37 @@
 pcb_PTR ith_sst_pcb;
 pcb_PTR ith_sst_child;
 
+pcb_t *CreateChild(){
+    pcb_t *p;
+    ssi_create_process_t ssi_create_process = {
+        .state = ith_sst_pcb,
+        .support = NULL,
+    };
+    ssi_payload_t payload = {
+        .service_code = CREATEPROCESS,
+        .arg = &ssi_create_process,
+    };
+    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&p), 0);
+    return p;
+}
+
 void initSST() {
   // init of ith sst process
   for(int i=0; i < MAXSSTNUM; i++){
     ith_sst_pcb = allocPcb();
     RAMTOP(ith_sst_pcb->p_s.reg_sp);
+    ith_sst_pcb->p_pid = FIRSTSSTPID - i;
+    ith_sst_pcb->p_supportStruct->sup_asid = i + 1;
+    process_count++;
     ith_sst_pcb->p_s.pc_epc = (memaddr)sstEntry;
     ith_sst_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
     ith_sst_pcb->p_s.mie = MIE_ALL;
     insertProcQ(&ready_queue_list, ith_sst_pcb);
-    ith_sst_pcb->p_pid = FIRSTSSTPID - i;
-    ith_sst_pcb->p_supportStruct->sup_asid = i + 1;
     // init of sst child
-    ssi_payload_PTR ith_sst_child_payload;
-    ith_sst_child_payload->service_code = CREATEPROCESS;
-    ith_sst_child = (pcb_PTR)SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned)(&ith_sst_child_payload), 0);
+    ssi_payload_PTR ith_sst_child_payload = CreateChild();
     // same ASID!
     ith_sst_child->p_supportStruct->sup_asid = ith_sst_pcb->p_supportStruct->sup_asid;
-    ith_sst_child->p_time;
-    insertProcQ(&ready_queue_list, ith_sst_child);
   }
 }
 

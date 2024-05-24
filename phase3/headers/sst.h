@@ -9,6 +9,8 @@ extern pcb_PTR ssi_pcb;
 
 /*initialize ith SST and its process*/
 void initSST(void);
+/*function to request creation of a child to ssi*/
+pcb_t *CreateChild(void);
 /*SST utility*/
 void sstEntry(void);
 void sstRequestHandler();

@@ -85,7 +85,8 @@ void SYSCALLExceptionHandler() {
 
       pcb_t *dest_process = (pcb_PTR)a1_reg;
 
-      if (isFree(dest_process->p_pid)) { // error!
+      if (isFree(dest_process->p_pid)) { 
+        // error!
         exception_state->reg_a0 = DEST_NOT_EXIST;
         break;
       }
@@ -101,16 +102,16 @@ void SYSCALLExceptionHandler() {
       msg->m_sender = current_process;
 
       if (outProcQ(&msg_queue_list, dest_process) != NULL) {
-        // process is blocked waiting for a message, i unblock it
+        // process is blocked waiting for a message  so I unblock it
         insertProcQ(&ready_queue_list, dest_process);
         soft_block_count--;
       }
 
       insertMessage(&dest_process->msg_inbox, msg);
-      exception_state->reg_a0 = 0;
       /*on success returns/places 0 in the caller’s v0, otherwise
-        MSGNOGOOD is used to provide a meaningful error condition 
-        on return*/
+       *MSGNOGOOD is used to provide a meaningful error condition 
+       *on return*/
+      exception_state->reg_a0 = 0;
 
       break;
     case RECEIVEMESSAGE:
