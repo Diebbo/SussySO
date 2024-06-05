@@ -1,16 +1,24 @@
 #include "./headers/vmmenager.h"
-#include <uriscv/liburiscv.h>
 
 pcb_PTR swap_mutex;
 
 // swap pool
-pteEntry_t *swap_pool[2 * UPROCMAX];
+swap_t swap_pool[POOLSIZE];
+
+void initSwapPool(void) {
+  // initialize the swap pool
+  for (int i = 0; i < 2 * UPROCMAX; i++) {
+    swap_pool[i].sw_asid = NOPROC;
+  }
+}
+
+unsigned isSwapPoolFrameFree(unsigned frame) {
+  return swap_pool[frame].sw_asid == NOPROC;
+}
 
 void entrySwapFunction() {
   // initialize the swap pool
-  for (int i = 0; i < 2 * UPROCMAX; i++) {
-    swap_pool[i] = NULL;
-  }
+  initSwapPool();
 
   while (TRUE) {
     unsigned *req_payload, *res_payload;
@@ -26,8 +34,10 @@ void entrySwapFunction() {
   }
 }
 
-
 void uTLB_RefillHandler() {
+
+}
+void pager(void){
   unsigned status;
   // get the support data of the current process
   support_t *support_data = getSupportData();
@@ -87,8 +97,8 @@ void uTLB_RefillHandler() {
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO =
-      (frame << PNFSHIFT) | VALIDON; 
-  
+      (frame << PNFSHIFT) | VALIDON;
+
   // place the new page in the CP0
   setENTRYLO(new_page->pte_entryLO); // check
 
@@ -108,10 +118,6 @@ void uTLB_RefillHandler() {
 }
 
 void writeBackingStore(pteEntry_t *page) {
-  unsigned asid = (page->pte_entryHI >> ASIDSHIFT) & 0x0F;
-  unsigned missing_page = (page->pte_entryHI >> VPNSHIFT) & 0x0F;
-  unsigned value = page->pte_entryLO;
-  unsigned command = 0;
   unsigned status;
 
   ssi_do_io_t do_io = {
@@ -125,7 +131,6 @@ void writeBackingStore(pteEntry_t *page) {
   SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 }
-
 
 pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
   unsigned command = START_DEVREG + (asid << 4) + 0x1; // i actually don't know
@@ -146,12 +151,16 @@ pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
   pteEntry_t *new_page = (pteEntry_t *)value;
   new_page->pte_entryHI = (asid << ASIDSHIFT) | (missing_page << VPNSHIFT);
   return new_page;
-
 }
 
 unsigned getFrameFromSwapPool() {
   // implement the page replacement algorithm FIFO
   static unsigned frame = 0;
-  frame = (frame + 1) % (2 * UPROCMAX);
-  return frame;
+  for(unsigned i = 0; i < POOLSIZE; i++) {
+    if (isSwapPoolFrameFree(i)) {
+      frame = i;
+      break;
+    }
+  }
+  return frame++ % POOLSIZE;
 }
