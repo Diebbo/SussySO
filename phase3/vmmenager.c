@@ -6,7 +6,7 @@ pcb_PTR swap_mutex;
 // swap pool
 pteEntry_t *swap_pool[2 * UPROCMAX];
 
-void entrySwapFunctio() {
+void entrySwapFunction() {
   // initialize the swap pool
   for (int i = 0; i < 2 * UPROCMAX; i++) {
     swap_pool[i] = NULL;
@@ -26,20 +26,9 @@ void entrySwapFunctio() {
   }
 }
 
-support_t *getSupportData() {
-  support_t *support_data;
-  ssi_payload_t getsup_payload = {
-      .service_code = GETSUPPORTPTR,
-      .arg = NULL,
-  };
-  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload),
-          0);
-  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb,
-          (unsigned int)(&getsup_payload), 0);
-  return support_data;
-}
 
 void uTLB_RefillHandler() {
+  unsigned status;
   // get the support data of the current process
   support_t *support_data = getSupportData();
 
@@ -58,7 +47,7 @@ void uTLB_RefillHandler() {
   /* enter the critical section */
 
   // get the missing page number
-  unsigned missing_page = (getENTRYHI() & GETPAGENO) >> VPNSHIFT;
+  unsigned missing_page = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
 
   // pick a frame from the swap pool
   unsigned frame = getFrameFromSwapPool();
@@ -68,7 +57,7 @@ void uTLB_RefillHandler() {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
-    unsigned status = getSTATUS();
+    status = getSTATUS();
     setSTATUS(status & ~IECON); // disable interrupts
 
     // mark the page pointed by the swap pool as not valid
@@ -92,13 +81,22 @@ void uTLB_RefillHandler() {
   // update the swap pool table
   swap_pool[frame] = new_page;
 
+  // operations performed atomically
+  status = getSTATUS();
+  setSTATUS(status & ~IECON); // disable interrupts
+
   // update the current process's page table
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= VALIDON;
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |=
-      (frame << 0x0); // TODO: check this
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO =
+      (frame << PNFSHIFT) | VALIDON; 
+  
+  // place the new page in the CP0
+  setENTRYLO(new_page->pte_entryLO); // check
 
   // update the TLB
   TLBWR();
+
+  // restore interrupt state
+  setSTATUS(status);
 
   // release mutual exclusion over the swap pool
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
