@@ -239,6 +239,8 @@
 #define POOLSIZE (UPROCMAX * 2)
 /* End of Mikeyg constants */
 
+#define SWAPPOOLADDR 0x20020000
+
 #define CHARRECV			5		/* Character received*/
 
 /* Inizio indirizzo di device registers */

@@ -1,4 +1,5 @@
 #include "./headers/vmmenager.h"
+#include <uriscv/liburiscv.h>
 
 pcb_PTR swap_mutex;
 
@@ -34,10 +35,9 @@ void entrySwapFunction() {
   }
 }
 
-void uTLB_RefillHandler() {
+void uTLB_RefillHandler() {}
 
-}
-void pager(void){
+void pager(void) {
   unsigned status;
   // get the support data of the current process
   support_t *support_data = getSupportData();
@@ -58,12 +58,12 @@ void pager(void){
 
   // get the missing page number
   unsigned missing_page = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
-
   // pick a frame from the swap pool
   unsigned frame = getFrameFromSwapPool();
+  memaddr page_addr = SWAPPOOLADDR + (frame * PAGESIZE);
 
   // check if the frame is occupied
-  if (swap_pool[frame] != NULL) {
+  if (!isSwapPoolFrameFree(frame)) {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
@@ -71,7 +71,7 @@ void pager(void){
     setSTATUS(status & ~IECON); // disable interrupts
 
     // mark the page pointed by the swap pool as not valid
-    swap_pool[frame]->pte_entryLO &= !VALIDON;
+    swap_pool[frame].sw_pte->pte_entryLO &= !VALIDON;
 
     // update the TLB if needed
     // TODO: now we are not updating the TLB, we are just invalidating it
@@ -89,7 +89,9 @@ void pager(void){
   pteEntry_t *new_page = readBackingStore(missing_page);
 
   // update the swap pool table
-  swap_pool[frame] = new_page;
+  swap_pool[frame].sw_asid = support_data->sup_asid;
+  swap_pool[frame].sw_page = missing_page;
+  swap_pool[frame].sw_pte = support_data->sup_privatePgTbl[missing_page];
 
   // operations performed atomically
   status = getSTATUS();
@@ -97,13 +99,12 @@ void pager(void){
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO =
-      (frame << PNFSHIFT) | VALIDON;
+      page_addr | DIRTYON | VALIDON;
 
   // place the new page in the CP0
-  setENTRYLO(new_page->pte_entryLO); // check
 
   // update the TLB
-  TLBWR();
+  updateTLB(new_page);
 
   // restore interrupt state
   setSTATUS(status);
@@ -115,6 +116,19 @@ void pager(void){
 
   // return control to the current process
   LDST(exception_state);
+}
+
+void updateTLB(pteEntry_t *page) {
+  // place the new page in the Data0 register
+  setENTRYHI(page->pte_entryHI);
+  TLBP();
+  // check if the page is already in the TLB
+  if ((getINDEX() & PRESENTFLAG) == 0) {
+    // the page is not in the TLB
+    setENTRYHI(p.pte_entryHI);
+    setENTRYLO(p.pte_entryLO);
+    TLBWI();
+  }
 }
 
 void writeBackingStore(pteEntry_t *page) {
@@ -156,7 +170,7 @@ pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
 unsigned getFrameFromSwapPool() {
   // implement the page replacement algorithm FIFO
   static unsigned frame = 0;
-  for(unsigned i = 0; i < POOLSIZE; i++) {
+  for (unsigned i = 0; i < POOLSIZE; i++) {
     if (isSwapPoolFrameFree(i)) {
       frame = i;
       break;

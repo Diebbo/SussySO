@@ -38,4 +38,6 @@ pteEntry_t *readBackingStore(unsigned , unsigned );
 // write page into device
 void writeBackingStore(pteEntry_t *);
 
+// insert page into TLB, if not present
+void updateTLB(pteEntry_t *page);
 #endif 

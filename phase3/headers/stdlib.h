@@ -22,7 +22,7 @@
 
 // internal global variables
 extern pcb_PTR swap_mutex;
-extern pteEntry_t *swap_pool[2 * UPROCMAX];
+extern swap_t swap_pool[POOLSIZE];
 
 // internal phase2 global variables & functions
 extern pcb_PTR ssi_pcb;
