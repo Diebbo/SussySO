@@ -147,9 +147,9 @@ void writeBackingStore(unsigned frame_number) {
 }
 
 pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
-  unsigned command = START_DEVREG + (asid << 4) + 0x1; // i actually don't know
+  unsigned command = START_DEVREG + (asid << 4) + 0x1; // TODO:
   unsigned status;
-  unsigned value;
+  unsigned value = (missing_page << 7) | DEVREADBLK;
 
   ssi_do_io_t do_io = {
       .commandAddr = command,
