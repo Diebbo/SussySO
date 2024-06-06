@@ -1,5 +1,4 @@
 #include "./headers/vmmenager.h"
-#include <uriscv/liburiscv.h>
 
 pcb_PTR swap_mutex;
 
@@ -34,8 +33,6 @@ void entrySwapFunction() {
     SYSCALL(RECEIVEMSG, (unsigned int)process_requesting_swap, 0, 0);
   }
 }
-
-void uTLB_RefillHandler() {}
 
 void pager(void) {
   unsigned status;
@@ -78,7 +75,7 @@ void pager(void) {
     TLBCLR();
 
     // update the backing store
-    writeBackingStore(swap_pool[frame]);
+    writeBackingStore(frame);
 
     // restore interrupt state
     setSTATUS(status);
@@ -90,7 +87,7 @@ void pager(void) {
 
   // update the swap pool table
   swap_pool[frame].sw_asid = support_data->sup_asid;
-  swap_pool[frame].sw_page = missing_page;
+  swap_pool[frame].sw_pageNo = missing_page;
   swap_pool[frame].sw_pte = support_data->sup_privatePgTbl[missing_page];
 
   // operations performed atomically
@@ -131,8 +128,11 @@ void updateTLB(pteEntry_t *page) {
   }
 }
 
-void writeBackingStore(pteEntry_t *page) {
-  unsigned status;
+void writeBackingStore(unsigned frame_number) {
+  unsigned status, command;
+  unsigned value = (unsigned)swap_pool[frame_number].sw_pte;
+  command = START_DEVREG + (swap_pool[frame_number].sw_asid << 4) +
+            0x0; // i actually don't know
 
   ssi_do_io_t do_io = {
       .commandAddr = command,

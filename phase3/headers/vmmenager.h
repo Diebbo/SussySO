@@ -35,8 +35,8 @@ unsigned getFrameFromSwapPool();
 // get page from device
 pteEntry_t *readBackingStore(unsigned , unsigned );
 
-// write page into device
-void writeBackingStore(pteEntry_t *);
+// write swap pool frame into device
+void writeBackingStore(unsigned);
 
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);

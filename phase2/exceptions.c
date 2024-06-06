@@ -1,16 +1,24 @@
 #include "./headers/exceptions.h"
+#include "headers/nucleus.h"
+#include <uriscv/types.h>
 
 extern cpu_t time_interrupt_start;
 
 void uTLB_RefillHandler() {
-  setENTRYHI(0x80000000);
-  setENTRYLO(0x00000000);
+  state_t *exception_state = (state_t *)BIOSDATAPAGE;
+  unsigned p = exception_state->entry_hi >> VPNSHIFT;
+
+  // i'm missing page p of the current-process support struct tlb
+  pteEntry_t *missing_page =
+      &current_process->p_supportStruct->sup_privatePgTbl[p];
+  setENTRYHI(missing_page->pte_entryHI);
+  setENTRYLO(missing_page->pte_entryLO);
   TLBWR();
-  LDST((state_t*) 0x0FFFF000);
+  LDST((state_t *) &current_process->p_s);
 }
 
 void exceptionHandler() {
-  // get cpu time 
+  // get cpu time
   STCK(time_interrupt_start);
 
   // error code from .ExcCode field of the Cause register
@@ -85,7 +93,7 @@ void SYSCALLExceptionHandler() {
 
       pcb_t *dest_process = (pcb_PTR)a1_reg;
 
-      if (isFree(dest_process->p_pid)) { 
+      if (isFree(dest_process->p_pid)) {
         // error!
         exception_state->reg_a0 = DEST_NOT_EXIST;
         break;
@@ -109,7 +117,7 @@ void SYSCALLExceptionHandler() {
 
       insertMessage(&dest_process->msg_inbox, msg);
       /*on success returns/places 0 in the caller’s v0, otherwise
-       *MSGNOGOOD is used to provide a meaningful error condition 
+       *MSGNOGOOD is used to provide a meaningful error condition
        *on return*/
       exception_state->reg_a0 = 0;
 
@@ -139,7 +147,7 @@ void SYSCALLExceptionHandler() {
        * 2. msg not found -> blocck process
        *
        */
-      //desired sender pid
+      // desired sender pid
       pcb_t *sender = (pcb_PTR)a1_reg;
 
       // if the sender is NULL, then the process is looking for the first
@@ -173,7 +181,7 @@ void SYSCALLExceptionHandler() {
         // has a payload
         *((unsigned *)a2_reg) = (unsigned)msg->m_payload;
       }
-      
+
       break;
     }
     // Returning from SYSCALL1 or SYSCALL2 (no blocking)
@@ -187,9 +195,13 @@ void SYSCALLExceptionHandler() {
   }
 }
 
-void TrapExceptionHandler(state_t *exec_state) { passUpOrDie(GENERALEXCEPT, exec_state); }
+void TrapExceptionHandler(state_t *exec_state) {
+  passUpOrDie(GENERALEXCEPT, exec_state);
+}
 
-void TLBExceptionHandler(state_t *exec_state) { passUpOrDie(PGFAULTEXCEPT, exec_state); }
+void TLBExceptionHandler(state_t *exec_state) {
+  passUpOrDie(PGFAULTEXCEPT, exec_state);
+}
 
 void passUpOrDie(unsigned type, state_t *exec_state) {
   if (current_process == NULL || current_process->p_supportStruct == NULL) {
@@ -199,12 +211,14 @@ void passUpOrDie(unsigned type, state_t *exec_state) {
     return;
   }
   // 1st Save the processor state
-  copyState(exec_state, &current_process->p_supportStruct->sup_exceptState[type]);
+  copyState(exec_state,
+            &current_process->p_supportStruct->sup_exceptState[type]);
   // 2nd Update the accumulated CPU time for the Current Process
   current_process->p_time -= deltaInterruptTime();
   current_process->p_time += deltaTime();
-  
+
   // 3rd Pass up the exception
-  context_t context_pass_to = current_process->p_supportStruct->sup_exceptContext[type];
+  context_t context_pass_to =
+      current_process->p_supportStruct->sup_exceptContext[type];
   LDCXT(context_pass_to.stackPtr, context_pass_to.status, context_pass_to.pc);
 }
