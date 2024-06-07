@@ -1,5 +1,4 @@
 #include "./headers/vmmenager.h"
-#include "headers/stdlib.h"
 
 pcb_PTR swap_mutex;
 
@@ -82,7 +81,7 @@ void pager(void) {
 
   // read the contents of the current process's backing store
   // TODO: ? [Section 5.1] & [Section 9]
-  pteEntry_t *new_page = readBackingStore(missing_page);
+  pteEntry_t *new_page = readBackingStore(missing_page, support_data->sup_asid);
 
   // update the swap pool table
   swap_pool[frame].sw_asid = support_data->sup_asid;
@@ -144,12 +143,12 @@ void writeBackingStore(unsigned frame_number) {
 }
 
 pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
-  unsigned dev_addr_base = (unsigned)DEV_REG_ADDR(IL_FLASH, asid);
-  unsigned status;
+  unsigned flash_dev_addr = (unsigned)DEV_REG_ADDR(IL_FLASH, asid);
+  unsigned status = 0;
   unsigned value = (missing_page << 7) | DEVREADBLK;
 
   ssi_do_io_t do_io = {
-      .commandAddr = command,
+      .commandAddr = flash_dev_addr,
       .commandValue = missing_page,
   };
   ssi_payload_t payload = {

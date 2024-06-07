@@ -258,6 +258,7 @@
 // important state register
 #define DEVRDY      1           /*printer*/
 #define DEVBSY      3
+#define DEVREADBLK  4
 
 #define RECVD       5           /*terminal*/
 
@@ -270,6 +271,5 @@
 
 #define IPLINE(ip_line) (ip_line - IPBASELINE)
 #define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
-#define DEVADDR(ip_line, dev_no) (START_DEVREG + (DEVIPOFFSET * IPLINE(ip_line)) + (SUBDEVOFF * dev_no))
 #endif
 
