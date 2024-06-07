@@ -69,4 +69,15 @@ support_t *getSupportData() {
   return support_data;
 }
 
+void gainSwapMutex(){
+  // gain mutual exclusion over the swap pool
+  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
+  SYSCALL(RECEIVEMSG, (unsigned int)swap_mutex, 0, 0);
+}
+
+void releaseSwapMutex(){
+  // release mutual exclusion over the swap pool
+  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
+}
+
 #endif // !STD_LIB_H

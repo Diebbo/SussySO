@@ -1,4 +1,5 @@
 #include "./headers/vmmenager.h"
+#include "headers/stdlib.h"
 
 pcb_PTR swap_mutex;
 
@@ -47,9 +48,7 @@ void pager(void) {
     TrapExceptionHandler(exception_state);
   }
 
-  // gain mutual exclusion over the swap pool
-  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
-  SYSCALL(RECEIVEMSG, (unsigned int)swap_mutex, 0, 0);
+  gainSwapMutex();
 
   /* enter the critical section */
 
@@ -88,7 +87,7 @@ void pager(void) {
   // update the swap pool table
   swap_pool[frame].sw_asid = support_data->sup_asid;
   swap_pool[frame].sw_pageNo = missing_page;
-  swap_pool[frame].sw_pte = support_data->sup_privatePgTbl[missing_page];
+  swap_pool[frame].sw_pte = &support_data->sup_privatePgTbl[missing_page];
 
   // operations performed atomically
   status = getSTATUS();
@@ -106,8 +105,7 @@ void pager(void) {
   // restore interrupt state
   setSTATUS(status);
 
-  // release mutual exclusion over the swap pool
-  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
+  releaseSwapMutex();
 
   /* exit the critical section */
 
@@ -131,8 +129,7 @@ void updateTLB(pteEntry_t *page) {
 void writeBackingStore(unsigned frame_number) {
   unsigned status, command;
   unsigned value = (unsigned)swap_pool[frame_number].sw_pte;
-  command = START_DEVREG + (swap_pool[frame_number].sw_asid << 4) +
-            0x0; // i actually don't know
+  unsigned command = (unsigned) DEVREG_ADDR(IL_FLASH, swap_pool[frame_number].sw_asid);
 
   ssi_do_io_t do_io = {
       .commandAddr = command,
@@ -147,7 +144,7 @@ void writeBackingStore(unsigned frame_number) {
 }
 
 pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
-  unsigned command = START_DEVREG + (asid << 4) + 0x1; // TODO:
+  unsigned dev_addr_base = (unsigned)DEV_REG_ADDR(IL_FLASH, asid);
   unsigned status;
   unsigned value = (missing_page << 7) | DEVREADBLK;
 

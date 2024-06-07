@@ -9,23 +9,18 @@
 
 #include <uriscv/const.h>
 
- /* Number of semaphore's device */
- #define SEMDEVLEN 49
- #define WAITINGMSG 0
- #define REGISTERNUMBER 32
- 
- /* Hardware & software constants */
- #define PAGESIZE 4096 /* page size in bytes	*/
- #define WORDLEN  4    /* word size in bytes	*/
- 
- #define USERMODE 1
+/* Number of semaphore's device */
+#define SEMDEVLEN 49
+#define WAITINGMSG 0
+#define REGISTERNUMBER 32
 
- #define MAXINT 0x7FFFFFFF
+/* Hardware & software constants */
+#define PAGESIZE 4096 /* page size in bytes	*/
+#define WORDLEN  4    /* word size in bytes	*/
 
- #define SUBDEVOFF 0x10
- #define NOOFFSET  0x0
+#define USERMODE 1
 
- #define DEVINDEX(ip_line, dev_no) ((ip_line - 17) * 8 + dev_no)
+#define MAXINT 0x7FFFFFFF
  
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
@@ -266,5 +261,15 @@
 
 #define RECVD       5           /*terminal*/
 
+#define SUBDEVOFF 0x10
+#define NOOFFSET  0x0
+
+// offsets
+#define IPBASELINE 17
+#define DEVIPOFFSET 0x80
+
+#define IPLINE(ip_line) (ip_line - IPBASELINE)
+#define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
+#define DEVADDR(ip_line, dev_no) (START_DEVREG + (DEVIPOFFSET * IPLINE(ip_line)) + (SUBDEVOFF * dev_no))
 #endif
 
