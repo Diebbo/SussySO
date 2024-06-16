@@ -238,19 +238,12 @@
 
 #define CHARRECV			5		/* Character received*/
 
-/* Inizio indirizzo di device registers */
+/* point of begin of device registers */
 #define START_DEVREG		0x10000054
 
 // important id process 
 #define SSIPID          0xFFFFFFFE 
-#define FIRSTSSTPID     0xFFFFFFFC
-#define SECONDSSTPID    0xFFFFFFFC - 1
-#define THIRDSSTPID     0xFFFFFFFC - 2
-#define FOURTHSSTPID    0xFFFFFFFC - 3
-#define FIFTHSSTPID     0xFFFFFFFC - 4
-#define SIXTHSSTPID     0xFFFFFFFC - 5
-#define SEVENTHSSTPID   0xFFFFFFFC - 6
-#define EIGHTHSSTPID    0xFFFFFFFC - 7
+#define SSTPIDS         0xFFFFFFFC
 
 // important mask
 #define STATMASK 0xFF
@@ -269,7 +262,10 @@
 #define IPBASELINE 17
 #define DEVIPOFFSET 0x80
 
+// others
 #define IPLINE(ip_line) (ip_line - IPBASELINE)
 #define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
+#define PARENT 0
+
 #endif
 

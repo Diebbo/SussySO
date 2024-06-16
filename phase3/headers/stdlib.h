@@ -9,6 +9,9 @@
 #include "../../phase1/headers/msg.h"
 #include "../../phase1/headers/pcb.h"
 
+// phase 2 headers
+#include "../../phase2/headers/nucleus.h"
+
 // uriscv headers
 #include <uriscv/aout.h>
 #include <uriscv/arch.h>
@@ -56,6 +59,7 @@ void initUprocPageTable(pcb_PTR p) {
       (0xbffff << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
 }
 
+/*function to get support struct (requested to SSI)*/
 support_t *getSupportData() {
   support_t *support_data;
   ssi_payload_t getsup_payload = {
@@ -67,6 +71,22 @@ support_t *getSupportData() {
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb,
           (unsigned int)(&getsup_payload), 0);
   return support_data;
+}
+
+/*function to request creation of a child to SSI*/
+pcb_t *CreateChild(){
+    pcb_t *p;
+    ssi_create_process_t ssi_create_process = {
+        .state = ith_sst_pcb,
+        .support = NULL,
+    };
+    ssi_payload_t payload = {
+        .service_code = CREATEPROCESS,
+        .arg = &ssi_create_process,
+    };
+    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&p), 0);
+    return p;
 }
 
 void gainSwapMutex(){

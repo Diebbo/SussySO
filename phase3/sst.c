@@ -3,27 +3,12 @@
 pcb_PTR ith_sst_pcb;
 pcb_PTR ith_sst_child;
 
-pcb_t *CreateChild(){
-    pcb_t *p;
-    ssi_create_process_t ssi_create_process = {
-        .state = ith_sst_pcb,
-        .support = NULL,
-    };
-    ssi_payload_t payload = {
-        .service_code = CREATEPROCESS,
-        .arg = &ssi_create_process,
-    };
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&p), 0);
-    return p;
-}
-
 void initSST() {
-  // init of ith sst process
+  // init of the 8 sst process
   for(int i=0; i < MAXSSTNUM; i++){
     ith_sst_pcb = allocPcb();
     RAMTOP(ith_sst_pcb->p_s.reg_sp);
-    ith_sst_pcb->p_pid = FIRSTSSTPID - i;
+    ith_sst_pcb->p_pid = SSTPIDS - 10 + i;
     ith_sst_pcb->p_supportStruct->sup_asid = i + 1;
     process_count++;
     ith_sst_pcb->p_s.pc_epc = (memaddr)sstEntry;

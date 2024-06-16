@@ -1,19 +1,17 @@
 #ifndef SST_H
 #define SST_H
 
-#include "../../phase2/headers/nucleus.h"
+#include "stdlib.h"
 
 extern pcb_PTR ith_sst_child;
 extern pcb_PTR ith_sst_pcb;
-extern pcb_PTR ssi_pcb;
 
-/*initialize ith SST and its process*/
-void initSST(void);
-/*function to request creation of a child to ssi*/
-pcb_t *CreateChild(void);
 /*SST utility*/
 void sstEntry(void);
+/*SST server entry point*/
 void sstRequestHandler();
+/*initialize ith SST and its process*/
+void initSST(void);
 /*return TimeOfDay in microseconds*/
 void getTOD(pcb_PTR sender);
 /*kill SST and its child*/

@@ -2,17 +2,6 @@
 
 extern pcb_PTR current_process;
 
-pcb_t *getSupport(){
-    pcb_t *p;
-    ssi_payload_t payload = {
-        .service_code = GETSUPPORTPTR,
-        .arg = NULL,
-    };
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&p), 0);
-    return p;
-}
-
 void supportExceptionHandler(){
     /*Assuming that the handling of the exception is to be passed up (non-NULL Support Structure
      *pointer) and the appropriate sup_exceptContext fields of the Support Structure were correctly ini-
@@ -20,7 +9,7 @@ void supportExceptionHandler(){
      *pass control to the Support Level’s SYSCALL exception handler. The processor state at the time of
      *the exception will be in the Support Structure’s corresponding sup_exceptState field.
      */
-    support_t* current_support = getSupport();
+    support_t* current_support = getSupportData();
     unsigned int context = current_support->sup_exceptContext->status;
     unsigned int status = current_support->sup_exceptState->cause;
     state_t *exception_state = (state_t *)BIOSDATAPAGE;
@@ -35,7 +24,7 @@ void supportExceptionHandler(){
 }
 
 void UsysCallHandler(state_t* exception_state){
-  /* syscall number */
+  /* wrapper syscall number */
   int a0_reg = exception_state->reg_a0;
   /* dest process */
   int a1_reg = exception_state->reg_a1;
@@ -53,9 +42,8 @@ void UsysCallHandler(state_t* exception_state){
          * PARENT, then the requesting process send the message to its SST [Section 6], that is its parent.
          */
 
-        if (a1_reg == 0) {
-            exception_state->reg_a0 = DEST_NOT_EXIST;
-            break;
+        if (a1_reg == PARENT) {
+            pcb_t *dest_process = current_process->p_parent;
         }
         
         pcb_t *dest_process = (pcb_PTR)a1_reg;
