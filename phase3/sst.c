@@ -1,4 +1,5 @@
 #include "./headers/sst.h"
+#include <uriscv/types.h>
 
 pcb_PTR ith_sst_pcb;
 pcb_PTR ith_sst_child;
@@ -105,7 +106,7 @@ void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_
   char *msg = string;
   //obtain other info
   devreg_t *status = (devreg_t*) sender->p_supportStruct->sup_exceptState;
-  devreg_t* devAddrBase = DEV_REG_ADDR(IntlineNo, devNo);
+  devreg_t* devAddrBase = (devreg_t*)DEV_REG_ADDR(IntlineNo, DevNo);
 
   while(TRUE){
     if((*msg == EOS) || (i >= lenght)){

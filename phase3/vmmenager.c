@@ -1,6 +1,4 @@
 #include "./headers/vmmenager.h"
-#include <algorithm>
-#include <uriscv/arch.h>
 
 pcb_PTR swap_mutex;
 
@@ -57,7 +55,8 @@ void pager(void) {
   unsigned missing_page = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
   // pick a frame from the swap pool
   unsigned victim_frame = getFrameFromSwapPool();
-  memaddr *victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
+  memaddr *victim_page_addr =
+      (memaddr *)SWAPPOOLADDR + (victim_frame * PAGESIZE);
 
   // check if the frame is occupied
   if (!isSwapPoolFrameFree(victim_frame)) {
@@ -75,7 +74,8 @@ void pager(void) {
     TLBCLR();
 
     // update the backing store
-    writeBackingStore(victim_frame, victim_page_addr);
+    status = writeBackingStoreFromSwapFrame(victim_frame, victim_page_addr);
+    // TODO: check status
 
     // restore interrupt state
     setSTATUS(status);
@@ -83,7 +83,10 @@ void pager(void) {
 
   // read the contents of the current process's backing store
   // TODO: ? [Section 5.1] & [Section 9]
-  unsigned status = readBackingStore(missing_page, support_data->sup_asid);
+  status = readBackingStoreFromPage(victim_page_addr,
+                                             &support_data->sup_privatePgTbl[missing_page]);
+  
+  // TODO: check status
 
   // update the swap pool table
   swap_pool[victim_frame].sw_asid = support_data->sup_asid;
@@ -102,7 +105,7 @@ void pager(void) {
   // place the new page in the CP0
 
   // update the TLB
-  updateTLB(new_page);
+  updateTLB(&support_data->sup_privatePgTbl[missing_page]);
 
   // restore interrupt state
   setSTATUS(status);
