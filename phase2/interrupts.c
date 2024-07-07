@@ -1,16 +1,6 @@
-/*Implement the device/timer interrupt exception handler. Process device/timer
-interrupts and convert them into appropriate messages for blocked PCBs.*/
-
 #include "./headers/interrupts.h"
-#include <sys/types.h>
-#include <uriscv/types.h>
 
-/*int getInterruptLines(){
-    // 1. Read the interrupt lines from the interrupting devices
-    // 2. Return the interrupt lines
-    return getCAUSE() & IOINTERRUPTS & TIMERINTERRUPT & DISKINTERRUPT &
-    FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
-}*/
+cpu_t time_interrupt_start;
 
 void interruptHandler(void) {
   unsigned exce_mie = getMIE();

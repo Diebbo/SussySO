@@ -105,7 +105,7 @@ void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_
   char *msg = string;
   //obtain other info
   devreg_t *status = (devreg_t*) sender->p_supportStruct->sup_exceptState;
-  devreg_t* devAddrBase = START_DEVREG + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
+  devreg_t* devAddrBase = DEV_REG_ADDR(IntlineNo, devNo);
 
   while(TRUE){
     if((*msg == EOS) || (i >= lenght)){

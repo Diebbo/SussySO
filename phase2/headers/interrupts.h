@@ -7,7 +7,7 @@ them into appropriate messages for blocked PCBs.*/
 #include "nucleus.h"
 
 // time interrupt started
-cpu_t time_interrupt_start;
+extern cpu_t time_interrupt_start;
 
 cpu_t deltaInterruptTime(void);
 void interruptHandler(void);

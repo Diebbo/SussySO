@@ -32,11 +32,15 @@ void entrySwapFunction();
 // get frame from swap pool
 unsigned getFrameFromSwapPool();
 
-// get page from device
-pteEntry_t *readBackingStore(unsigned , unsigned );
+// copy the page from device to
+unsigned readBackingStoreFromAddress(memaddr* , memaddr*);
+
+unsigned readBackingStoreFromPage(memaddr *, pteEntry_t *);
 
 // write swap pool frame into device
-void writeBackingStore(unsigned);
+unsigned writeBackingStoreFromSwapFrame(unsigned , memaddr *);
+
+unsigned writeBackingStore(memaddr *, memaddr *);
 
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);

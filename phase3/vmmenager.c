@@ -1,4 +1,6 @@
 #include "./headers/vmmenager.h"
+#include <algorithm>
+#include <uriscv/arch.h>
 
 pcb_PTR swap_mutex;
 
@@ -54,11 +56,11 @@ void pager(void) {
   // get the missing page number
   unsigned missing_page = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
   // pick a frame from the swap pool
-  unsigned frame = getFrameFromSwapPool();
-  memaddr page_addr = SWAPPOOLADDR + (frame * PAGESIZE);
+  unsigned victim_frame = getFrameFromSwapPool();
+  memaddr *victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
 
   // check if the frame is occupied
-  if (!isSwapPoolFrameFree(frame)) {
+  if (!isSwapPoolFrameFree(victim_frame)) {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
@@ -66,14 +68,14 @@ void pager(void) {
     setSTATUS(status & ~IECON); // disable interrupts
 
     // mark the page pointed by the swap pool as not valid
-    swap_pool[frame].sw_pte->pte_entryLO &= !VALIDON;
+    swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
 
     // update the TLB if needed
     // TODO: now we are not updating the TLB, we are just invalidating it
     TLBCLR();
 
     // update the backing store
-    writeBackingStore(frame);
+    writeBackingStore(victim_frame, victim_page_addr);
 
     // restore interrupt state
     setSTATUS(status);
@@ -81,12 +83,13 @@ void pager(void) {
 
   // read the contents of the current process's backing store
   // TODO: ? [Section 5.1] & [Section 9]
-  pteEntry_t *new_page = readBackingStore(missing_page, support_data->sup_asid);
+  unsigned status = readBackingStore(missing_page, support_data->sup_asid);
 
   // update the swap pool table
-  swap_pool[frame].sw_asid = support_data->sup_asid;
-  swap_pool[frame].sw_pageNo = missing_page;
-  swap_pool[frame].sw_pte = &support_data->sup_privatePgTbl[missing_page];
+  swap_pool[victim_frame].sw_asid = support_data->sup_asid;
+  swap_pool[victim_frame].sw_pageNo = missing_page;
+  swap_pool[victim_frame].sw_pte =
+      &support_data->sup_privatePgTbl[missing_page];
 
   // operations performed atomically
   status = getSTATUS();
@@ -94,7 +97,7 @@ void pager(void) {
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO =
-      page_addr | DIRTYON | VALIDON;
+      ((unsigned)victim_page_addr << PFNSHIFT) | DIRTYON | VALIDON;
 
   // place the new page in the CP0
 
@@ -119,19 +122,51 @@ void updateTLB(pteEntry_t *page) {
   // check if the page is already in the TLB
   if ((getINDEX() & PRESENTFLAG) == 0) {
     // the page is not in the TLB
-    setENTRYHI(p.pte_entryHI);
-    setENTRYLO(p.pte_entryLO);
+    setENTRYHI(page->pte_entryHI);
+    setENTRYLO(page->pte_entryLO);
     TLBWI();
   }
 }
 
-void writeBackingStore(unsigned frame_number) {
-  unsigned status, command;
-  unsigned value = (unsigned)swap_pool[frame_number].sw_pte;
-  unsigned command = (unsigned) DEVREG_ADDR(IL_FLASH, swap_pool[frame_number].sw_asid);
+unsigned writeBackingStoreFromSwapFrame(unsigned frame_number,
+                                        memaddr *page_addr) {
+  unsigned dev_addr = DEV_REG_ADDR(IL_FLASH, swap_pool[frame_number].sw_asid) +
+                      (swap_pool[frame_number].sw_pageNo * PAGESIZE);
+  return writeBackingStore(page_addr, (memaddr *)dev_addr);
+}
+
+unsigned writeBackingStore(memaddr *writing_page_addr,
+                           memaddr *flash_dev_addr) {
+  unsigned command = (unsigned)(writing_page_addr << 7) | FLASHWRITE;
+  unsigned status = 0;
+  ssi_do_io_t do_io = {
+      .commandAddr = flash_dev_addr,
+      .commandValue = command,
+  };
+  ssi_payload_t payload = {
+      .service_code = DOIO,
+      .arg = &do_io,
+  };
+  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
+  return status;
+}
+
+unsigned readBackingStoreFromPage(memaddr *missing_page_addr,
+                                  pteEntry_t *page) {
+  memaddr *flash_dev_addr =
+      (memaddr *)DEV_REG_ADDR(IL_FLASH, (page->pte_entryHI >> ASIDSHIFT) & 7) +
+      (((page->pte_entryHI & GETPAGENO) >> VPNSHIFT) * PAGESIZE);
+  return readBackingStoreFromAddress(missing_page_addr, flash_dev_addr);
+}
+
+unsigned readBackingStoreFromAddres(memaddr *missing_page_addr,
+                                    memaddr *flash_dev_addr) {
+  unsigned status = 0;
+  unsigned value = (unsigned)((unsigned)missing_page_addr << 7) | FLASHREAD;
 
   ssi_do_io_t do_io = {
-      .commandAddr = command,
+      .commandAddr = flash_dev_addr,
       .commandValue = value,
   };
   ssi_payload_t payload = {
@@ -140,27 +175,7 @@ void writeBackingStore(unsigned frame_number) {
   };
   SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
-}
-
-pteEntry_t *readBackingStore(unsigned missing_page, unsigned asid) {
-  unsigned flash_dev_addr = (unsigned)DEV_REG_ADDR(IL_FLASH, asid);
-  unsigned status = 0;
-  unsigned value = (missing_page << 7) | DEVREADBLK;
-
-  ssi_do_io_t do_io = {
-      .commandAddr = flash_dev_addr,
-      .commandValue = missing_page,
-  };
-  ssi_payload_t payload = {
-      .service_code = DOIO,
-      .arg = &do_io,
-  };
-  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&value), 0);
-
-  pteEntry_t *new_page = (pteEntry_t *)value;
-  new_page->pte_entryHI = (asid << ASIDSHIFT) | (missing_page << VPNSHIFT);
-  return new_page;
+  return status;
 }
 
 unsigned getFrameFromSwapPool() {

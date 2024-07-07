@@ -129,7 +129,7 @@
 #define GETPAGENO     0x3FFFF000
 #define GETSHAREFLAG  0xC0000000
 #define VPNSHIFT      12
-#define PNFSHIFT      VPNSHIFT
+#define PFNSHIFT      VPNSHIFT
 #define ASIDSHIFT     6
 #define SHAREDSEGFLAG 30
 
