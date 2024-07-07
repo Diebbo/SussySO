@@ -86,12 +86,12 @@ void killSST(pcb_PTR sender) {
   input_payload->arg = NULL;
   input_payload->service_code = TERMPROCESS;
   SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned)(&input_payload), 0);
-  response_payload->arg = (unsigned)"SST TERMINATED!\n";
+  response_payload->arg = NULL;
   response = response_payload->arg;
 
   /*Send a message to the test process to communicate the termination of the
    * SST.*/
-  //SYSCALL(SENDMSG, (unsigned int)tester, (unsigned)(&response), 0);
+  SYSCALL(SENDMSG, (unsigned int)sender, (unsigned)(&response), 0);
 }
 
 void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_line){
