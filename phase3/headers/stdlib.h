@@ -31,7 +31,7 @@ extern swap_t swap_pool[POOLSIZE];
 extern pcb_PTR ssi_pcb;
 
 // support level next free asid
-extern int next_asid;
+extern int next_asid = 0;
 
 int getASID(void) {
   unsigned asid = next_asid;
@@ -59,6 +59,28 @@ void initUprocPageTable(pcb_PTR p) {
       (0xbffff << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
 }
 
+void initUProc(pcb_PTR sst_father){
+  /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
+   * that two parameters:
+   *  • A pointer to the initial processor state for the U-proc.
+   *  • A pointer to an initialized Support Structure for the U-proc.
+   * Initial Processor State for a U-proc; Each U-proc’s initial processor state should have its:
+   *  • PC (and s_t9) set to 0x8000.00B0; the address of the start of the .text section [Section 10.3.1-pops].
+   *  • SP set to 0xC000.0000 [Section 2].
+   *  • Status set for user-mode with all interrupts and the processor Local Timer enabled.
+   *  • EntryHi.ASID set to the process’s unique ID; an integer from [1..8]
+   * Important: Each U-proc MUST be assigned a unique, non-zero ASID.
+  */
+  pcb_PTR u_proc;
+  u_proc->p_supportStruct->sup_exceptContext->stackPtr = (memaddr) USERSTACKTOP;
+  u_proc = CreateChild(u_proc->p_supportStruct->sup_exceptContext->stackPtr);
+  u_proc->p_supportStruct->sup_exceptContext->pc = (memaddr) UPROCSTARTADDR;
+  u_proc->p_supportStruct->sup_exceptContext->status = ALLOFF | USERPON | IEPON | IMON | TEBITON;
+  u_proc->p_supportStruct->sup_asid = sst_father->p_supportStruct->sup_asid;
+  u_proc->p_supportStruct->sup_exceptState->entry_hi = u_proc->p_supportStruct->sup_asid;
+
+}
+
 /*function to get support struct (requested to SSI)*/
 support_t *getSupportData() {
   support_t *support_data;
@@ -74,10 +96,10 @@ support_t *getSupportData() {
 }
 
 /*function to request creation of a child to SSI*/
-pcb_t *CreateChild(){
+pcb_t *CreateChild(state_t *s){
     pcb_t *p;
     ssi_create_process_t ssi_create_process = {
-        .state = ith_sst_pcb,
+        .state = s,
         .support = NULL,
     };
     ssi_payload_t payload = {

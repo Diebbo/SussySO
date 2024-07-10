@@ -2,7 +2,6 @@
 #include <uriscv/types.h>
 
 pcb_PTR ith_sst_pcb;
-pcb_PTR ith_sst_child;
 
 void initSSTs() {
   // init of the 8 sst process
@@ -16,10 +15,8 @@ void initSSTs() {
     ith_sst_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
     ith_sst_pcb->p_s.mie = MIE_ALL;
     insertProcQ(&ready_queue_list, ith_sst_pcb);
-    // init of sst child
-    ssi_payload_PTR ith_sst_child_payload = CreateChild();
-    // same ASID!
-    ith_sst_child->p_supportStruct->sup_asid = ith_sst_pcb->p_supportStruct->sup_asid;
+    //init the uProc (sst child)
+    initUProc(ith_sst_pcb);
   }
 }
 

@@ -21,8 +21,14 @@ void test3() {
   initSwapPool();
   entrySwapFunction();
 
-  // Init. sharable peripheral
-  initUProc();
+  // Init. sharable peripheral (done in initSSTs)
+  /* Technical Point: A careful reading of the Level 4/Phase 3 specification reveals that there are
+   * actually no purposefully shared peripheral devices. Each of the [1..8] U-procs has its own flash device
+   * (backing store), printer, and terminal device(s). Hence, one does not actually need a process to
+   * protect access to device registers. However, for purposes of correctness (or more appropriate: to
+   * protect against erroneous behavior) and future phase compatibility, it is possible to have a process for
+   * each device that waits for messages and requests the single DoIO to the SSI.
+   */
 
   //Init 8 SST
   initSSTs();
@@ -31,9 +37,7 @@ void test3() {
   terminate();
 }
 
-void initUProc(){
 
-}
 
 void terminateAll(){
   for(int i=0; i<8; i++){

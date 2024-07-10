@@ -11,9 +11,9 @@
 
 // test phase 3 ('Istantiator process')
 void test3(void);
-void initUProc(void);
 // func. to panic after the 8 sst have been killed
 void terminateAll(void);
+
 
 // extern ds and func.
 extern pcb_t *current_process;
