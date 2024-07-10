@@ -1,4 +1,4 @@
-#include "./headers/vmmenager.h"
+#include "./headers/vmManager.h"
 
 pcb_PTR swap_mutex;
 

@@ -4,7 +4,7 @@
 pcb_PTR ith_sst_pcb;
 pcb_PTR ith_sst_child;
 
-void initSST() {
+void initSSTs() {
   // init of the 8 sst process
   for(int i=0; i < MAXSSTNUM; i++){
     ith_sst_pcb = allocPcb();

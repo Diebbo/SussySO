@@ -60,10 +60,8 @@ extern void TrapExceptionHandler(state_t *);
 extern void SSI_function_entry_point(void);
 extern void passUpOrDie(unsigned , state_t *);
 extern void initSSI(void);
-extern void initSST(void);
 
 /* defined in p2test.c */
-extern void test(void);
 extern void test(void);
 /* defined in p3test.c */
 extern void test3(void);

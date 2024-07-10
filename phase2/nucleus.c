@@ -73,8 +73,6 @@ void initKernel() {
   process_count++;
 
   insertProcQ(&ready_queue_list, second_process);
-
-  initSST();
 }
 
 void copyState(state_t *source, state_t *dest) {

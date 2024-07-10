@@ -1,7 +1,7 @@
 #ifndef VM_MANAGER_H
 #define VM_MANAGER_H
 
-#include "stdlib.h"
+#include "sysSupport.h"
 
 // internal global variables
 extern pcb_PTR swap_mutex;
