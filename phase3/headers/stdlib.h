@@ -100,4 +100,12 @@ void releaseSwapMutex(){
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
 }
 
+int isOneOfSSTPids(int pid){
+  for(int i=0; i<8; i++){
+    if(pid == (SSTPIDS -i)){
+      return TRUE;
+    }
+  }
+}
+
 #endif // !STD_LIB_H

@@ -8,6 +8,7 @@ void supportExceptionHandler(){
      *tialized, execution continues with the Support Level’s general exception handler, which should then
      *pass control to the Support Level’s SYSCALL exception handler. The processor state at the time of
      *the exception will be in the Support Structure’s corresponding sup_exceptState field.
+     *(NOTE: already overwritten the one in phase2)
      */
     support_t* current_support = getSupportData();
     unsigned int context = current_support->sup_exceptContext->status;
@@ -15,9 +16,7 @@ void supportExceptionHandler(){
     state_t *exception_state = (state_t *)BIOSDATAPAGE;
     unsigned exception_code =  status & 0x7FFFFFFF;
 
-    if (exception_code >= 24 && exception_code <= 28) {
-        TLBhandler();
-    }else if ((exception_code >= 0 && exception_code <= 7) ||
+    if ((exception_code >= 0 && exception_code <= 7) ||
              (exception_code >= 12 && exception_code <= 23)){
         UsysCallHandler(exception_state);
     }
@@ -32,7 +31,8 @@ void UsysCallHandler(state_t* exception_state){
   int a2_reg = exception_state->reg_a2;
   msg_t *msg;
 
-  if( a0_reg == (SENDMSG || RECEIVEMSG) ){
+  // perform action only if is a SEND/RECEIVE request AND if it's an user process
+  if( a0_reg == (SENDMSG || RECEIVEMSG) && isOneOfSSTPids(current_process->p_parent->p_pid) ){
     switch (a0_reg){
     case SENDMSG:
         /* This services cause the transmission of a message to a specified process. The USYS1 service is
