@@ -70,15 +70,18 @@ void initUProc(pcb_PTR sst_father){
    *  • Status set for user-mode with all interrupts and the processor Local Timer enabled.
    *  • EntryHi.ASID set to the process’s unique ID; an integer from [1..8]
    * Important: Each U-proc MUST be assigned a unique, non-zero ASID.
-  */
-  pcb_PTR u_proc;
-  u_proc->p_supportStruct->sup_exceptContext->stackPtr = (memaddr) USERSTACKTOP;
-  u_proc = CreateChild(u_proc->p_supportStruct->sup_exceptContext->stackPtr);
-  u_proc->p_supportStruct->sup_exceptContext->pc = (memaddr) UPROCSTARTADDR;
-  u_proc->p_supportStruct->sup_exceptContext->status = ALLOFF | USERPON | IEPON | IMON | TEBITON;
-  u_proc->p_supportStruct->sup_asid = sst_father->p_supportStruct->sup_asid;
-  u_proc->p_supportStruct->sup_exceptState->entry_hi = u_proc->p_supportStruct->sup_asid;
+   */
+  state_t u_proc_state;
+  STST(&u_proc_state);
 
+  pcb_PTR u_proc = CreateChild(&u_proc_state);
+  u_proc->p_s.pc_epc = (memaddr) UPROCSTARTADDR;
+  u_proc->p_s.reg_sp = (memaddr) USERSTACKTOP;
+  u_proc->p_s.mie = ALLOFF | USERPON | IEPON | IMON | TEBITON;
+
+  u_proc->p_supportStruct = getSupportData();
+  u_proc->p_supportStruct->sup_asid = sst_father->p_supportStruct->sup_asid;
+  u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid;
 }
 
 /*function to get support struct (requested to SSI)*/
@@ -88,10 +91,8 @@ support_t *getSupportData() {
       .service_code = GETSUPPORTPTR,
       .arg = NULL,
   };
-  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload),
-          0);
-  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb,
-          (unsigned int)(&getsup_payload), 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload),0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload), 0);
   return support_data;
 }
 
