@@ -17,7 +17,7 @@ void test3() {
    *      each SST is terminated.
    */
 
-  // Init. of Swap Pool table and a Swap Mutex process
+  // Init. of Swap Pool table and entry Swap Mutex process 
   initSwapPool();
   entrySwapFunction();
 
@@ -30,14 +30,56 @@ void test3() {
    * each device that waits for messages and requests the single DoIO to the SSI.
    */
 
+  // Init array of support struct (so each will be used for every u-proc init. in initSSTs)
+  initSupportArray();
+
   //Init 8 SST
   initSSTs();
 
   //Terminate after the 8 sst die
-  terminate();
+  terminateAll();
 }
 
+void initSupportArray(){
+  /* A Support Structure must contain all the fields necessary for the Support Level to support both
+   * paging and passed up SYSCALL services. This includes:
+   *   • sup_asid: The process’s ASID.
+   *   • sup_exceptState[2]: The two processor state (state_t) areas where the processor state at the
+   *      time of the exception is placed by the Nucleus for passing up exception handling to the Support
+   *      Level.
+   *   • sup_exceptContext[2]: The two processor context (context_t) sets. Each context is a PC
+   *      / SP / Status combination. These are the two processor contexts which the Nucleus uses for
+   *      passing up exception handling to the Support Level.
+   *   • sup_privatePgTbl[32]: The process’s Page Table.
+   *   • sup_stackTLB[500]: The stack area for the process’s TLB exception handler. An integer array
+   *      of 500 is a 2Kb area.
+   *   • sup_stackGen[500]: The stack area for the process’s Support Level general exception handler.
+   * 
+   * Only the sup_asid, sup_exceptContext[2], and sup_privatePgTbl[32] [Section 2.1] require
+   * initialization prior to request the CreateProcess service.
+   * To initialize a processor context area one performs the following:
+   *   • Set the two PC fields. One of them (0 - PGFAULTEXCEPT) should be set to the address of the
+   *      Support Level’s TLB handler, while the other one (1 - GENERALEXCEPT) should be set to the
+   *      address of the Support Level’s general exception handler.
+   *   • Set the two Status registers to: kernel-mode with all interrupts and the Processor Local Timer
+   *      enabled.
+   *   • Set the two SP fields to utilize the two stack spaces allocated in the Support Structure. Stacks
+   *      grow “down” so set the SP fields to the address of the end of these areas.
+   *      E.g. ... = &(...sup_stackGen[499]).
+   */
+  for(int asid=0; asid<8; asid++){
+    memaddr maxaddr;
+    supportArray[asid]->sup_asid = asid;
 
+    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
+    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
+    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+
+    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
+    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
+    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+  }
+}
 
 void terminateAll(){
   for(int i=0; i<8; i++){

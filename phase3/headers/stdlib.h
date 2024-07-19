@@ -33,6 +33,10 @@ extern pcb_PTR ssi_pcb;
 // support level next free asid
 extern int next_asid = 0;
 
+// static support array
+extern support_t *supportArray[8];
+extern int support_index = 0;
+
 int getASID(void) {
   unsigned asid = next_asid;
   if (asid > 8) {
@@ -44,8 +48,8 @@ int getASID(void) {
   return asid;
 }
 
+// init and fill the support page table with the correct values
 void initUprocPageTable(pcb_PTR p) {
-  // fill the support page table with the correct values
   // nucleus proces has asid 0
   if (p->p_supportStruct->sup_asid == NOPROC)
     p->p_supportStruct->sup_asid = getASID();
@@ -59,6 +63,14 @@ void initUprocPageTable(pcb_PTR p) {
       (0xbffff << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
 }
 
+// initialization of the support struct of the user process
+void initSupportStruct(pcb_PTR u_proc){
+  u_proc->p_supportStruct = supportArray[support_index];
+  u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid << ASIDSHIFT;
+  support_index++;
+}
+
+// initialization of a single user process
 void initUProc(pcb_PTR sst_father){
   /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
    * that two parameters:
@@ -79,9 +91,7 @@ void initUProc(pcb_PTR sst_father){
   u_proc->p_s.reg_sp = (memaddr) USERSTACKTOP;
   u_proc->p_s.mie = ALLOFF | USERPON | IEPON | IMON | TEBITON;
 
-  u_proc->p_supportStruct = getSupportData();
-  u_proc->p_supportStruct->sup_asid = sst_father->p_supportStruct->sup_asid;
-  u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid;
+  initSupportStruct(u_proc);
 }
 
 /*function to get support struct (requested to SSI)*/
@@ -112,23 +122,25 @@ pcb_t *CreateChild(state_t *s){
     return p;
 }
 
+// gain mutual exclusion over the swap pool
 void gainSwapMutex(){
-  // gain mutual exclusion over the swap pool
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
   SYSCALL(RECEIVEMSG, (unsigned int)swap_mutex, 0, 0);
 }
 
+// release mutual exclusion over the swap pool
 void releaseSwapMutex(){
-  // release mutual exclusion over the swap pool
   SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
 }
 
+// check if is a SST pid
 int isOneOfSSTPids(int pid){
   for(int i=0; i<8; i++){
     if(pid == (SSTPIDS -i)){
       return TRUE;
     }
   }
+  return FALSE;
 }
 
 #endif // !STD_LIB_H
