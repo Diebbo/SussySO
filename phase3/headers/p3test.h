@@ -2,8 +2,8 @@
 #define P3TEST_H
 
 // uRISCV lib.
-#include "../headers/const.h"
-#include "../headers/types.h"
+#include "../../headers/const.h"
+#include "../../headers/types.h"
 #include <uriscv/arch.h>
 #include <uriscv/liburiscv.h>
 

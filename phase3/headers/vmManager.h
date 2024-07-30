@@ -11,7 +11,6 @@ extern swap_t swap_pool[2 * UPROCMAX];
 extern pcb_PTR ssi_pcb;
 extern void TrapExceptionHandler(state_t *);
 
-
 void initSwapPool(void);
 
 // retrun true if the frame is free
@@ -32,16 +31,13 @@ void entrySwapFunction();
 // get frame from swap pool
 unsigned getFrameFromSwapPool();
 
-// copy the page from device to
-unsigned readBackingStoreFromAddress(memaddr* , memaddr*);
+// flash operation
+unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid, unsigned page_number);
 
-unsigned readBackingStoreFromPage(memaddr *, pteEntry_t *);
+unsigned readBackingStoreFromPage(memaddr missing_page_addr, unsigned asid, unsigned page_number);
 
-// write swap pool frame into device
-unsigned writeBackingStoreFromSwapFrame(unsigned , memaddr *);
-
-unsigned writeBackingStore(memaddr *, memaddr *);
+unsigned writeBackingStore(memaddr missing_page_addr, unsigned asid, unsigned page_no);
 
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);
-#endif 
+#endif
