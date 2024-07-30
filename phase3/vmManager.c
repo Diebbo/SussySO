@@ -62,8 +62,7 @@ void pager(void) {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
-    status = getSTATUS();
-    setSTATUS(status & ~IECON); // disable interrupts
+    offInterrupts();
 
     // mark the page pointed by the swap pool as not valid
     swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
@@ -77,13 +76,12 @@ void pager(void) {
                                swap_pool[victim_frame].sw_pageNo);
     // TODO: check status
 
-    // restore interrupt state
-    setSTATUS(status);
+    onInterrupts();
   }
 
   // read the contents of the current process's backing store
 
-  int vpn = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
+  int vpn = ENTRYHI_TO_VPN(exception_state->entry_hi);
 
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
@@ -96,9 +94,8 @@ void pager(void) {
   swap_pool[victim_frame].sw_pte =
       &support_data->sup_privatePgTbl[missing_page];
 
-  // operations performed atomically
-  status = getSTATUS();
-  setSTATUS(status & ~IECON); // disable interrupts
+  // #region atomic operations
+  offInterrupts();
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO =
@@ -109,8 +106,8 @@ void pager(void) {
   // update the TLB
   updateTLB(&support_data->sup_privatePgTbl[missing_page]);
 
-  // restore interrupt state
-  setSTATUS(status);
+  onInterrupts();
+  // #endregion atomic operations
 
   releaseSwapMutex();
 

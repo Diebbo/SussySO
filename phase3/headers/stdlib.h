@@ -111,7 +111,7 @@ pcb_t *CreateChild(state_t *s){
     pcb_t *p;
     ssi_create_process_t ssi_create_process = {
         .state = s,
-        .support = NULL,
+        .support = (support_t *)NULL,
     };
     ssi_payload_t payload = {
         .service_code = CREATEPROCESS,
@@ -141,6 +141,14 @@ int isOneOfSSTPids(int pid){
     }
   }
   return FALSE;
+}
+
+void onInterrupts(){
+  setSTATUS(getSTATUS() | IECON);
+}
+
+void offInterrupts(){
+  setSTATUS(getSTATUS() & ~IECON);
 }
 
 #endif // !STD_LIB_H

@@ -267,5 +267,7 @@
 #define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
 #define PARENT 0
 
+#define ENTRYHI_TO_VPN(entry_hi) ((entry_hi & GETPAGENO) >> VPNSHIFT)
+
 #endif
 

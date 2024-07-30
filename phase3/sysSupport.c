@@ -1,4 +1,4 @@
-#include "./headers/sysSupport.h"
+#include "headers/sysSupport.h"
 
 extern pcb_PTR current_process;
 

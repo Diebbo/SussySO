@@ -1,5 +1,4 @@
 #ifndef VM_MANAGER_H
-#define VM_MANAGER_H
 
 #include "sysSupport.h"
 
