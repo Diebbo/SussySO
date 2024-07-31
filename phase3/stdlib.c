@@ -67,7 +67,7 @@ support_t *getSupportData() {
       .arg = NULL,
   };
   SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload),0);
-  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload), 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&support_data), 0);
   return support_data;
 }
 
@@ -100,11 +100,6 @@ void releaseSwapMutex(){
 
 // check if is a SST pid
 int isOneOfSSTPids(int pid){
-  for(int i=0; i<8; i++){
-    if(pid == (SSTPIDS -i)){
-      return TRUE;
-    }
-  }
-  return FALSE;
+  return pid >= SSTPIDS && pid < SSTPIDS + MAXSSTNUM;
 }
 

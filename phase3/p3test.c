@@ -70,15 +70,15 @@ void initSupportArray(){
    */
   for(int asid=0; asid<8; asid++){
     memaddr maxaddr;
-    supportArray[asid]->sup_asid = asid;
+    support_arr[asid]->sup_asid = asid;
 
-    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
-    supportArray[asid]->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
+    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
+    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
 
-    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
-    supportArray[asid]->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
+    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
+    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
   }
 }
 

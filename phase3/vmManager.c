@@ -21,7 +21,6 @@ void entrySwapFunction() {
   initSwapPool();
 
   while (TRUE) {
-    unsigned *req_payload, *res_payload;
     swap_t swap_message;
     // wait for a swap request
     unsigned int process_requesting_swap =
@@ -75,6 +74,7 @@ void pager(void) {
     status = writeBackingStore(victim_page_addr, support_data->sup_asid,
                                swap_pool[victim_frame].sw_pageNo);
     // TODO: check status
+    status = status; // to avoid warning
 
     ONINTERRUPTS();
   }
