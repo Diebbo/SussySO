@@ -62,7 +62,7 @@ void pager(void) {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
-    offInterrupts();
+    OFFINTERRUPTS();
 
     // mark the page pointed by the swap pool as not valid
     swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
@@ -76,7 +76,7 @@ void pager(void) {
                                swap_pool[victim_frame].sw_pageNo);
     // TODO: check status
 
-    onInterrupts();
+    ONINTERRUPTS();
   }
 
   // read the contents of the current process's backing store
@@ -95,7 +95,7 @@ void pager(void) {
       &support_data->sup_privatePgTbl[missing_page];
 
   // #region atomic operations
-  offInterrupts();
+  OFFINTERRUPTS();
 
   // update the current process's page table
   support_data->sup_privatePgTbl[missing_page].pte_entryLO =
@@ -106,7 +106,7 @@ void pager(void) {
   // update the TLB
   updateTLB(&support_data->sup_privatePgTbl[missing_page]);
 
-  onInterrupts();
+  ONINTERRUPTS();
   // #endregion atomic operations
 
   releaseSwapMutex();
