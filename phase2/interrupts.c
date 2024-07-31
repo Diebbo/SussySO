@@ -94,18 +94,16 @@ void interruptHandlerNonTimer(unsigned ip_line) {
     dev_index = DEVINDEX(ip_line, dev_no);
 
     break;
+
   case IL_FLASH:
-    devreg_t *flash = (devreg_t *)dev_addr_base;
+  default:
+    dtpreg_t *flash = (dtpreg_t *)dev_addr_base;
 
     status = flash->status;
 
     flash->command = ACK;
     
     dev_index = DEVINDEX(ip_line, dev_no);
-
-    break;
-  default:
-    // Check for other types of devices (TODO)
     break;
   }
 
