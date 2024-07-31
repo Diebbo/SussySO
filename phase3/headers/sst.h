@@ -3,8 +3,7 @@
 
 #include "stdlib.h"
 
-extern pcb_PTR ith_sst_child;
-extern pcb_PTR ith_sst_pcb;
+extern pcb_PTR sst_pcb[MAXSSTNUM];
 
 /*SST utility*/
 void sstEntry(void);

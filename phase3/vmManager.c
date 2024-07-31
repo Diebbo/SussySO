@@ -1,5 +1,4 @@
 #include "./headers/vmManager.h"
-#include <uriscv/types.h>
 
 pcb_PTR swap_mutex;
 

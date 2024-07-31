@@ -1,22 +1,21 @@
 #include "./headers/sst.h"
-#include <uriscv/types.h>
 
-pcb_PTR ith_sst_pcb;
+pcb_PTR sst_pcb[MAXSSTNUM];
 
 void initSSTs() {
   // init of the 8 sst process
-  for(int i=0; i < MAXSSTNUM; i++){
-    ith_sst_pcb = allocPcb();
-    RAMTOP(ith_sst_pcb->p_s.reg_sp);
-    ith_sst_pcb->p_pid = SSTPIDS - 10 + i;
-    ith_sst_pcb->p_supportStruct->sup_asid = i + 1;
+  for (int i = 0; i < MAXSSTNUM; i++) {
+    sst_pcb[i] = allocPcb();
+    RAMTOP(sst_pcb[i]->p_s.reg_sp);
+    // Non mi interessa il pid sst_pcb[i]->p_pid = SSTPIDS - 10 + i;
+    sst_pcb[i]->p_supportStruct->sup_asid = i;
     process_count++;
-    ith_sst_pcb->p_s.pc_epc = (memaddr)sstEntry;
-    ith_sst_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
-    ith_sst_pcb->p_s.mie = MIE_ALL;
-    insertProcQ(&ready_queue_list, ith_sst_pcb);
-    //init the uProc (sst child)
-    initUProc(ith_sst_pcb);
+    sst_pcb[i]->p_s.pc_epc = (memaddr)sstEntry;
+    sst_pcb[i]->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+    sst_pcb[i]->p_s.mie = MIE_ALL;
+    insertProcQ(&ready_queue_list, sst_pcb[i]);
+    // init the uProc (sst child)
+    initUProc(sst_pcb[i]);
   }
 }
 

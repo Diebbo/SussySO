@@ -1,5 +1,7 @@
 #include "./headers/p3test.h"
 
+extern pcb_PTR swap_mutex;
+
 void test3() {
   /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
    * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
@@ -17,9 +19,8 @@ void test3() {
    *      each SST is terminated.
    */
 
-  // Init. of Swap Pool table and entry Swap Mutex process 
-  initSwapPool();
-  entrySwapFunction();
+  // alloc swap mutex process
+  allocSwapMutex();
 
   // Init. sharable peripheral (done in initSSTs)
   /* Technical Point: A careful reading of the Level 4/Phase 3 specification reveals that there are
@@ -88,4 +89,15 @@ void terminateAll(){
   PANIC();
 }
 
+void allocSwapMutex(void){
+  swap_mutex = allocPcb();
+  RAMTOP(swap_mutex->p_s.reg_sp);
+  swap_mutex->p_supportStruct->sup_asid = 0;
+  process_count++;
+  swap_mutex->p_s.pc_epc = (memaddr)entrySwapFunction;
+  swap_mutex->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+  swap_mutex->p_s.mie = MIE_ALL;
+  insertProcQ(&ready_queue_list, swap_mutex);
+  initUProc(swap_mutex);
+}
 
