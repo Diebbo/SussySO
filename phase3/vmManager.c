@@ -1,4 +1,5 @@
 #include "./headers/vmManager.h"
+#include <uriscv/types.h>
 
 pcb_PTR swap_mutex;
 
@@ -132,7 +133,7 @@ void updateTLB(pteEntry_t *page) {
 
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
                         unsigned page_number) {
-  dtpreg_t *flash_dev_addr = (devreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
+  dtpreg_t *flash_dev_addr = (dtpreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
   flash_dev_addr->data0 = page_addr;
 
   unsigned status = 0;
