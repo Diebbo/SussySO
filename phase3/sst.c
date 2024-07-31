@@ -25,8 +25,11 @@ void sstEntry() {
   // reply
   while (TRUE) {
     ssi_payload_PTR process_request_payload;
-    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
-    sstRequestHandler(process_request_ptr, process_request_payload->service_code, process_request_payload->arg);
+    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(
+        RECEIVEMSG, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
+    sstRequestHandler(process_request_ptr,
+                      process_request_payload->service_code,
+                      process_request_payload->arg);
   }
 }
 
@@ -53,14 +56,14 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * to the printer with the same number of the sender
      * ASID.
      */
-    writeOnPrinter(sender,(ssi_payload_PTR)arg,IL_PRINTER);
+    writeOnPrinter(sender, (ssi_payload_PTR)arg, IL_PRINTER);
     break;
   case WRITETERMINAL:
     /* This service cause the print of a string of characters
      * to the terminal with the same number of the sender
      * ASID.
      */
-    writeOnTerminal(sender,(ssi_payload_PTR)arg,IL_TERMINAL);
+    writeOnTerminal(sender, (ssi_payload_PTR)arg, IL_TERMINAL);
     break;
   default:
     // error
@@ -90,27 +93,28 @@ void killSST(pcb_PTR sender) {
   SYSCALL(SENDMSG, (unsigned int)sender, (unsigned)(&response), 0);
 }
 
-void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_line){
-  //obtain string and lenght of arg
-  sst_print_PTR print_payload  = (sst_print_PTR) pcb_payload;
-  int lenght = (int) print_payload->length;
-  char *string = (char*) print_payload->string;
+void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload,
+                    unsigned int i_line) {
+  // obtain string and lenght of arg
+  sst_print_PTR print_payload = (sst_print_PTR)pcb_payload;
+  int lenght = (int)print_payload->length;
+  char *string = (char *)print_payload->string;
   unsigned int IntlineNo = i_line;
   unsigned int DevNo = sender->p_supportStruct->sup_asid;
-  //indexes to check
+  // indexes to check
   int i = 0;
   char *msg = string;
-  //obtain other info
-  devreg_t *status = (devreg_t*) sender->p_supportStruct->sup_exceptState;
-  devreg_t* devAddrBase = (devreg_t*)DEV_REG_ADDR(IntlineNo, DevNo);
+  // obtain other info
+  devreg_t *status = (devreg_t *)sender->p_supportStruct->sup_exceptState;
+  devreg_t *devAddrBase = (devreg_t *)DEV_REG_ADDR(IntlineNo, DevNo);
 
-  while(TRUE){
-    if((*msg == EOS) || (i >= lenght)){
+  while (TRUE) {
+    if ((*msg == EOS) || (i >= lenght)) {
       break;
     }
-    
+
     //  device not ready nor busy -> error!
-    if (((unsigned int)status & STATMASK) != (DEVRDY || DEVBSY)){
+    if (((unsigned int)status & STATMASK) != (DEVRDY | DEVBSY)) {
       // there can be a better way to signal it
       PANIC();
     }
@@ -118,7 +122,7 @@ void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_
     unsigned int value = PRINTCHR | (((unsigned int)*msg) << 8);
 
     ssi_do_io_t do_io = {
-        .commandAddr = devAddrBase->dtp.data0,
+        .commandAddr = &devAddrBase->dtp.data0,
         .commandValue = value,
     };
     ssi_payload_t payload = {
@@ -130,7 +134,7 @@ void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
     // device not ready -> error!
-    if (((unsigned int)status & STATMASK) != DEVRDY){
+    if (((unsigned int)status & STATMASK) != DEVRDY) {
       PANIC();
     }
 
@@ -142,34 +146,35 @@ void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_
   SYSCALL(SENDMSG, (unsigned int)sender, 0, 0);
 }
 
-void writeOnTerminal(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i_line){
-  //obtain string and lenght of arg
-  sst_print_PTR print_payload  = (sst_print_PTR) pcb_payload;
-  int lenght = (int) print_payload->length;
-  char *string = (char*) print_payload->string;
+void writeOnTerminal(pcb_PTR sender, ssi_payload_PTR pcb_payload,
+                     unsigned int i_line) {
+  // obtain string and lenght of arg
+  sst_print_PTR print_payload = (sst_print_PTR)pcb_payload;
+  int lenght = (int)print_payload->length;
+  char *string = (char *)print_payload->string;
   unsigned int IntlineNo = i_line;
   unsigned int DevNo = sender->p_supportStruct->sup_asid;
-  //indexes to check
+  // indexes to check
   int i = 0;
   char *msg = string;
-  //obtain other info
-  devreg_t *status = (devreg_t*) sender->p_supportStruct->sup_exceptState;
-  devreg_t *devAddrBase = START_DEVREG + ((IntlineNo - 3) * 0x80) + (DevNo * 0x10);
+  // obtain other info
+  devreg_t *status = (devreg_t *)sender->p_supportStruct->sup_exceptState;
+  devreg_t *devAddrBase = (devreg_t *)DEV_REG_ADDR(DevNo, IntlineNo);
 
-  while(TRUE){
-    if((*msg == EOS) || (i >= lenght)){
+  while (TRUE) {
+    if ((*msg == EOS) || (i >= lenght)) {
       break;
     }
 
     //  device not ready nor busy -> error!
-    if (((unsigned int)status & STATMASK) != (DEVRDY || DEVBSY)){
+    if (((unsigned int)status & STATMASK) != (DEVRDY | DEVBSY)) {
       PANIC();
     }
 
-    unsigned int value = PRINTCHR | (((unsigned int)*msg) << 8);   
+    unsigned int value = PRINTCHR | (((unsigned int)*msg) << 8);
 
     ssi_do_io_t do_io = {
-        .commandAddr = devAddrBase->term.transm_command,
+        .commandAddr = &devAddrBase->term.transm_command,
         .commandValue = value,
     };
     ssi_payload_t payload = {
@@ -180,12 +185,12 @@ void writeOnTerminal(pcb_PTR sender, ssi_payload_PTR pcb_payload, unsigned int i
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
-    //error on reviving or transimtting char
-    if ((((unsigned int)devAddrBase->term.recv_status & STATMASK) != RECVD) && 
-            (((unsigned int)devAddrBase->term.transm_status & STATMASK) != RECVD)){
-              PANIC();
-    }                   
-    
+    // error on reviving or transimtting char
+    if ((((unsigned int)devAddrBase->term.recv_status & STATMASK) != RECVD) &&
+        (((unsigned int)devAddrBase->term.transm_status & STATMASK) != RECVD)) {
+      PANIC();
+    }
+
     msg++;
     i++;
   }
