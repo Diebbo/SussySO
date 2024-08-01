@@ -269,5 +269,8 @@
 
 #define ENTRYHI_TO_VPN(entry_hi) ((entry_hi & GETPAGENO) >> VPNSHIFT)
 
+// kill myself
+#define SELF NULL
+
 #endif
 
