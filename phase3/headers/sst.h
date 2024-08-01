@@ -15,11 +15,11 @@ void initSSTs(void);
 void getTOD(pcb_PTR sender);
 /*kill SST and its child*/
 void killSST(pcb_PTR sender);
-/*This service cause the print of a string of characters to the printer with the same number of the
-sender ASID. */
-void writeOnPrinter(pcb_PTR sender, ssi_payload_PTR arg, unsigned int ip_line);
-/*This service cause the print of a string of characters to the terminal with the same number of the
-sender ASID.*/
-void writeOnTerminal(pcb_PTR sender, ssi_payload_PTR arg, unsigned int ip_line);
+// print a string to the printer with the same number of the sender ASID
+void writeOnPrinter(pcb_PTR sender, sst_print_PTR arg, unsigned asid);
+// print a string to the terminal with the same number of the sender ASID
+void writeOnTerminal(pcb_PTR sender, sst_print_PTR arg, unsigned asid);
+/*write a string to a device*/
+void write(char *msg, int lenght, devreg_t *devAddrBase);
 
 #endif

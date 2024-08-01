@@ -62,4 +62,6 @@ void releaseSwapMutex();
 // check if is a SST pid
 int isOneOfSSTPids(int pid);
 
+// terminate a process
+void terminateProcess(pcb_PTR);
 #endif // !STD_LIB_H
