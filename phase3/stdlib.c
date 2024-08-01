@@ -51,10 +51,13 @@ void initUProc(pcb_PTR sst_father){
   state_t u_proc_state;
   STST(&u_proc_state);
 
-  pcb_PTR u_proc = CreateChild(&u_proc_state);
-  u_proc->p_s.pc_epc = (memaddr) UPROCSTARTADDR;
-  u_proc->p_s.reg_sp = (memaddr) USERSTACKTOP;
-  u_proc->p_s.mie = ALLOFF | USERPON | IEPON | IMON | TEBITON;
+  u_proc_state.pc_epc = (memaddr) UPROCSTARTADDR;
+  u_proc_state.reg_sp = (memaddr) USERSTACKTOP;
+  u_proc_state.status |= MSTATUS_MIE_MASK;
+  u_proc_state.status &= ~MSTATUS_MPP_MASK; // user mode
+  u_proc_state.mie = MIE_ALL;
+
+  pcb_PTR u_proc = createChild(&u_proc_state);
 
   initSupportStruct(u_proc);
 }
