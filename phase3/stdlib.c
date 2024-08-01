@@ -72,7 +72,7 @@ support_t *getSupportData() {
 }
 
 /*function to request creation of a child to SSI*/
-pcb_t *CreateChild(state_t *s){
+pcb_t *createChild(state_t *s){
     pcb_t *p;
     ssi_create_process_t ssi_create_process = {
         .state = s,

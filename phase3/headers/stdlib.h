@@ -51,7 +51,7 @@ void initUProc(pcb_PTR sst_father);
 support_t *getSupportData();
 
 /*function to request creation of a child to SSI*/
-pcb_t *CreateChild(state_t *s);
+pcb_t *createChild(state_t *s);
 
 // gain mutual exclusion over the swap pool
 void gainSwapMutex();
