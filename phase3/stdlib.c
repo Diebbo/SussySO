@@ -1,7 +1,7 @@
 #include "headers/stdlib.h"
 
 // internal global variables
-support_t *support_arr[8];
+support_t *support_arr[MAXSSTNUM];
 
 int getASID(void) {
   static unsigned next_asid = 1; // asid 0 is reserved for nucleus
@@ -35,8 +35,21 @@ void initSupportStruct(pcb_PTR u_proc){
   u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid << ASIDSHIFT;
 }
 
+void defaultSupportData(support_t *support_data, int asid){
+  memaddr maxaddr;
+  support_data->sup_asid = asid;
+
+  support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
+  support_data->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+
+  support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
+  support_data->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+}
+
 // initialization of a single user process
-void initUProc(pcb_PTR sst_father){
+pcb_PTR initUProc(pcb_PTR sst_father){
   /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
    * that two parameters:
    *  • A pointer to the initial processor state for the U-proc.
@@ -57,9 +70,7 @@ void initUProc(pcb_PTR sst_father){
   u_proc_state.status &= ~MSTATUS_MPP_MASK; // user mode
   u_proc_state.mie = MIE_ALL;
 
-  pcb_PTR u_proc = createChild(&u_proc_state);
-
-  initSupportStruct(u_proc);
+  return createChild(&u_proc_state, sst_father->p_supportStruct);
 }
 
 /*function to get support struct (requested to SSI)*/
@@ -75,11 +86,11 @@ support_t *getSupportData() {
 }
 
 /*function to request creation of a child to SSI*/
-pcb_t *createChild(state_t *s){
+pcb_t *createChild(state_t *s, support_t *sup) {
     pcb_t *p;
     ssi_create_process_t ssi_create_process = {
         .state = s,
-        .support = (support_t *)NULL,
+        .support = sup,
     };
     ssi_payload_t payload = {
         .service_code = CREATEPROCESS,
@@ -113,4 +124,8 @@ void terminateProcess(pcb_PTR arg){
     };
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&term_process_payload), 0);
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, 0, 0);
+}
+
+void notify(pcb_PTR process){
+  SYSCALL(SENDMESSAGE, (unsigned int)process, 0, 0);
 }

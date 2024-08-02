@@ -45,13 +45,13 @@ void initUprocPageTable(pcb_PTR p);
 void initSupportStruct(pcb_PTR u_proc);
 
 // initialization of a single user process
-void initUProc(pcb_PTR sst_father);
+pcb_PTR initUProc(pcb_PTR sst_father);
 
 /*function to get support struct (requested to SSI)*/
 support_t *getSupportData();
 
 /*function to request creation of a child to SSI*/
-pcb_t *createChild(state_t *s);
+pcb_t *createChild(state_t *s, support_t *sup);
 
 // gain mutual exclusion over the swap pool
 void gainSwapMutex();
@@ -64,4 +64,14 @@ int isOneOfSSTPids(int pid);
 
 // terminate a process
 void terminateProcess(pcb_PTR);
+
+// send void message to the process
+void notify(pcb_PTR);
+
+// init default support struct
+void defaultSupportData(support_t *, int);
+
+void pager();
+
+void supportExceptionHandler();
 #endif // !STD_LIB_H
