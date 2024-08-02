@@ -20,7 +20,7 @@ void initSSI(){
      restarted, the stack is popped. [Section 7.4]*/
 
   ssi_pcb->p_s.pc_epc = (memaddr)SSI_function_entry_point;
-  ssi_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+  ssi_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
   ssi_pcb->p_s.mie = MIE_ALL;
 
   insertProcQ(&ready_queue_list, ssi_pcb);

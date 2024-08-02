@@ -1,8 +1,5 @@
 #include "headers/stdlib.h"
 
-// internal global variables
-support_t *support_arr[MAXSSTNUM];
-
 int getASID(void) {
   static unsigned next_asid = 1; // asid 0 is reserved for nucleus
   if (next_asid >= 8) {

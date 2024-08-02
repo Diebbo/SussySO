@@ -1,7 +1,7 @@
 #include "./headers/p3test.h"
 
 extern pcb_PTR swap_mutex;
-extern support_t *support_arr[8];
+support_t *support_arr[8];
 
 pcb_PTR test_process;
 

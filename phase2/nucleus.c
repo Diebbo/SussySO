@@ -67,7 +67,7 @@ void initKernel() {
   RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
   second_process->p_s.reg_sp -= 2 * PAGESIZE;
   second_process->p_s.pc_epc = (memaddr)test3;
-  second_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+  second_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
   second_process->p_s.mie = MIE_ALL;
 
   process_count++;

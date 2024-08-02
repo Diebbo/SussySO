@@ -1,12 +1,10 @@
 #include "./headers/exceptions.h"
-#include "headers/nucleus.h"
-#include <uriscv/types.h>
 
 extern cpu_t time_interrupt_start;
 
 void uTLB_RefillHandler() {
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  unsigned p = exception_state->entry_hi >> VPNSHIFT;
+  unsigned p = ENTRYHI_GET_VPN(exception_state->entry_hi);
 
   // i'm missing page p of the current-process support struct tlb
   pteEntry_t *missing_page =

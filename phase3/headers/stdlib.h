@@ -31,7 +31,7 @@ extern swap_t swap_pool[POOLSIZE];
 extern pcb_PTR ssi_pcb;
 
 // static support array
-extern support_t *support_arr[8];
+extern support_t *support_arr[MAXSSTNUM];
 
 #define OFFINTERRUPTS() setSTATUS(getSTATUS() & ~IECON)
 #define ONINTERRUPTS() setSTATUS(getSTATUS() | IECON)

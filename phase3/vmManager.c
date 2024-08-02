@@ -81,7 +81,7 @@ void pager(void) {
 
   // read the contents of the current process's backing store
 
-  int vpn = ENTRYHI_TO_VPN(exception_state->entry_hi);
+  int vpn = ENTRYHI_GET_VPN(exception_state->entry_hi);
 
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
