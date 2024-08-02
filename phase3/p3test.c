@@ -1,8 +1,10 @@
 #include "./headers/p3test.h"
 
+// external global variables
 extern pcb_PTR swap_mutex;
-support_t *support_arr[8];
 
+// internal global variables
+support_t support_arr[8];
 pcb_PTR test_process;
 
 void test3() {
@@ -72,8 +74,8 @@ void initSupportArray(){
    *      grow “down” so set the SP fields to the address of the end of these areas.
    *      E.g. ... = &(...sup_stackGen[499]).
    */
-  for(int asid=0; asid<=MAXSSTNUM; asid++){
-    defaultSupportData(support_arr[asid], asid);
+  for(int asid=1; asid<=MAXSSTNUM; asid++){
+    defaultSupportData(&support_arr[asid-1], asid);
   }
 }
 
@@ -91,10 +93,15 @@ void terminateAll(){
 }
 
 pcb_PTR allocSwapMutex(void){
+  memaddr swap_mutex_stack;
   state_t swap_st;
   STST(&swap_st);
+  swap_st.reg_sp = RAMTOP(swap_mutex_stack) - PAGESIZE;
+  swap_st.status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   swap_st.pc_epc = (memaddr) entrySwapFunction;
 
-  return createChild(&swap_st, support_arr[0]);
+  pcb_PTR child = createChild(&swap_st, (support_t *)NULL);
+  
+  return child;
 }
 

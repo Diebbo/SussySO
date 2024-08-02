@@ -21,15 +21,13 @@ void entrySwapFunction() {
   initSwapPool();
 
   while (TRUE) {
-    swap_t swap_message;
     // wait for a swap request
-    unsigned int process_requesting_swap =
-        SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned int)(&swap_message), 0);
+    unsigned int process_requesting_swap = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
     // giving the process the swap mutex
-    SYSCALL(SENDMSG, (unsigned int)process_requesting_swap, 0, 0);
+    SYSCALL(SENDMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
     // wait for the process to finish the swap
-    SYSCALL(RECEIVEMSG, (unsigned int)process_requesting_swap, 0, 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
   }
 }
 

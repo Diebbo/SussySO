@@ -28,7 +28,7 @@ void initUprocPageTable(pcb_PTR p) {
 // initialization of the support struct of the user process
 void initSupportStruct(pcb_PTR u_proc){
   static unsigned support_index = 0;
-  u_proc->p_supportStruct = support_arr[support_index++];
+  u_proc->p_supportStruct = &support_arr[support_index++];
   u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid << ASIDSHIFT;
 }
 
