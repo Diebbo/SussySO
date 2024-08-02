@@ -1,8 +1,9 @@
 #include "./headers/sst.h"
 
 pcb_PTR sst_pcb[MAXSSTNUM];
+pcb_PTR child_pcb[MAXSSTNUM]; // debug purpose
 
-void initSSTs() {
+pcb_PTR *initSSTs() {
   // init of the 8 sst process
   for (int i = 0; i < MAXSSTNUM; i++) {
     sst_pcb[i] = allocPcb();
@@ -15,8 +16,10 @@ void initSSTs() {
     sst_pcb[i]->p_s.mie = MIE_ALL;
     insertProcQ(&ready_queue_list, sst_pcb[i]);
     // init the uProc (sst child)
-    initUProc(sst_pcb[i]);
+    child_pcb[i] = initUProc(sst_pcb[i]);
   }
+
+  return sst_pcb;
 }
 
 void sstEntry() {
@@ -81,9 +84,13 @@ void getTOD(pcb_PTR sender) {
 }
 
 void killSST(pcb_PTR sender) {
-  terminateProcess(sender);
+  if (sender != NULL) {
+    // terminate the sender
+    terminateProcess(sender);
+  }
+  notify(test_process);
+  
   terminateProcess(SELF);
-  // do i need to notify the test process? 
 }
 
 void writeOnPrinter(pcb_PTR sender, sst_print_PTR arg, unsigned asid) {

@@ -13,15 +13,19 @@ void supportExceptionHandler() {
    *phase2)
    */
   support_t *current_support = getSupportData();
-  // unsigned int context = current_support->sup_exceptContext->status;
-  unsigned int status = current_support->sup_exceptState->cause;
-  state_t *exception_state = (state_t *)BIOSDATAPAGE;
-  unsigned exception_code = status & 0x7FFFFFFF;
+  
+  state_t *exception_state = &(current_support->sup_exceptState[GENERALEXCEPT]);
+  int exception_code = exception_state->cause;
 
-  if ((exception_code >= 0 && exception_code <= 7) ||
-      (exception_code >= 12 && exception_code <= 23)) {
+  if (exception_code == SYSEXCEPTION) {
     UsysCallHandler(exception_state);
+  } else {
+    // terminate process
+    terminateProcess(SELF);
   }
+
+  exception_state->pc_epc += WORD_SIZE;
+  LDST(exception_state);
 }
 
 void UsysCallHandler(state_t *exception_state) {

@@ -4,13 +4,14 @@
 #include "stdlib.h"
 
 extern pcb_PTR sst_pcb[MAXSSTNUM];
+extern pcb_PTR test_process;
 
 /*SST utility*/
 void sstEntry(void);
 /*SST server entry point*/
 void sstRequestHandler();
 /*initialize ith SST and its process*/
-void initSSTs(void);
+pcb_PTR *initSSTs(void);
 /*return TimeOfDay in microseconds*/
 void getTOD(pcb_PTR sender);
 /*kill SST and its child*/

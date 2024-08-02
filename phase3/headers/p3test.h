@@ -9,6 +9,8 @@
 
 #include "vmManager.h"
 
+// extern ds and func.
+extern pcb_t *current_process;
 
 // test phase 3 ('Istantiator process')
 void test3(void);
@@ -18,9 +20,8 @@ void terminateAll(void);
 void initSupportArray(void);
 
 // func. to alloc the swap mutex process
-void allocSwapMutex(void);
+pcb_PTR allocSwapMutex(void);
 
-// extern ds and func.
-extern pcb_t *current_process;
+void waitTermination(pcb_PTR *ssts);
 
 #endif

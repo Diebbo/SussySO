@@ -1,8 +1,12 @@
 #include "./headers/p3test.h"
 
 extern pcb_PTR swap_mutex;
+extern support_t *support_arr[8];
+
+pcb_PTR test_process;
 
 void test3() {
+  test_process = current_process;
   /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
    * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
    * The InstantiatorProcess will perform the following tasks:
@@ -19,8 +23,11 @@ void test3() {
    *      each SST is terminated.
    */
 
+  // Init array of support struct (so each will be used for every u-proc init. in initSSTs)
+  initSupportArray();
+
   // alloc swap mutex process
-  allocSwapMutex();
+  swap_mutex = allocSwapMutex();
 
   // Init. sharable peripheral (done in initSSTs)
   /* Technical Point: A careful reading of the Level 4/Phase 3 specification reveals that there are
@@ -31,14 +38,11 @@ void test3() {
    * each device that waits for messages and requests the single DoIO to the SSI.
    */
 
-  // Init array of support struct (so each will be used for every u-proc init. in initSSTs)
-  initSupportArray();
-
   //Init 8 SST
-  initSSTs();
+  pcb_PTR *ssts = initSSTs();
 
   //Terminate after the 8 sst die
-  terminateAll();
+  waitTermination(ssts);
 }
 
 void initSupportArray(){
@@ -68,17 +72,14 @@ void initSupportArray(){
    *      grow “down” so set the SP fields to the address of the end of these areas.
    *      E.g. ... = &(...sup_stackGen[499]).
    */
-  for(int asid=0; asid<8; asid++){
-    memaddr maxaddr;
-    support_arr[asid]->sup_asid = asid;
+  for(int asid=0; asid<=MAXSSTNUM; asid++){
+    defaultSupportData(support_arr[asid], asid);
+  }
+}
 
-    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
-    support_arr[asid]->sup_exceptContext[PGFAULTEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
-
-    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
-    support_arr[asid]->sup_exceptContext[GENERALEXCEPT].status = ALLOFF | IEPON | IMON | TEBITON;
+void waitTermination(pcb_PTR *ssts){
+  for(int i=1; i<MAXSSTNUM; i++){
+    SYSCALL(RECEIVEMSG, (unsigned)ssts[i],0,0);
   }
 }
 
@@ -89,15 +90,11 @@ void terminateAll(){
   PANIC();
 }
 
-void allocSwapMutex(void){
-  swap_mutex = allocPcb();
-  RAMTOP(swap_mutex->p_s.reg_sp);
-  swap_mutex->p_supportStruct->sup_asid = 0;
-  process_count++;
-  swap_mutex->p_s.pc_epc = (memaddr)entrySwapFunction;
-  swap_mutex->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
-  swap_mutex->p_s.mie = MIE_ALL;
-  insertProcQ(&ready_queue_list, swap_mutex);
-  initUProc(swap_mutex);
+pcb_PTR allocSwapMutex(void){
+  state_t swap_st;
+  STST(&swap_st);
+  swap_st.pc_epc = (memaddr) entrySwapFunction;
+
+  return createChild(&swap_st, support_arr[0]);
 }
 
