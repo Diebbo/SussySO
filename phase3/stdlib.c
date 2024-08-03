@@ -61,6 +61,7 @@ pcb_PTR initUProc(pcb_PTR sst_father){
   state_t u_proc_state;
   STST(&u_proc_state);
 
+  u_proc_state.entry_hi = sst_father->p_supportStruct->sup_asid << ASIDSHIFT;
   u_proc_state.pc_epc = (memaddr) UPROCSTARTADDR;
   u_proc_state.reg_sp = (memaddr) USERSTACKTOP;
   u_proc_state.status |= MSTATUS_MIE_MASK;

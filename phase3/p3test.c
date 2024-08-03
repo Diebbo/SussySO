@@ -2,10 +2,12 @@
 
 // external global variables
 extern pcb_PTR swap_mutex;
+extern pcb_PTR sst_pcb[MAXSSTNUM];
 
 // internal global variables
 support_t support_arr[8];
 pcb_PTR test_process;
+
 
 void test3() {
   test_process = current_process;
@@ -41,10 +43,10 @@ void test3() {
    */
 
   //Init 8 SST
-  pcb_PTR *ssts = initSSTs();
+  initSSTs();
 
   //Terminate after the 8 sst die
-  waitTermination(ssts);
+  waitTermination(sst_pcb);
 }
 
 void initSupportArray(){
@@ -80,7 +82,7 @@ void initSupportArray(){
 }
 
 void waitTermination(pcb_PTR *ssts){
-  for(int i=1; i<MAXSSTNUM; i++){
+  for(int i=0; i<MAXSSTNUM; i++){
     SYSCALL(RECEIVEMSG, (unsigned)ssts[i],0,0);
   }
 }
