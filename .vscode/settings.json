@@ -13,6 +13,10 @@
         "const.h": "c",
         "interrupts.h": "c",
         "exceptions.h": "c",
-        "sst.h": "c"
+        "sst.h": "c",
+        "*.def": "c",
+        "io_context": "c",
+        "shared_mutex": "c",
+        "*.tcc": "c"
     }
 }

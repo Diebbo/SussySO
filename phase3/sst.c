@@ -9,20 +9,21 @@ void initSSTs() {
   for (int i = 0; i < MAXSSTNUM; i++) {
     state_t sst_st;
     STST(&sst_st);
-    sst_st.reg_sp = (memaddr)current_stack_top; // ???
+    sst_st.reg_sp = (memaddr)current_stack_top;
     current_stack_top -= PAGESIZE;
     sst_st.pc_epc = (memaddr)sstEntry;
     sst_st.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
     sst_st.mie = MIE_ALL;
     sst_pcb[i] = createChild(&sst_st, &support_arr[i]);
     // init the uProc (sst child)
-    child_pcb[i] = initUProc(sst_pcb[i]);
   }
-
-
 }
 
 void sstEntry() {
+  // init the child
+  support_t *sst_support = getSupportData();
+
+  child_pcb[sst_support->sup_asid-1] = initUProc(sst_pcb[sst_support->sup_asid-1]);
   // get the message from someone - user process
   // handle
   // reply
@@ -70,9 +71,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
     break;
   default:
     // error
-    // what the hell !!! SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, TERMINATE,
-    // 0);
-    PANIC();
+    terminateProcess(SELF); // terminate the SST and child
     break;
   }
 }
@@ -80,7 +79,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
 void getTOD(pcb_PTR sender) {
   cpu_t tod_time;
   STCK(tod_time);
-  SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned)(&tod_time), 0);
+  SYSCALL(SENDMSG, (unsigned int)sender, (unsigned)(&tod_time), 0);
 }
 
 void killSST(pcb_PTR sender) {
@@ -102,7 +101,7 @@ void writeOnPrinter(pcb_PTR sender, sst_print_PTR arg, unsigned asid) {
 }
 
 void writeOnTerminal(pcb_PTR sender, sst_print_PTR arg, unsigned int asid) {
-  // write the string on the printer
+  // write the string on t RECEIVEMSG, he printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid));
 
   // ack the sender

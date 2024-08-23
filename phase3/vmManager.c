@@ -23,14 +23,14 @@ void entrySwapFunction() {
 
   while (TRUE) {
     // wait for a swap request
-    unsigned int process_requesting_swap = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
+    unsigned int process_requesting_swap = SYSCALL(RECEIVEMSG, ANYMESSAGE, 0, 0);
 
     gained_process = (pcb_PTR)process_requesting_swap;
 
     // giving the process the swap mutex
-    SYSCALL(SENDMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
+    SYSCALL(SENDMSG, (unsigned int)process_requesting_swap, 0, 0);
     // wait for the process to finish the swap
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
+    SYSCALL(RECEIVEMSG, (unsigned int)process_requesting_swap, 0, 0);
   }
 }
 
