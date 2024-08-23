@@ -1,5 +1,7 @@
 #include "headers/stdlib.h"
 
+extern memaddr current_stack_top;
+
 int getASID(void) {
   static unsigned next_asid = 1; // asid 0 is reserved for nucleus
   if (next_asid >= 8) {
@@ -33,15 +35,16 @@ void initSupportStruct(pcb_PTR u_proc){
 }
 
 void defaultSupportData(support_t *support_data, int asid){
-  memaddr maxaddr;
   support_data->sup_asid = asid;
 
   support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE);
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = current_stack_top;
+  current_stack_top -= PAGESIZE;
   support_data->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
   support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = RAMTOP(maxaddr) - (2 * asid * PAGESIZE) + PAGESIZE;
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = current_stack_top;
+  current_stack_top -= PAGESIZE;
   support_data->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 }
 

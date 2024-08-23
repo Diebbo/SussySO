@@ -4,7 +4,7 @@ pcb_PTR sst_pcb[MAXSSTNUM];
 pcb_PTR child_pcb[MAXSSTNUM]; // debug purpose
 memaddr current_stack_top;
 
-pcb_PTR *initSSTs() {
+void initSSTs() {
   // init of the 8 sst process
   for (int i = 0; i < MAXSSTNUM; i++) {
     state_t sst_st;
@@ -19,7 +19,7 @@ pcb_PTR *initSSTs() {
     child_pcb[i] = initUProc(sst_pcb[i]);
   }
 
-  return sst_pcb;
+
 }
 
 void sstEntry() {

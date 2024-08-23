@@ -11,7 +11,7 @@ void sstEntry(void);
 /*SST server entry point*/
 void sstRequestHandler();
 /*initialize ith SST and its process*/
-pcb_PTR *initSSTs(void);
+void initSSTs(void);
 /*return TimeOfDay in microseconds*/
 void getTOD(pcb_PTR sender);
 /*kill SST and its child*/
