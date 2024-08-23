@@ -71,7 +71,7 @@ void notify(pcb_PTR);
 // init default support struct
 void defaultSupportData(support_t *, int);
 
-void pager();
+extern void pager();
 
-void supportExceptionHandler();
+extern void supportExceptionHandler(void);
 #endif // !STD_LIB_H

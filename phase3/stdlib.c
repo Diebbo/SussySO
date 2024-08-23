@@ -6,7 +6,7 @@ int getASID(void) {
   static unsigned next_asid = 1; // asid 0 is reserved for nucleus
   if (next_asid >= 8) {
     /*function cannot be called more than 8 time*/
-    next_asid = 1;
+    PANIC();
     return NOPROC;
   }
   return next_asid++;

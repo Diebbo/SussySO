@@ -12,6 +12,7 @@
         "*.inc": "c",
         "const.h": "c",
         "interrupts.h": "c",
-        "exceptions.h": "c"
+        "exceptions.h": "c",
+        "sst.h": "c"
     }
 }

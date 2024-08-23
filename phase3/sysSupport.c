@@ -18,7 +18,7 @@ void supportExceptionHandler() {
   int exception_code = exception_state->cause;
 
   if (exception_code == SYSEXCEPTION) {
-    UsysCallHandler(exception_state);
+    UsysCallHandler(exception_state, current_support->sup_asid);
   } else {
     // terminate process
     terminateProcess(SELF);
@@ -28,19 +28,18 @@ void supportExceptionHandler() {
   LDST(exception_state);
 }
 
-void UsysCallHandler(state_t *exception_state) {
+void UsysCallHandler(state_t *exception_state, int asid) {
   /* wrapper syscall number */
   int a0_reg = exception_state->reg_a0;
   /* dest process */
   int a1_reg = exception_state->reg_a1;
   /* payload */
   int a2_reg = exception_state->reg_a2;
-  pcb_t *dest_process;
+  pcb_PTR dest_process, receive_process;
 
   // perform action only if is a SEND/RECEIVE request AND if it's an user
   // process
-  if (a0_reg != SENDMSG || a0_reg != RECEIVEMSG ||
-      !isOneOfSSTPids(current_process->p_parent->p_pid)) {
+  if (a0_reg != SENDMSG && a0_reg != RECEIVEMSG) {
     // invalid syscall
     TrapExceptionHandler(exception_state);
   }
@@ -57,7 +56,7 @@ void UsysCallHandler(state_t *exception_state) {
      */
 
     dest_process =
-        a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
+        a1_reg == PARENT ? sst_pcb[asid] : (pcb_t *)a1_reg;
 
     SYSCALL(SENDMESSAGE, (unsigned)current_process, (unsigned)dest_process,
             a2_reg);
@@ -77,7 +76,8 @@ void UsysCallHandler(state_t *exception_state) {
      * the queue is empty, and the first message sent to it will wake up it and
      * put it in the Ready Queue.
      */
-    SYSCALL(RECEIVEMESSAGE, (unsigned)current_process, (unsigned)a1_reg,
+    receive_process = a1_reg == PARENT ? sst_pcb[asid] : (pcb_t *)a1_reg;
+    SYSCALL(RECEIVEMESSAGE, (unsigned)current_process, (unsigned)receive_process,
             a2_reg);
 
     break;
