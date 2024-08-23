@@ -25,7 +25,7 @@ void entrySwapFunction() {
     // wait for a swap request
     unsigned int process_requesting_swap = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
-    gained_process = process_requesting_swap;
+    gained_process = (pcb_PTR)process_requesting_swap;
 
     // giving the process the swap mutex
     SYSCALL(SENDMESSAGE, (unsigned int)process_requesting_swap, 0, 0);

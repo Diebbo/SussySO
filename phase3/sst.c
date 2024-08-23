@@ -2,13 +2,15 @@
 
 pcb_PTR sst_pcb[MAXSSTNUM];
 pcb_PTR child_pcb[MAXSSTNUM]; // debug purpose
+memaddr current_stack_top;
 
 pcb_PTR *initSSTs() {
   // init of the 8 sst process
   for (int i = 0; i < MAXSSTNUM; i++) {
     state_t sst_st;
     STST(&sst_st);
-    sst_st.reg_sp = (memaddr)0x20004000; // ???
+    sst_st.reg_sp = (memaddr)current_stack_top; // ???
+    current_stack_top -= PAGESIZE;
     sst_st.pc_epc = (memaddr)sstEntry;
     sst_st.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
     sst_st.mie = MIE_ALL;

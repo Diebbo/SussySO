@@ -3,6 +3,7 @@
 // external global variables
 extern pcb_PTR swap_mutex;
 extern pcb_PTR sst_pcb[MAXSSTNUM];
+extern memaddr current_stack_top;
 
 // internal global variables
 support_t support_arr[8];
@@ -11,6 +12,8 @@ pcb_PTR test_process;
 
 void test3() {
   test_process = current_process;
+  RAMTOP(current_stack_top);
+  current_stack_top -= 3*PAGESIZE;
   /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
    * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
    * The InstantiatorProcess will perform the following tasks:
