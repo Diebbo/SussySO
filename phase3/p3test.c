@@ -67,17 +67,6 @@ void initSupportArray(){
    *      of 500 is a 2Kb area.
    *   • sup_stackGen[500]: The stack area for the process’s Support Level general exception handler.
    * 
-   * Only the sup_asid, sup_exceptContext[2], and sup_privatePgTbl[32] [Section 2.1] require
-   * initialization prior to request the CreateProcess service.
-   * To initialize a processor context area one performs the following:
-   *   • Set the two PC fields. One of them (0 - PGFAULTEXCEPT) should be set to the address of the
-   *      Support Level’s TLB handler, while the other one (1 - GENERALEXCEPT) should be set to the
-   *      address of the Support Level’s general exception handler.
-   *   • Set the two Status registers to: kernel-mode with all interrupts and the Processor Local Timer
-   *      enabled.
-   *   • Set the two SP fields to utilize the two stack spaces allocated in the Support Structure. Stacks
-   *      grow “down” so set the SP fields to the address of the end of these areas.
-   *      E.g. ... = &(...sup_stackGen[499]).
    */
   for(int asid=1; asid<=MAXSSTNUM; asid++){
     defaultSupportData(&support_arr[asid-1], asid);
@@ -98,14 +87,26 @@ void terminateAll(){
 }
 
 pcb_PTR allocSwapMutex(void){
-  memaddr swap_mutex_stack;
   state_t swap_st;
   STST(&swap_st);
-  swap_st.reg_sp = RAMTOP(swap_mutex_stack) - PAGESIZE;
+  swap_st.reg_sp = current_stack_top;
+  current_stack_top -= PAGESIZE;
   swap_st.status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   swap_st.pc_epc = (memaddr) entrySwapFunction;
 
-  pcb_PTR child = createChild(&swap_st, (support_t *)NULL);
+  support_t sup;
+  sup.sup_asid = 0;
+  sup.sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
+  sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = current_stack_top;
+  current_stack_top -= PAGESIZE;
+  sup.sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  sup.sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
+  sup.sup_exceptContext[GENERALEXCEPT].stackPtr = current_stack_top;
+  current_stack_top -= PAGESIZE;
+  sup.sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+
+
+  pcb_PTR child = createChild(&swap_st, &sup);
   
   return child;
 }
