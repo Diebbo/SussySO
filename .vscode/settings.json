@@ -17,6 +17,7 @@
         "*.def": "c",
         "io_context": "c",
         "shared_mutex": "c",
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "vmmanager.h": "c"
     }
 }

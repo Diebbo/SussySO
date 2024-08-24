@@ -1,14 +1,14 @@
 #include "./headers/vmManager.h"
 
 pcb_PTR swap_mutex;
-pcb_PTR gained_process; // debug purpose
+pcb_PTR gained_mutex_process; // debug purpose
 
 // swap pool
 swap_t swap_pool[POOLSIZE];
 
 void initSwapPool(void) {
   // initialize the swap pool
-  for (int i = 0; i < 2 * UPROCMAX; i++) {
+  for (int i = 0; i < POOLSIZE; i++) {
     swap_pool[i].sw_asid = NOPROC;
   }
 }
@@ -25,7 +25,7 @@ void entrySwapFunction() {
     // wait for a swap request
     unsigned int process_requesting_swap = SYSCALL(RECEIVEMSG, ANYMESSAGE, 0, 0);
 
-    gained_process = (pcb_PTR)process_requesting_swap;
+    gained_mutex_process = (pcb_PTR)process_requesting_swap;
 
     // giving the process the swap mutex
     SYSCALL(SENDMSG, (unsigned int)process_requesting_swap, 0, 0);
