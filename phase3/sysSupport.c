@@ -1,6 +1,18 @@
 #include "headers/sysSupport.h"
 
 extern pcb_PTR current_process;
+extern pcb_PTR gained_mutex_process;
+
+void programTrapExceptionHandler(state_t *exception_state){
+  // check if the program hold the mutex
+  if (gained_mutex_process == current_process) {
+    // release the mutex
+    releaseSwapMutex();
+  }
+
+  // terminate the process
+  terminateProcess(SELF);
+}
 
 void supportExceptionHandler() {
   /*Assuming that the handling of the exception is to be passed up (non-NULL
@@ -15,13 +27,16 @@ void supportExceptionHandler() {
   support_t *current_support = getSupportData();
   
   state_t *exception_state = &(current_support->sup_exceptState[GENERALEXCEPT]);
-  int exception_code = exception_state->cause;
+  int exception_code = (exception_state->cause & GETEXECCODE) >> CAUSESHIFT;
 
-  if (exception_code == SYSEXCEPTION) {
+  switch (exception_code)
+  {
+  case SYSEXCEPTION:
     UsysCallHandler(exception_state, current_support->sup_asid);
-  } else {
-    // terminate process
-    terminateProcess(SELF);
+    break;
+  default:
+    programTrapExceptionHandler(exception_state);
+    break;
   }
 
   exception_state->pc_epc += WORD_SIZE;

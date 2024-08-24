@@ -35,6 +35,19 @@ void initSupportStruct(pcb_PTR u_proc){
 }
 
 void defaultSupportData(support_t *support_data, int asid){
+  /*
+   * Only the sup_asid, sup_exceptContext[2], and sup_privatePgTbl[32] [Section 2.1] require
+   * initialization prior to request the CreateProcess service.
+   * To initialize a processor context area one performs the following:
+   *   • Set the two PC fields. One of them (0 - PGFAULTEXCEPT) should be set to the address of the
+   *      Support Level’s TLB handler, while the other one (1 - GENERALEXCEPT) should be set to the
+   *      address of the Support Level’s general exception handler.
+   *   • Set the two Status registers to: kernel-mode with all interrupts and the Processor Local Timer
+   *      enabled.
+   *   • Set the two SP fields to utilize the two stack spaces allocated in the Support Structure. Stacks
+   *      grow “down” so set the SP fields to the address of the end of these areas.
+   *      E.g. ... = &(...sup_stackGen[499]).
+  */
   support_data->sup_asid = asid;
 
   support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
