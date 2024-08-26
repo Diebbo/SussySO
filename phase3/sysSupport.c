@@ -27,7 +27,7 @@ void supportExceptionHandler() {
   support_t *current_support = getSupportData();
   
   state_t *exception_state = &(current_support->sup_exceptState[GENERALEXCEPT]);
-  int exception_code = (exception_state->cause & GETEXECCODE) >> CAUSESHIFT;
+  int exception_code = CAUSE_GET_EXCCODE(exception_state->cause);
 
   switch (exception_code)
   {

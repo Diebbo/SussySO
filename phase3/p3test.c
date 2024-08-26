@@ -12,8 +12,7 @@ pcb_PTR test_process;
 
 void test3() {
   test_process = current_process;
-  RAMTOP(current_stack_top);
-  current_stack_top -= 3*PAGESIZE;
+  initFreeStackTop();
   /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
    * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
    * The InstantiatorProcess will perform the following tasks:
@@ -89,20 +88,18 @@ void terminateAll(){
 pcb_PTR allocSwapMutex(void){
   state_t swap_st;
   STST(&swap_st);
-  swap_st.reg_sp = current_stack_top;
-  current_stack_top -= PAGESIZE;
+  swap_st.reg_sp = getCurrentFreeStackTop();
   swap_st.status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   swap_st.pc_epc = (memaddr) entrySwapFunction;
+  swap_st.mie = MIE_ALL;
 
   support_t sup;
   sup.sup_asid = 0;
   sup.sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = current_stack_top;
-  current_stack_top -= PAGESIZE;
+  sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
   sup.sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
   sup.sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  sup.sup_exceptContext[GENERALEXCEPT].stackPtr = current_stack_top;
-  current_stack_top -= PAGESIZE;
+  sup.sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
   sup.sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
 

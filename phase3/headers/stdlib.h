@@ -45,10 +45,10 @@ void initUprocPageTable(pcb_PTR p);
 void initSupportStruct(pcb_PTR u_proc);
 
 // initialization of a single user process
-pcb_PTR initUProc(pcb_PTR sst_father);
+pcb_PTR initUProc(support_t *sst_support);
 
 /*function to get support struct (requested to SSI)*/
-support_t *getSupportData();
+support_t *getSupportData(void);
 
 /*function to request creation of a child to SSI*/
 pcb_t *createChild(state_t *s, support_t *sup);
@@ -70,6 +70,11 @@ void notify(pcb_PTR);
 
 // init default support struct
 void defaultSupportData(support_t *, int);
+
+// assign the current stack top and decrement it
+memaddr getCurrentFreeStackTop(void);
+
+void initFreeStackTop(void);
 
 extern void pager();
 

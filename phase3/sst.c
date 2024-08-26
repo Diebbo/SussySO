@@ -23,7 +23,7 @@ void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
 
-  child_pcb[sst_support->sup_asid-1] = initUProc(sst_pcb[sst_support->sup_asid-1]);
+  child_pcb[sst_support->sup_asid-1] = initUProc(sst_support);
   // get the message from someone - user process
   // handle
   // reply

@@ -34,6 +34,11 @@ void initSupportStruct(pcb_PTR u_proc){
   u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid << ASIDSHIFT;
 }
 
+void initFreeStackTop(void){
+  RAMTOP(current_stack_top);
+  current_stack_top -= 3 * PAGESIZE;
+}
+
 void defaultSupportData(support_t *support_data, int asid){
   /*
    * Only the sup_asid, sup_exceptContext[2], and sup_privatePgTbl[32] [Section 2.1] require
@@ -51,18 +56,22 @@ void defaultSupportData(support_t *support_data, int asid){
   support_data->sup_asid = asid;
 
   support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = current_stack_top;
-  current_stack_top -= PAGESIZE;
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
   support_data->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
   support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = current_stack_top;
-  current_stack_top -= PAGESIZE;
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
   support_data->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 }
 
+memaddr getCurrentFreeStackTop(void){
+  unsigned tmp_stack_top = current_stack_top;
+  current_stack_top -= PAGESIZE;
+  return tmp_stack_top;
+} 
+
 // initialization of a single user process
-pcb_PTR initUProc(pcb_PTR sst_father){
+pcb_PTR initUProc(support_t *sst_support){
   /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
    * that two parameters:
    *  • A pointer to the initial processor state for the U-proc.
@@ -77,18 +86,18 @@ pcb_PTR initUProc(pcb_PTR sst_father){
   state_t u_proc_state;
   STST(&u_proc_state);
 
-  u_proc_state.entry_hi = sst_father->p_supportStruct->sup_asid << ASIDSHIFT;
+  u_proc_state.entry_hi = sst_support->sup_asid << ASIDSHIFT;
   u_proc_state.pc_epc = (memaddr) UPROCSTARTADDR;
   u_proc_state.reg_sp = (memaddr) USERSTACKTOP;
   u_proc_state.status |= MSTATUS_MIE_MASK;
   u_proc_state.status &= ~MSTATUS_MPP_MASK; // user mode
   u_proc_state.mie = MIE_ALL;
 
-  return createChild(&u_proc_state, sst_father->p_supportStruct);
+  return createChild(&u_proc_state, sst_support);
 }
 
 /*function to get support struct (requested to SSI)*/
-support_t *getSupportData() {
+support_t *getSupportData(void) {
   support_t *support_data;
   ssi_payload_t getsup_payload = {
       .service_code = GETSUPPORTPTR,
@@ -117,13 +126,13 @@ pcb_t *createChild(state_t *s, support_t *sup) {
 
 // gain mutual exclusion over the swap pool
 void gainSwapMutex(){
-  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
-  SYSCALL(RECEIVEMSG, (unsigned int)swap_mutex, 0, 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)swap_mutex, 0, 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)swap_mutex, 0, 0);
 }
 
 // release mutual exclusion over the swap pool
 void releaseSwapMutex(){
-  SYSCALL(SENDMSG, (unsigned int)swap_mutex, 0, 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)swap_mutex, 0, 0);
 }
 
 // check if is a SST pid
