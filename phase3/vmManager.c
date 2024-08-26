@@ -39,7 +39,7 @@ void pager(void) {
   // get the support data of the current process
   support_t *support_data = getSupportData();
 
-  state_t *exception_state = &(support_data->sup_exceptState[0]);
+  state_t *exception_state = &(support_data->sup_exceptState[PGFAULTEXCEPT]);
 
   // check if the exception is a TLB-Modification exception
   if (exception_state->cause == TLBMOD) {
@@ -52,7 +52,11 @@ void pager(void) {
   /* enter the critical section */
 
   // get the missing page number
-  unsigned missing_page = (exception_state->entry_hi & GETPAGENO) >> VPNSHIFT;
+  unsigned missing_page = ENTRYHI_GET_VPN(exception_state->entry_hi);
+  if (missing_page >= MAXPAGES) {
+    // invalid page number
+    missing_page = MAXPAGES - 1;
+  }
   // pick a frame from the swap pool
   unsigned victim_frame = getFrameFromSwapPool();
   memaddr victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
@@ -74,7 +78,9 @@ void pager(void) {
     // update the backing store
     status = writeBackingStore(victim_page_addr, support_data->sup_asid,
                                swap_pool[victim_frame].sw_pageNo);
-    // TODO: check status
+    if (status != OK) {
+      PANIC();
+    }
     status = status; // to avoid warning
 
     ONINTERRUPTS();
@@ -87,7 +93,10 @@ void pager(void) {
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
 
-  // TODO: check status
+  if (status != OK)
+  {
+    PANIC();
+  }
 
   // update the swap pool table
   swap_pool[victim_frame].sw_asid = support_data->sup_asid;
