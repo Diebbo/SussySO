@@ -6,13 +6,18 @@ void uTLB_RefillHandler() {
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
   unsigned p = ENTRYHI_GET_VPN(exception_state->entry_hi);
 
+  if (p >= MAXPAGES) {
+    // invalid page number
+    p = MAXPAGES - 1;
+    //TrapExceptionHandler(exception_state);
+  }
   // i'm missing page p of the current-process support struct tlb
   pteEntry_t *missing_page =
       &current_process->p_supportStruct->sup_privatePgTbl[p];
   setENTRYHI(missing_page->pte_entryHI);
   setENTRYLO(missing_page->pte_entryLO);
   TLBWR();
-  LDST((state_t *) &current_process->p_s);
+  LDST(exception_state);
 }
 
 void exceptionHandler() {
