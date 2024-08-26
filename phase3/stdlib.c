@@ -149,5 +149,5 @@ void terminateProcess(pcb_PTR arg){
 }
 
 void notify(pcb_PTR process){
-  SYSCALL(SENDMSG, (unsigned int)process, 0, 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)process, 0, 0);
 }
