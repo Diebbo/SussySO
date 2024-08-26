@@ -3,18 +3,19 @@
 pcb_PTR sst_pcb[MAXSSTNUM];
 pcb_PTR child_pcb[MAXSSTNUM]; // debug purpose
 memaddr current_stack_top;
+state_t sst_st[MAXSSTNUM];
+state_t u_proc_state[MAXSSTNUM];
 
 void initSSTs() {
   // init of the 8 sst process
-  for (int i = 0; i < MAXSSTNUM; i++) {
-    state_t sst_st;
-    STST(&sst_st);
-    sst_st.reg_sp = (memaddr)current_stack_top;
-    current_stack_top -= PAGESIZE;
-    sst_st.pc_epc = (memaddr)sstEntry;
-    sst_st.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
-    sst_st.mie = MIE_ALL;
-    sst_pcb[i] = createChild(&sst_st, &support_arr[i]);
+  //for (int i = 0; i < MAXSSTNUM; i++) {
+  for (int i = 0; i < 1; i++) {
+    STST(&sst_st[i]);
+    sst_st[i].reg_sp = getCurrentFreeStackTop();
+    sst_st[i].pc_epc = (memaddr)sstEntry;
+    sst_st[i].status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+    sst_st[i].mie = MIE_ALL;
+    sst_pcb[i] = createChild(&sst_st[i], &support_arr[i]);
     // init the uProc (sst child)
   }
 }
@@ -23,7 +24,7 @@ void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
 
-  child_pcb[sst_support->sup_asid-1] = initUProc(sst_support);
+  child_pcb[sst_support->sup_asid-1] = initUProc(&u_proc_state[sst_support->sup_asid-1], sst_support);
   // get the message from someone - user process
   // handle
   // reply

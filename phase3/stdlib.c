@@ -71,7 +71,7 @@ memaddr getCurrentFreeStackTop(void){
 } 
 
 // initialization of a single user process
-pcb_PTR initUProc(support_t *sst_support){
+pcb_PTR initUProc(state_t *u_proc_state, support_t *sst_support){
   /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
    * that two parameters:
    *  • A pointer to the initial processor state for the U-proc.
@@ -83,17 +83,16 @@ pcb_PTR initUProc(support_t *sst_support){
    *  • EntryHi.ASID set to the process’s unique ID; an integer from [1..8]
    * Important: Each U-proc MUST be assigned a unique, non-zero ASID.
    */
-  state_t u_proc_state;
-  STST(&u_proc_state);
+  STST(u_proc_state);
 
-  u_proc_state.entry_hi = sst_support->sup_asid << ASIDSHIFT;
-  u_proc_state.pc_epc = (memaddr) UPROCSTARTADDR;
-  u_proc_state.reg_sp = (memaddr) USERSTACKTOP;
-  u_proc_state.status |= MSTATUS_MIE_MASK;
-  u_proc_state.status &= ~MSTATUS_MPP_MASK; // user mode
-  u_proc_state.mie = MIE_ALL;
+  u_proc_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
+  u_proc_state->pc_epc = (memaddr) UPROCSTARTADDR;
+  u_proc_state->reg_sp = (memaddr) USERSTACKTOP;
+  u_proc_state->status |= MSTATUS_MIE_MASK;
+  u_proc_state->status &= ~MSTATUS_MPP_MASK; // user mode
+  u_proc_state->mie = MIE_ALL;
 
-  return createChild(&u_proc_state, sst_support);
+  return createChild(u_proc_state, sst_support);
 }
 
 /*function to get support struct (requested to SSI)*/

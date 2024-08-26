@@ -45,7 +45,7 @@ void initUprocPageTable(pcb_PTR p);
 void initSupportStruct(pcb_PTR u_proc);
 
 // initialization of a single user process
-pcb_PTR initUProc(support_t *sst_support);
+pcb_PTR initUProc(state_t *u_proc_state,support_t *sst_support);
 
 /*function to get support struct (requested to SSI)*/
 support_t *getSupportData(void);

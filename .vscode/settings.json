@@ -18,6 +18,8 @@
         "io_context": "c",
         "shared_mutex": "c",
         "*.tcc": "c",
-        "vmmanager.h": "c"
+        "vmmanager.h": "c",
+        "p3test.h": "c",
+        "syssupport.h": "c"
     }
 }

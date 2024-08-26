@@ -21,9 +21,6 @@ void sTLB_RefillHandler(void);
 // support level PGM handler
 void pager(void);
 
-// get support data of current process
-support_t *getSupportData(void);
-
 // entry point function for mutex swap process
 void entrySwapFunction();
 

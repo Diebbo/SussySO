@@ -8,6 +8,8 @@ extern memaddr current_stack_top;
 // internal global variables
 support_t support_arr[8];
 pcb_PTR test_process;
+state_t swap_st;
+support_t swap_sup;
 
 
 void test3() {
@@ -86,24 +88,22 @@ void terminateAll(){
 }
 
 pcb_PTR allocSwapMutex(void){
-  state_t swap_st;
   STST(&swap_st);
   swap_st.reg_sp = getCurrentFreeStackTop();
   swap_st.status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
   swap_st.pc_epc = (memaddr) entrySwapFunction;
   swap_st.mie = MIE_ALL;
 
-  support_t sup;
-  sup.sup_asid = 0;
-  sup.sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
-  sup.sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
-  sup.sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  sup.sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
-  sup.sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  swap_sup.sup_asid = 0;
+  swap_sup.sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
+  swap_sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
+  swap_sup.sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+  swap_sup.sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
+  swap_sup.sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
+  swap_sup.sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
 
-  pcb_PTR child = createChild(&swap_st, &sup);
+  pcb_PTR child = createChild(&swap_st, &swap_sup);
   
   return child;
 }
