@@ -51,6 +51,9 @@ void test3() {
 
   //Terminate after the 8 sst die
   waitTermination(sst_pcb);
+
+  // terminate the test process
+  terminateProcess(SELF);
 }
 
 void initSupportArray(){
@@ -94,16 +97,7 @@ pcb_PTR allocSwapMutex(void){
   swap_st.pc_epc = (memaddr) entrySwapFunction;
   swap_st.mie = MIE_ALL;
 
-  swap_sup.sup_asid = 0;
-  swap_sup.sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  swap_sup.sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
-  swap_sup.sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
-  swap_sup.sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  swap_sup.sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
-  swap_sup.sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
-
-
-  pcb_PTR child = createChild(&swap_st, &swap_sup);
+  pcb_PTR child = createChild(&swap_st, NULL);
   
   return child;
 }
