@@ -13,18 +13,14 @@ int getASID(void) {
 }
 
 // init and fill the support page table with the correct values
-void initUprocPageTable(pcb_PTR p) {
-  // nucleus proces has asid 0
-  if (p->p_supportStruct->sup_asid == NOPROC)
-    p->p_supportStruct->sup_asid = getASID();
-
+void initUprocPageTable(pteEntry_t *tbl, int asid) {
   for (int i = 0; i < MAXPAGES; i++) {
-    p->p_supportStruct->sup_privatePgTbl[i].pte_entryHI =
-        (KUSEG + (i << VPNSHIFT)) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
-    p->p_supportStruct->sup_privatePgTbl[i].pte_entryLO = DIRTYON;
+    tbl[i].pte_entryHI =
+        KUSEG + (i << VPNSHIFT) + (asid << ASIDSHIFT);
+    tbl[i].pte_entryLO = DIRTYON;
   }
-  p->p_supportStruct->sup_privatePgTbl[31].pte_entryHI =
-      (0xbffff << VPNSHIFT) | (p->p_supportStruct->sup_asid << ASIDSHIFT);
+  tbl[31].pte_entryHI =
+      (0xbffff000) | (asid << ASIDSHIFT);
 }
 
 // initialization of the support struct of the user process
@@ -62,6 +58,8 @@ void defaultSupportData(support_t *support_data, int asid){
   support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
   support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
   support_data->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
+
+  initUprocPageTable(support_data->sup_privatePgTbl, asid);
 }
 
 memaddr getCurrentFreeStackTop(void){
