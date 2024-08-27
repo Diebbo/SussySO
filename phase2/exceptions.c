@@ -11,6 +11,9 @@ void uTLB_RefillHandler() {
     p = MAXPAGES - 1;
     //TrapExceptionHandler(exception_state);
   }
+  if (current_process->p_supportStruct == NULL)
+    PANIC();
+    
   // i'm missing page p of the current-process support struct tlb
   pteEntry_t *missing_page =
       &current_process->p_supportStruct->sup_privatePgTbl[p];
