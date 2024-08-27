@@ -75,8 +75,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
     dest_process =
         a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
 
-    SYSCALL(SENDMESSAGE, (unsigned)current_process, (unsigned)dest_process,
-            a2_reg);
+        SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
 
     break;
   case RECEIVEMSG:
@@ -94,8 +93,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
      * put it in the Ready Queue.
      */
     receive_process = a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
-    SYSCALL(RECEIVEMESSAGE, (unsigned)current_process, (unsigned)receive_process,
-            a2_reg);
+    SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
 
     break;
   }

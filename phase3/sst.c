@@ -9,7 +9,7 @@ state_t u_proc_state[MAXSSTNUM];
 void initSSTs() {
   // init of the 8 sst process
   //for (int i = 0; i < MAXSSTNUM; i++) {
-  for (int i = 1; i < 2; i++) {
+  for (int i = 0; i < 1; i++) {
     STST(&sst_st[i]);
     sst_st[i].reg_sp = getCurrentFreeStackTop();
     sst_st[i].pc_epc = (memaddr)sstEntry;
@@ -47,7 +47,8 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * number of microseconds since the system was last
      * booted/reset.
      */
-    res_payload = getTOD(sender, (cpu_t *)arg);
+    cpu_t tod_time;
+    res_payload = getTOD(sender, &tod_time);
     has_to_reply = TRUE;
     break;
   case TERMINATE:
