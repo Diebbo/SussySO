@@ -39,7 +39,7 @@ extern support_t support_arr[MAXSSTNUM];
 int getASID(void);
 
 // init and fill the support page table with the correct values
-void initUprocPageTable(pcb_PTR p);
+void initUprocPageTable(pteEntry_t *tbl, int asid);
 
 // initialization of the support struct of the user process
 void initSupportStruct(pcb_PTR u_proc);

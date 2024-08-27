@@ -41,8 +41,10 @@ void pager(void) {
 
   state_t *exception_state = &(support_data->sup_exceptState[PGFAULTEXCEPT]);
 
+  unsigned cause = exception_state->cause & 0x7FFFFFFF;
+
   // check if the exception is a TLB-Modification exception
-  if (exception_state->cause == TLBMOD) {
+  if (cause == TLBMOD) {
     // treat this exception as a program trap
     TrapExceptionHandler(exception_state);
   }
@@ -78,7 +80,7 @@ void pager(void) {
     // update the backing store
     status = writeBackingStore(victim_page_addr, support_data->sup_asid,
                                swap_pool[victim_frame].sw_pageNo);
-    if (status != OK) {
+    if (status != DEVRDY) {
       PANIC();
     }
     status = status; // to avoid warning
@@ -93,7 +95,7 @@ void pager(void) {
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
 
-  if (status != OK)
+  if (status != DEVRDY)
   {
     PANIC();
   }
