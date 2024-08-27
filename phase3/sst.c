@@ -9,7 +9,7 @@ state_t u_proc_state[MAXSSTNUM];
 void initSSTs() {
   // init of the 8 sst process
   //for (int i = 0; i < MAXSSTNUM; i++) {
-  for (int i = 0; i < 1; i++) {
+  for (int i = 1; i < 2; i++) {
     STST(&sst_st[i]);
     sst_st[i].reg_sp = getCurrentFreeStackTop();
     sst_st[i].pc_epc = (memaddr)sstEntry;
@@ -31,7 +31,7 @@ void sstEntry() {
   while (TRUE) {
     ssi_payload_PTR process_request_payload;
     pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(
-        RECEIVEMSG, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
+        RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
     sstRequestHandler(process_request_ptr,
                       process_request_payload->service_code,
                       process_request_payload->arg);
@@ -39,13 +39,16 @@ void sstEntry() {
 }
 
 void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
+  void *res_payload = NULL;
+  unsigned has_to_reply = FALSE;
   switch (service) {
   case GET_TOD:
     /* This service should allow the sender to get back the
      * number of microseconds since the system was last
      * booted/reset.
      */
-    getTOD(sender);
+    res_payload = getTOD(sender, (cpu_t *)arg);
+    has_to_reply = TRUE;
     break;
   case TERMINATE:
     /* This service causes the sender U-proc and its SST
@@ -62,6 +65,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * ASID.
      */
     writeOnPrinter(sender, (sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
+    has_to_reply = TRUE;
     break;
   case WRITETERMINAL:
     /* This service cause the print of a string of characters
@@ -69,18 +73,23 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * ASID.
      */
     writeOnTerminal(sender, (sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
+    has_to_reply = TRUE;
     break;
   default:
     // error
     terminateProcess(SELF); // terminate the SST and child
     break;
   }
+  
+  // ack the sender
+  if (has_to_reply) { 
+    SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)res_payload, 0);
+  }
 }
 
-void getTOD(pcb_PTR sender) {
-  cpu_t tod_time;
-  STCK(tod_time);
-  SYSCALL(SENDMSG, (unsigned int)sender, (unsigned)(&tod_time), 0);
+cpu_t *getTOD(pcb_PTR sender, cpu_t *tod_time) {
+  STCK(*tod_time);
+  return tod_time;
 }
 
 void killSST(pcb_PTR sender) {
@@ -96,17 +105,11 @@ void killSST(pcb_PTR sender) {
 void writeOnPrinter(pcb_PTR sender, sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid));
-
-  // ack the sender
-  SYSCALL(SENDMSG, (unsigned int)sender, 0, 0);
 }
 
 void writeOnTerminal(pcb_PTR sender, sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid));
-
-  // ack the sender
-  SYSCALL(SENDMSG, (unsigned int)sender, 0, 0);
 }
 
 void write(char *msg, int lenght, devreg_t *devAddrBase) {
