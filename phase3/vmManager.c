@@ -110,8 +110,10 @@ void pager(void) {
   OFFINTERRUPTS();
 
   // update the current process's page table
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO =
-      ((unsigned)victim_page_addr << PFNSHIFT) | DIRTYON | VALIDON;
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= VALIDON;
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= DIRTYON;
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO &= 0xFFF;
+  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= (victim_page_addr);
 
   // place the new page in the CP0
 
@@ -147,10 +149,11 @@ unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
   dtpreg_t *flash_dev_addr = (dtpreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
   flash_dev_addr->data0 = page_addr;
 
+  unsigned value = (page_number << 8) | command;
   unsigned status = 0;
   ssi_do_io_t do_io = {
-      .commandAddr = &flash_dev_addr->command,
-      .commandValue = (page_number << 8) | command,
+      .commandAddr = &(flash_dev_addr->command),
+      .commandValue = value,
   };
   ssi_payload_t payload = {
       .service_code = DOIO,
