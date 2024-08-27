@@ -20,7 +20,7 @@ void initUprocPageTable(pteEntry_t *tbl, int asid) {
     tbl[i].pte_entryLO = DIRTYON;
   }
   tbl[31].pte_entryHI =
-      (0xbffff000) | (asid << ASIDSHIFT);
+      (0xbffff << VPNSHIFT) | (asid << ASIDSHIFT);
 }
 
 // initialization of the support struct of the user process

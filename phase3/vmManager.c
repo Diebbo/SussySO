@@ -53,12 +53,6 @@ void pager(void) {
 
   /* enter the critical section */
 
-  // get the missing page number
-  unsigned missing_page = ENTRYHI_GET_VPN(exception_state->entry_hi);
-  if (missing_page >= MAXPAGES) {
-    // invalid page number
-    missing_page = MAXPAGES - 1;
-  }
   // pick a frame from the swap pool
   unsigned victim_frame = getFrameFromSwapPool();
   memaddr victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
@@ -90,7 +84,11 @@ void pager(void) {
 
   // read the contents of the current process's backing store
 
+  // it's not the actual vpn, but the page index in the backing store
   int vpn = ENTRYHI_GET_VPN(exception_state->entry_hi);
+  if (vpn >= MAXPAGES) {
+    vpn = MAXPAGES - 1;
+  }
 
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
@@ -102,23 +100,22 @@ void pager(void) {
 
   // update the swap pool table
   swap_pool[victim_frame].sw_asid = support_data->sup_asid;
-  swap_pool[victim_frame].sw_pageNo = missing_page;
-  swap_pool[victim_frame].sw_pte =
-      &support_data->sup_privatePgTbl[missing_page];
+  swap_pool[victim_frame].sw_pageNo = vpn;
+  swap_pool[victim_frame].sw_pte = &support_data->sup_privatePgTbl[vpn];
 
   // #region atomic operations
   OFFINTERRUPTS();
 
   // update the current process's page table
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= VALIDON;
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= DIRTYON;
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO &= 0xFFF;
-  support_data->sup_privatePgTbl[missing_page].pte_entryLO |= (victim_page_addr);
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= VALIDON;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO &= 0xFFF;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= (victim_page_addr);
 
   // place the new page in the CP0
 
   // update the TLB
-  updateTLB(&support_data->sup_privatePgTbl[missing_page]);
+  updateTLB(&support_data->sup_privatePgTbl[vpn]);
 
   ONINTERRUPTS();
   // #endregion atomic operations
