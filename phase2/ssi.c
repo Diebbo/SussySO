@@ -128,6 +128,32 @@ unsigned Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
+void getDevLineAndNumber(unsigned command_address, unsigned *dev_line, unsigned *dev_no){
+  for (int j = 0; j < N_DEV_PER_IL; j++) {
+        termreg_t *base_address = (termreg_t *)DEV_REG_ADDR(IL_TERMINAL, j);
+        if (command_address == (memaddr)&(base_address->recv_command)) {
+            *dev_line = IL_TERMINAL;
+            *dev_no = j;
+            return;
+        } else if (command_address == (memaddr)&(base_address->transm_command)) {
+            *dev_line = IL_TERMINAL;
+            *dev_no = j;
+            return;
+        }
+    }
+
+  for (int i = DEV_IL_START; i < DEV_IL_START + 7; i++) {
+        for (int j = 0; j < N_DEV_PER_IL; j++) {
+            dtpreg_t *base_address = (dtpreg_t *)DEV_REG_ADDR(i, j);
+            if (command_address == (memaddr)&(base_address->command)) {
+                *dev_line = i;
+                *dev_no = j;
+                return;
+            }
+        }
+    }
+}
+
 unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
@@ -151,12 +177,10 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     elaborate the request from the device; • given the device address, the SSI
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
-  // unsigned dev_no = 7;                       // *specs for terminal *
-  unsigned dev_line = IL_TERMINAL - IL_OFFSET;  // *                   *
-  unsigned dev_no = (unsigned)arg->commandAddr - 0x10000054 - ((dev_line-3) * 0x80);
-  dev_no = dev_no / 0x10;
+  unsigned dev_line, dev_no;
+  getDevLineAndNumber((unsigned)arg->commandAddr, &dev_line, &dev_no);
 
-  unsigned dev_index = (dev_line - 3) * 8 + dev_no;
+  unsigned dev_index = DEVINDEX(dev_line, dev_no);
 
   pcb_PTR blocked_for_message = outProcQ(&msg_queue_list, sender);
   

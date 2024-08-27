@@ -37,6 +37,9 @@ int Get_Process_ID(pcb_t *sender, int arg);
 /*This service is called if there is no match with ssi service*/
 void killProgeny(pcb_t *sender);
 
+// set the device line and number base on the command address 
+void getDevLineAndNumber(unsigned command_address, unsigned *dev_line, unsigned *dev_no);
+
 extern void interruptHandlerNonTimer(int IntlineNo);
 
 #endif
