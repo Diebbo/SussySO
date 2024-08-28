@@ -51,12 +51,14 @@ void defaultSupportData(support_t *support_data, int asid){
   */
   support_data->sup_asid = asid;
 
+  unsigned int stack_top = getCurrentFreeStackTop();
+
   support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr) pager;
-  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = stack_top;
   support_data->sup_exceptContext[PGFAULTEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
   support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr) supportExceptionHandler;
-  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = getCurrentFreeStackTop();
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr = stack_top;
   support_data->sup_exceptContext[GENERALEXCEPT].status |= MSTATUS_MIE_MASK | MSTATUS_MPP_M;
 
   initUprocPageTable(support_data->sup_privatePgTbl, asid);

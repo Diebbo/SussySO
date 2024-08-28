@@ -38,6 +38,7 @@ void supportExceptionHandler() {
     break;
   default:
     programTrapExceptionHandler(exception_state);
+    return;
     break;
   }
 
@@ -56,10 +57,6 @@ void UsysCallHandler(state_t *exception_state, int asid) {
 
   // perform action only if is a SEND/RECEIVE request AND if it's an user
   // process
-  if (a0_reg != SENDMSG && a0_reg != RECEIVEMSG) {
-    // invalid syscall
-    TrapExceptionHandler(exception_state);
-  }
   switch (a0_reg) {
   case SENDMSG:
     /* This services cause the transmission of a message to a specified process.
@@ -74,8 +71,8 @@ void UsysCallHandler(state_t *exception_state, int asid) {
 
     dest_process =
         a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
-
-        SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
+    
+    SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
 
     break;
   case RECEIVEMSG:
@@ -95,6 +92,9 @@ void UsysCallHandler(state_t *exception_state, int asid) {
     receive_process = a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
     SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
 
+    break;
+  case default:
+    programTrapExceptionHandler(exception_state);
     break;
   }
 }

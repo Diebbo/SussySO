@@ -131,9 +131,11 @@ void updateTLB(pteEntry_t *page) {
   // check if the page is already in the TLB
   if ((getINDEX() & PRESENTFLAG) == 0) {
     // the page is not in the TLB
+    setENTRYHI(page->pte_entryHI);
     setENTRYLO(page->pte_entryLO);
     TLBWI();
-  } }
+  } 
+}
 
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
                         unsigned page_number) {

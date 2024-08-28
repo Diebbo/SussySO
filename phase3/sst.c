@@ -13,7 +13,7 @@ void initSSTs() {
     STST(&sst_st[i]);
     sst_st[i].reg_sp = getCurrentFreeStackTop();
     sst_st[i].pc_epc = (memaddr)sstEntry;
-    sst_st[i].status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+    sst_st[i].status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
     sst_st[i].mie = MIE_ALL;
     sst_pcb[i] = createChild(&sst_st[i], &support_arr[i]);
     // init the uProc (sst child)
