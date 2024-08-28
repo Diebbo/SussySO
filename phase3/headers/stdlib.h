@@ -36,13 +36,8 @@ extern support_t support_arr[MAXSSTNUM];
 #define OFFINTERRUPTS() setSTATUS(getSTATUS() & ~MSTATUS_MIE_MASK)
 #define ONINTERRUPTS() setSTATUS(getSTATUS() | MSTATUS_MIE_MASK)
 
-int getASID(void);
-
 // init and fill the support page table with the correct values
 void initUprocPageTable(pteEntry_t *tbl, int asid);
-
-// initialization of the support struct of the user process
-void initSupportStruct(pcb_PTR u_proc);
 
 // initialization of a single user process
 pcb_PTR initUProc(state_t *u_proc_state,support_t *sst_support);

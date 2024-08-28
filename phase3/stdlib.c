@@ -2,32 +2,15 @@
 
 extern memaddr current_stack_top;
 
-int getASID(void) {
-  static unsigned next_asid = 1; // asid 0 is reserved for nucleus
-  if (next_asid >= 8) {
-    /*function cannot be called more than 8 time*/
-    PANIC();
-    return NOPROC;
-  }
-  return next_asid++;
-}
-
 // init and fill the support page table with the correct values
 void initUprocPageTable(pteEntry_t *tbl, int asid) {
   for (int i = 0; i < MAXPAGES; i++) {
     tbl[i].pte_entryHI =
-        KUSEG + (i << VPNSHIFT) + (asid << ASIDSHIFT);
+        KUSEG | (i << VPNSHIFT) | (asid << ASIDSHIFT);
     tbl[i].pte_entryLO = DIRTYON;
   }
   tbl[31].pte_entryHI =
       (0xbffff << VPNSHIFT) | (asid << ASIDSHIFT);
-}
-
-// initialization of the support struct of the user process
-void initSupportStruct(pcb_PTR u_proc){
-  static unsigned support_index = 0;
-  u_proc->p_supportStruct = &support_arr[support_index++];
-  u_proc->p_s.entry_hi= u_proc->p_supportStruct->sup_asid << ASIDSHIFT;
 }
 
 void initFreeStackTop(void){
@@ -87,7 +70,7 @@ pcb_PTR initUProc(state_t *u_proc_state, support_t *sst_support){
   u_proc_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
   u_proc_state->pc_epc = (memaddr) UPROCSTARTADDR;
   u_proc_state->reg_sp = (memaddr) USERSTACKTOP;
-  u_proc_state->status |= MSTATUS_MIE_MASK;
+  u_proc_state->status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK;
   u_proc_state->status &= ~MSTATUS_MPP_MASK; // user mode
   u_proc_state->mie = MIE_ALL;
 
