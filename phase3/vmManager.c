@@ -105,9 +105,10 @@ void pager(void) {
   OFFINTERRUPTS();
 
   // update the current process's page table
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON | VALIDON;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= VALIDON;
   support_data->sup_privatePgTbl[vpn].pte_entryLO &= 0xfff;
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= victim_frame;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= victim_page_addr & 0xfffff000;
 
 
   // update the TLB
