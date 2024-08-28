@@ -93,7 +93,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
     SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
 
     break;
-  case default:
+  default:
     programTrapExceptionHandler(exception_state);
     break;
   }
