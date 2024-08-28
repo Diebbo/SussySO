@@ -107,12 +107,8 @@ void pager(void) {
   OFFINTERRUPTS();
 
   // update the current process's page table
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= VALIDON;
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON;
-  support_data->sup_privatePgTbl[vpn].pte_entryLO &= 0xFFF;
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= (victim_page_addr);
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON | VALIDON | victim_page_addr;
 
-  // place the new page in the CP0
 
   // update the TLB
   updateTLB(&support_data->sup_privatePgTbl[vpn]);
@@ -135,11 +131,9 @@ void updateTLB(pteEntry_t *page) {
   // check if the page is already in the TLB
   if ((getINDEX() & PRESENTFLAG) == 0) {
     // the page is not in the TLB
-    setENTRYHI(page->pte_entryHI);
     setENTRYLO(page->pte_entryLO);
     TLBWI();
-  }
-}
+  } }
 
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
                         unsigned page_number) {

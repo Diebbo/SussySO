@@ -33,8 +33,8 @@ extern pcb_PTR ssi_pcb;
 // static support array
 extern support_t support_arr[MAXSSTNUM];
 
-#define OFFINTERRUPTS() setSTATUS(getSTATUS() & ~IECON)
-#define ONINTERRUPTS() setSTATUS(getSTATUS() | IECON)
+#define OFFINTERRUPTS() setSTATUS(getSTATUS() & ~MSTATUS_MIE_MASK)
+#define ONINTERRUPTS() setSTATUS(getSTATUS() | MSTATUS_MIE_MASK)
 
 int getASID(void);
 
