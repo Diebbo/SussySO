@@ -53,6 +53,12 @@ void pager(void) {
 
   /* enter the critical section */
 
+  // it's not the actual vpn, but the page index in the backing store
+  int vpn = ENTRYHI_GET_VPN(exception_state->entry_hi);
+  if (vpn >= MAXPAGES) {
+    vpn = MAXPAGES - 1;
+  }
+
   // pick a frame from the swap pool
   unsigned victim_frame = getFrameFromSwapPool();
   memaddr victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
@@ -77,19 +83,11 @@ void pager(void) {
     if (status != DEVRDY) {
       PANIC();
     }
-    status = status; // to avoid warning
 
     ONINTERRUPTS();
   }
 
   // read the contents of the current process's backing store
-
-  // it's not the actual vpn, but the page index in the backing store
-  int vpn = ENTRYHI_GET_VPN(exception_state->entry_hi);
-  if (vpn >= MAXPAGES) {
-    vpn = MAXPAGES - 1;
-  }
-
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
 
@@ -107,7 +105,9 @@ void pager(void) {
   OFFINTERRUPTS();
 
   // update the current process's page table
-  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON | VALIDON | victim_page_addr;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= DIRTYON | VALIDON;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO &= 0xfff;
+  support_data->sup_privatePgTbl[vpn].pte_entryLO |= victim_frame;
 
 
   // update the TLB
@@ -117,7 +117,6 @@ void pager(void) {
   // #endregion atomic operations
 
   releaseSwapMutex();
-
   /* exit the critical section */
 
   // return control to the current process
@@ -129,7 +128,8 @@ void updateTLB(pteEntry_t *page) {
   setENTRYHI(page->pte_entryHI);
   TLBP();
   // check if the page is already in the TLB
-  if ((getINDEX() & PRESENTFLAG) == 0) {
+  unsigned is_present = getINDEX() & PRESENTFLAG;
+  if (is_present == FALSE) {
     // the page is not in the TLB
     setENTRYHI(page->pte_entryHI);
     setENTRYLO(page->pte_entryLO);

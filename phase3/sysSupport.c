@@ -38,7 +38,7 @@ void supportExceptionHandler() {
     break;
   default:
     programTrapExceptionHandler(exception_state);
-    return;
+    return; // to avoid skipping the LDST
     break;
   }
 
