@@ -135,7 +135,7 @@ void updateTLB(pteEntry_t *page) {
     setENTRYHI(page->pte_entryHI);
     setENTRYLO(page->pte_entryLO);
     TLBWI();
-  } 
+  }
 }
 
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
