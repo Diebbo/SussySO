@@ -74,14 +74,13 @@ void pager(void) {
     swap_pool[victim_frame].sw_pte->pte_entryLO &= ~VALIDON;
 
     // update the TLB if needed
-    // TODO: now we are not updating the TLB, we are just invalidating it
-    TLBCLR();
+    updateTLB(swap_pool[victim_frame].sw_pte);
 
     // update the backing store
     status = writeBackingStore(victim_page_addr, support_data->sup_asid,
                                swap_pool[victim_frame].sw_pageNo);
     if (status != DEVRDY) {
-      PANIC();
+      programTrapExceptionHandler(exception_state);
     }
 
     ONINTERRUPTS();
@@ -93,7 +92,7 @@ void pager(void) {
 
   if (status != DEVRDY)
   {
-    PANIC();
+    programTrapExceptionHandler(exception_state);
   }
 
   // update the swap pool table
