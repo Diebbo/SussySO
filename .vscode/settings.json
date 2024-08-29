@@ -12,6 +12,14 @@
         "*.inc": "c",
         "const.h": "c",
         "interrupts.h": "c",
-        "exceptions.h": "c"
+        "exceptions.h": "c",
+        "sst.h": "c",
+        "*.def": "c",
+        "io_context": "c",
+        "shared_mutex": "c",
+        "*.tcc": "c",
+        "vmmanager.h": "c",
+        "p3test.h": "c",
+        "syssupport.h": "c"
     }
 }

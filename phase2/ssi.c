@@ -1,7 +1,32 @@
 #include "./headers/ssi.h"
-/* given an unsigned int and an integer representing the bit you want to check
- (0-indexed) and return 1 if the bit is 1, 0 otherwise */
-#define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
+
+void initSSI(){
+    // init the first process
+  ssi_pcb = allocPcb();
+  /*init first process state */
+  RAMTOP(ssi_pcb->p_s.reg_sp); // Set SP to RAMTOP
+
+  /*FROM MANUAL:
+          IEc: bit 0 - The “current” global interrupt enable bit. When 0,
+     regardless of the settings in Status.IM all interrupts are disabled. When
+     1, interrupt acceptance is controlled by Status.IM. • KUc: bit 1 - The
+     “current” kernel-mode user-mode control bit. When Sta- tus.KUc=0 the
+     processor is in kernel-mode. • IEp & KUp: bits 2-3 - the “previous”
+     settings of the Status.IEc and Sta- tus.KUc. • IEo & KUo: bits 4-5 - the
+     “previous” settings of the Status.IEp and Sta- tus.KUp - denoted the “old”
+     bit settings. These six bits; IEc, KUc, IEp, KUp, IEo, and KUo act as
+     3-slot deep KU/IE bit stacks. Whenever an exception is raised the stack is
+     pushed [Section 3.1] and whenever an interrupted execution stream is
+     restarted, the stack is popped. [Section 7.4]*/
+
+  ssi_pcb->p_s.pc_epc = (memaddr)SSI_function_entry_point;
+  ssi_pcb->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
+  ssi_pcb->p_s.mie = MIE_ALL;
+
+  insertProcQ(&ready_queue_list, ssi_pcb);
+
+  ssi_pcb->p_pid = SSIPID;
+}
 
 void SSI_function_entry_point() {
   while (TRUE) {
@@ -103,6 +128,32 @@ unsigned Terminate_Process(pcb_t *sender, pcb_t *target) {
   }
 }
 
+void getDevLineAndNumber(unsigned command_address, unsigned *dev_line, unsigned *dev_no){
+  for (int j = 0; j < N_DEV_PER_IL; j++) {
+        termreg_t *base_address = (termreg_t *)DEV_REG_ADDR(IL_TERMINAL, j);
+        if (command_address == (memaddr)&(base_address->recv_command)) {
+            *dev_line = IL_TERMINAL;
+            *dev_no = j;
+            return;
+        } else if (command_address == (memaddr)&(base_address->transm_command)) {
+            *dev_line = IL_TERMINAL;
+            *dev_no = j;
+            return;
+        }
+    }
+
+  for (int i = DEV_IL_START; i < DEV_IL_START + 7; i++) {
+        for (int j = 0; j < N_DEV_PER_IL; j++) {
+            dtpreg_t *base_address = (dtpreg_t *)DEV_REG_ADDR(i, j);
+            if (command_address == (memaddr)&(base_address->command)) {
+                *dev_line = i;
+                *dev_no = j;
+                return;
+            }
+        }
+    }
+}
+
 unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
   /*Here is the step by step execution of the kernel when a generic DoIO is
     requested: • A process sends a request to the SSI to perform a DoIO; • the
@@ -126,12 +177,10 @@ unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
     elaborate the request from the device; • given the device address, the SSI
     should free the process waiting the completion on the DoIO and finally,
     forwarding the status message to the original process.*/
-  // unsigned dev_no = 7;                       // *specs for terminal *
-  unsigned dev_line = IL_TERMINAL - IL_OFFSET;  // *                   *
-  unsigned dev_no = (unsigned)arg->commandAddr - 0x10000054 - ((dev_line-3) * 0x80);
-  dev_no = dev_no / 0x10;
+  unsigned dev_line, dev_no;
+  getDevLineAndNumber((unsigned)arg->commandAddr, &dev_line, &dev_no);
 
-  unsigned dev_index = (dev_line - 3) * 8 + dev_no;
+  unsigned dev_index = DEVINDEX(dev_line, dev_no);
 
   pcb_PTR blocked_for_message = outProcQ(&msg_queue_list, sender);
   

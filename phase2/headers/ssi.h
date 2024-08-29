@@ -5,7 +5,13 @@ various system service calls (SYS1, SYS3, SYS5, SYS6, SYS7, etc.).*/
 #define SSI_H
 #include "nucleus.h"
 
-
+// SSI process
+extern pcb_PTR ssi_pcb;
+//ssi init
+void initSSI(void);
+// SSI enty point
+void SSI_function_entry_point(void);
+// SSI processing request
 void SSI_Request(pcb_t *sender, int service, void *arg);
 // When requested, this service causes a new process, said to be a progeny of
 // the sender, to be created.
@@ -30,6 +36,9 @@ return 0 as the parent identifier of the root process.*/
 int Get_Process_ID(pcb_t *sender, int arg);
 /*This service is called if there is no match with ssi service*/
 void killProgeny(pcb_t *sender);
+
+// set the device line and number base on the command address 
+void getDevLineAndNumber(unsigned command_address, unsigned *dev_line, unsigned *dev_no);
 
 extern void interruptHandlerNonTimer(int IntlineNo);
 

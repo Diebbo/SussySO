@@ -11,7 +11,6 @@
 
 /* Number of semaphore's device */
 #define SEMDEVLEN 49
-#define RECVD    5
 #define WAITINGMSG 0
 #define REGISTERNUMBER 32
 
@@ -22,12 +21,7 @@
 #define USERMODE 1
 
 #define MAXINT 0x7FFFFFFF
-
-#define SUBDEVOFF 0x10
-#define NOOFFSET  0x0
-
-#define DEVINDEX(ip_line, dev_no) ((ip_line - 17) * 8 + dev_no)
-
+ 
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR   0x10000000
 #define RAMBASESIZE   0x10000004
@@ -49,9 +43,9 @@
 #define GENERALEXCEPT 1
 
 /* Mikeyg Added constants */
-
-#define MAXPROC 40
-#define MAXMESSAGES 40
+#define MAXSSTNUM 8
+#define MAXPROC 50
+#define MAXMESSAGES 50
 
 #define ANYMESSAGE 0
 #define MSGNOGOOD -1
@@ -60,7 +54,6 @@
 #define RECEIVEMESSAGE -2
 
 #define NORESPONSE -1
-
 #define CREATEPROCESS 1
 #define TERMPROCESS   2
 #define DOIO          3
@@ -68,6 +61,8 @@
 #define CLOCKWAIT     5
 #define GETSUPPORTPTR 6
 #define GETPROCESSID  7
+
+#define NORESPONSE -1
 
 /* Status register constants */
 #define ALLOFF      0x00000000
@@ -83,7 +78,6 @@
 #define IL_CPUTIMER 7
 
 #define IL_OFFSET 14
-
 #define IL_IPI 16
 #define IL_DISK 17
 #define IL_FLASH 18
@@ -122,6 +116,7 @@
 #define BREAKEXCEPTION 9
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
+#define TLBMOD         24
 
 
 /* EntryLO register (NDVG) constants */
@@ -134,9 +129,17 @@
 #define GETPAGENO     0x3FFFF000
 #define GETSHAREFLAG  0xC0000000
 #define VPNSHIFT      12
+#define PFNSHIFT      VPNSHIFT
 #define ASIDSHIFT     6
 #define SHAREDSEGFLAG 30
 
+#define SENDMSG 1
+#define RECEIVEMSG 2
+
+#define GET_TOD 1
+#define TERMINATE 2
+#define WRITEPRINTER 3
+#define WRITETERMINAL 4
 
 /* Index register constants */
 #define PRESENTFLAG 0x80000000
@@ -216,8 +219,6 @@
  * As requested by chapter 3.4 exception 0 we call the interrupt of the first device
  * that we find "on" / "running" / "of which we get 1 from this function"
 */
-
-//00000000001000000000000000
 #define CAUSE_IP_GET(cause, il_no) ((cause) & (1 << ((il_no) + 8))) // performs a bit shift based on the parameters
 
 
@@ -233,9 +234,41 @@
 #define POOLSIZE (UPROCMAX * 2)
 /* End of Mikeyg constants */
 
+#define SWAPPOOLADDR 0x20020000
+
 #define CHARRECV			5		/* Character received*/
 
-/* Inizio indirizzo di device registers */
+/* point of begin of device registers */
 #define START_DEVREG		0x10000054
 
+// important id process 
+#define SSIPID          0xFFFFFFFE 
+#define SSTPIDS         0xFFFFFFFC
+
+// important mask
+#define STATMASK 0xFF
+
+// important state register
+#define DEVRDY      1           /*printer*/
+#define DEVBSY      3
+#define DEVREADBLK  4
+
+#define RECVD       5           /*terminal*/
+
+#define SUBDEVOFF 0x10
+#define NOOFFSET  0x0
+
+// offsets
+#define IPBASELINE 17
+#define DEVIPOFFSET 0x80
+
+// others
+#define IPLINE(ip_line) (ip_line - IPBASELINE)
+#define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
+#define PARENT 0
+
+// kill myself
+#define SELF NULL
+
 #endif
+

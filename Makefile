@@ -26,11 +26,11 @@ all : kernel.core.uriscv
 kernel.core.uriscv : kernel
 	uriscv-elf2uriscv -k $<
 
-kernel : ./phase1/msg.o ./phase1/pcb.o ./phase2/p2test.o ./phase2/scheduler.o ./phase2/nucleus.o ./phase2/exceptions.o ./phase2/interrupts.o ./phase2/ssi.o crtso.o liburiscv.o
+kernel: ./phase1/msg.o ./phase1/pcb.o ./phase2/ssi.o ./phase2/exceptions.o ./phase2/interrupts.o ./phase2/scheduler.o ./phase2/nucleus.o ./phase3/sysSupport.o ./phase3/sst.o ./phase3/vmManager.o ./phase3/p3test.o ./phase3/stdlib.o crtso.o liburiscv.o
 	$(LD) -o $@ $^ $(LDFLAGS)
 
 clean :
-	-rm -f ./phase2/*.o ./phase1/*.o kernel kernel.*.uriscv
+	-rm -f ./phase2/*.o ./phase1/*.o ./phase3/*.o kernel kernel.*.uriscv
 
 # Pattern rule for assembly modules
 %.o : %.S

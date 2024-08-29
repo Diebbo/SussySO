@@ -22,6 +22,8 @@
 #include <uriscv/types.h>
 
 /* GLOBAL VARIABLES*/
+/* given an unsigned int and an integer representing the bit you want to check
+ (0-indexed) and return 1 if the bit is 1, 0 otherwise */
 #define BIT_CHECKER(n, bit) (((n) >> (bit)) & 1)
 // started but not terminated processes
 extern int process_count;
@@ -35,8 +37,6 @@ extern struct list_head blockedPCBs[SEMDEVLEN - 1];
 extern struct list_head msg_queue_list;
 // pcb waiting for clock tick
 extern struct list_head pseudoClockList;
-// SSI process id 
-#define SSIPID 0xFFFFFFFE 
 // SSI process
 extern pcb_PTR ssi_pcb;
 //pid counter
@@ -45,26 +45,27 @@ extern int pid_counter_tracer;
 extern cpu_t acc_cpu_time;
 
 void initKernel(void);
-
-
-/* GLOBAL FUNCTIONS */
-void uTLB_RefillHandler(void);
-
-
-void exceptionHandler(void);
-void TrapExceptionHandler(state_t *);
 void Scheduler(void);
-void SSI_function_entry_point(void);
-void passUpOrDie(unsigned , state_t *);
-/*copy entry_hi, cause, status, pc_epc and mie from source to dest*/
+
+// copy entry_hi, cause, status, pc_epc and mie from source to dest
 void copyState(state_t *source, state_t *dest);
-/*time accumulated function*/
+// time accumulated function
 cpu_t deltaTime(void);
+
+
+/* EXTERN FUNCTIONS */
+extern void uTLB_RefillHandler(void);
+extern void exceptionHandler(void);
+extern void TrapExceptionHandler(state_t *);
+extern void SSI_function_entry_point(void);
+extern void passUpOrDie(unsigned , state_t *);
+extern void initSSI(void);
 
 /* defined in p2test.c */
 extern void test(void);
+/* defined in p3test.c */
+extern void test3(void);
 
-
-int main(int, char **);
+int main(void);
 
 #endif

@@ -1,20 +1,12 @@
-/*Implement the device/timer interrupt exception handler. Process device/timer
-interrupts and convert them into appropriate messages for blocked PCBs.*/
-
 #include "./headers/interrupts.h"
 
-/*int getInterruptLines(){
-    // 1. Read the interrupt lines from the interrupting devices
-    // 2. Return the interrupt lines
-    return getCAUSE() & IOINTERRUPTS & TIMERINTERRUPT & DISKINTERRUPT &
-    FLASHINTERRUPT & PRINTINTERRUPT & TERMINTERRUPT;
-}*/
+cpu_t time_interrupt_start;
 
 void interruptHandler(void) {
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
   // pending interrupt
-  unsigned ip = exce_mie & exce_mip; 
+  unsigned ip = exce_mie & exce_mip;
   if (BIT_CHECKER(ip, 7)) {
     interruptHandlerPLT();
   }
@@ -45,9 +37,8 @@ void interruptHandlerNonTimer(unsigned ip_line) {
   // 1. Calculate the address for this device’s device register
   // Tip: to calculate the device snumber you can use a switch among constants
   // DEVxON
-  // ip_line -= 14;
   int dev_no = 0;
-  
+
   unsigned *devices_bit_map = (unsigned *)CDEV_BITMAP_ADDR(ip_line);
   switch (*devices_bit_map) {
   case DEV0ON:
@@ -74,7 +65,7 @@ void interruptHandlerNonTimer(unsigned ip_line) {
   case DEV7ON:
     dev_no = 7;
     break;
-  default: 
+  default:
     break;
   }
 
@@ -82,50 +73,55 @@ void interruptHandlerNonTimer(unsigned ip_line) {
   unsigned dev_addr_base = (unsigned)DEV_REG_ADDR(ip_line, dev_no);
   unsigned dev_index = 0, status = 0;
 
-
   // diffrent device interrupts
-  switch (ip_line)
-  {
+  switch (ip_line) {
   case IL_TERMINAL:
     termreg_t *term = (termreg_t *)dev_addr_base;
-    unsigned sub_dev_off = NOOFFSET;
 
-    // check if the interrupt is coused from the second subdevice
-    if (term->transm_status & (0x7 << SUBDEVOFF)) {
-      sub_dev_off = SUBDEVOFF;
-    }
 
     // 2. Save off the status code from the device’s device register
-    status = (term->transm_status >> sub_dev_off) & 0x7;
-
     // 3. Acknowledge the outstanding interrupt
-    term->transm_command = (ACK  << sub_dev_off);
+    if ((term->transm_status & 0xff) == OKCHARTRANS) {
+      status = term->transm_status & 0xff;
+      term->transm_command = ACK;
+    } else {
+      status = term->recv_status;
+      term->recv_command = ACK;
+    }
 
     // 4. Send a message and unblock the PCB waiting the status
     dev_index = DEVINDEX(ip_line, dev_no);
 
     break;
+
+  case IL_FLASH:
   default:
-    // Check for other types of devices (TODO)
+    dtpreg_t *flash = (dtpreg_t *)dev_addr_base;
+
+    status = flash->status;
+
+    flash->command = ACK;
+    
+    dev_index = DEVINDEX(ip_line, dev_no);
     break;
   }
 
   pcb_PTR caller = removeProcQ(&blockedPCBs[dev_index]);
 
   if (caller != NULL) {
-    // Simulating a SYS2 call to unblock the ssi  
+    // Simulating a SYS2 call to unblock the ssi
     msg_PTR ack = allocMsg();
     ack->m_sender = ssi_pcb;
     ack->m_payload = status;
     pushMessage(&caller->msg_inbox, ack);
     insertProcQ(&ready_queue_list, caller);
-    soft_block_count--; 
+    soft_block_count--;
   }
 
   // 7. Return control to the Current Process
   if (current_process == NULL)
     Scheduler();
-  else{
+  else {
     // decrement the time that takes to the process to be interrupted
     current_process->p_time -= deltaInterruptTime();
     LDST((state_t *)BIOSDATAPAGE);
@@ -148,7 +144,7 @@ void interruptHandlerPLT() {
     copyState(exception_state, &current_process->p_s);
     // ! WARNING: process already running
     insertProcQ(&ready_queue_list, current_process);
-    
+
     // decrement the time that takes to the process to be interrupted
     current_process->p_time -= deltaInterruptTime();
   }
@@ -167,8 +163,7 @@ void pseudoClockHandler() {
   */
   LDIT(PSECOND);
   pcb_PTR pcb = NULL;
-  while ((pcb = removeProcQ(&pseudoClockList)) !=
-         NULL) { 
+  while ((pcb = removeProcQ(&pseudoClockList)) != NULL) {
     // unlock process - SYS2
     insertProcQ(&ready_queue_list, pcb);
 
@@ -190,7 +185,7 @@ void pseudoClockHandler() {
   LDST((state_t *)BIOSDATAPAGE);
 }
 
-cpu_t deltaInterruptTime(){
+cpu_t deltaInterruptTime() {
   cpu_t current_time;
   STCK(current_time);
   return current_time - time_interrupt_start;
