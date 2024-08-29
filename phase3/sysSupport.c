@@ -70,7 +70,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
      */
 
     dest_process =
-        a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
+        a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
     
     SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
 
@@ -89,7 +89,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
      * the queue is empty, and the first message sent to it will wake up it and
      * put it in the Ready Queue.
      */
-    receive_process = a1_reg == PARENT ? current_process->p_parent : (pcb_t *)a1_reg;
+    receive_process = a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
     SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
 
     break;

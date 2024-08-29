@@ -31,6 +31,9 @@ void entrySwapFunction() {
     SYSCALL(SENDMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
     // wait for the process to finish the swap
     SYSCALL(RECEIVEMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
+    
+    // released the swap mutex
+    gained_mutex_process = NULL;
   }
 }
 
@@ -46,7 +49,7 @@ void pager(void) {
   // check if the exception is a TLB-Modification exception
   if (cause == TLBMOD) {
     // treat this exception as a program trap
-    TrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(exception_state);
   }
 
   gainSwapMutex();
@@ -64,26 +67,27 @@ void pager(void) {
   memaddr victim_page_addr = SWAPPOOLADDR + (victim_frame * PAGESIZE);
 
   // check if the frame is occupied
-  if (!isSwapPoolFrameFree(victim_frame)) {
+  if (isSwapPoolFrameFree(victim_frame) == FALSE) {
     // we assume the frame is occupied by a dirty page
 
     // operations performed atomically
     OFFINTERRUPTS();
 
     // mark the page pointed by the swap pool as not valid
-    swap_pool[victim_frame].sw_pte->pte_entryLO &= ~VALIDON;
+    swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
 
     // update the TLB if needed
     updateTLB(swap_pool[victim_frame].sw_pte);
 
+    ONINTERRUPTS();
+
     // update the backing store
-    status = writeBackingStore(victim_page_addr, support_data->sup_asid,
+    status = writeBackingStore(victim_page_addr, swap_pool[victim_frame].sw_asid,
                                swap_pool[victim_frame].sw_pageNo);
     if (status != DEVRDY) {
       programTrapExceptionHandler(exception_state);
     }
 
-    ONINTERRUPTS();
   }
 
   // read the contents of the current process's backing store
@@ -162,9 +166,9 @@ unsigned readBackingStoreFromPage(memaddr missing_page_addr, unsigned asid,
   return flashOperation(FLASHREAD, missing_page_addr, asid, page_number);
 }
 
-unsigned writeBackingStore(memaddr missing_page_addr, unsigned asid,
+unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid,
                            unsigned page_number) {
-  return flashOperation(FLASHWRITE, missing_page_addr, asid, page_number);
+  return flashOperation(FLASHWRITE, updating_page_addr, asid, page_number);
 }
 
 unsigned getFrameFromSwapPool() {
