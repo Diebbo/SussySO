@@ -11,6 +11,7 @@ void initSSTs() {
   //for (int i = 0; i < MAXSSTNUM; i++) {
   for (int i = 0; i < 1; i++) {
     STST(&sst_st[i]);
+    sst_st[i].entry_hi = (i + 1) << ASIDSHIFT;
     sst_st[i].reg_sp = getCurrentFreeStackTop();
     sst_st[i].pc_epc = (memaddr)sstEntry;
     sst_st[i].status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
@@ -65,7 +66,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * to the printer with the same number of the sender
      * ASID.
      */
-    writeOnPrinter(sender, (sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
+    writeOnPrinter((sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
     has_to_reply = TRUE;
     break;
   case WRITETERMINAL:
@@ -73,7 +74,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * to the terminal with the same number of the sender
      * ASID.
      */
-    writeOnTerminal(sender, (sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
+    writeOnTerminal((sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
     has_to_reply = TRUE;
     break;
   default:
@@ -103,12 +104,12 @@ void killSST(pcb_PTR sender) {
   terminateProcess(SELF);
 }
 
-void writeOnPrinter(pcb_PTR sender, sst_print_PTR arg, unsigned asid) {
+void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid));
 }
 
-void writeOnTerminal(pcb_PTR sender, sst_print_PTR arg, unsigned int asid) {
+void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid));
 }
