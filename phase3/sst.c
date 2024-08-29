@@ -49,8 +49,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * number of microseconds since the system was last
      * booted/reset.
      */
-    cpu_t tod_time;
-    res_payload = getTOD(sender, &tod_time);
+    res_payload = (void *)getTOD();
     has_to_reply = TRUE;
     break;
   case TERMINATE:
@@ -90,8 +89,9 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
   }
 }
 
-cpu_t *getTOD(pcb_PTR sender, cpu_t *tod_time) {
-  STCK(*tod_time);
+cpu_t getTOD() {
+  cpu_t tod_time;
+  STCK(tod_time);
   return tod_time;
 }
 
@@ -107,13 +107,13 @@ void killSST(pcb_PTR sender) {
 
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid),
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid-1),
         PRINTER);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid),
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid-1),
         TERMINAL);
 }
 

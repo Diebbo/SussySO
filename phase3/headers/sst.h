@@ -18,7 +18,7 @@ void sstRequestHandler();
 /*initialize ith SST and its process*/
 void initSSTs(void);
 /*return TimeOfDay in microseconds*/
-cpu_t *getTOD(pcb_PTR sender, cpu_t *tod_time);
+cpu_t getTOD(void);
 /*kill SST and its child*/
 void killSST(pcb_PTR sender);
 // print a string to the printer with the same number of the sender ASID
