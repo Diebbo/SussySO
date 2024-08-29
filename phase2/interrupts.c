@@ -77,18 +77,17 @@ void interruptHandlerNonTimer(unsigned ip_line) {
   switch (ip_line) {
   case IL_TERMINAL:
     termreg_t *term = (termreg_t *)dev_addr_base;
-    unsigned sub_dev_off = NOOFFSET;
 
-    // check if the interrupt is coused from the second subdevice
-    if (term->transm_status & (0x7 << SUBDEVOFF)) {
-      sub_dev_off = SUBDEVOFF;
-    }
 
     // 2. Save off the status code from the device’s device register
-    status = (term->transm_status >> sub_dev_off) & 0x7;
-
     // 3. Acknowledge the outstanding interrupt
-    term->transm_command = (ACK << sub_dev_off);
+    if ((term->transm_status & 0xff) == OKCHARTRANS) {
+      status = term->transm_status & 0xff;
+      term->transm_command = ACK;
+    } else {
+      status = term->recv_status;
+      term->recv_command = ACK;
+    }
 
     // 4. Send a message and unblock the PCB waiting the status
     dev_index = DEVINDEX(ip_line, dev_no);
