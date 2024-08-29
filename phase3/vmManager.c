@@ -71,7 +71,7 @@ void pager(void) {
     OFFINTERRUPTS();
 
     // mark the page pointed by the swap pool as not valid
-    swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
+    swap_pool[victim_frame].sw_pte->pte_entryLO &= ~VALIDON;
 
     // update the TLB if needed
     // TODO: now we are not updating the TLB, we are just invalidating it
