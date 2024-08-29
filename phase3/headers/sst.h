@@ -5,6 +5,7 @@
 
 extern pcb_PTR sst_pcb[MAXSSTNUM];
 extern pcb_PTR test_process;
+extern void programTrapExceptionHandler(state_t *exception_state);
 
 enum writet {
   TERMINAL,

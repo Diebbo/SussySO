@@ -9,7 +9,7 @@ state_t u_proc_state[MAXSSTNUM];
 void initSSTs() {
   // init of the 8 sst process
   // for (int i = 0; i < MAXSSTNUM; i++) {
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < 8; i++) {
     STST(&sst_st[i]);
     sst_st[i].entry_hi = (i + 1) << ASIDSHIFT;
     sst_st[i].reg_sp = getCurrentFreeStackTop();
@@ -151,8 +151,10 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
     SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
     // device not ready -> error!
-    if (status != OKCHARTRANS) {
-      PANIC();
+    if (write_to == TERMINAL && status != OKCHARTRANS) {
+      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+    } else if (write_to == PRINTER && status != DEVRDY) {
+      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
     }
 
     msg++;
