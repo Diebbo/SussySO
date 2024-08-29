@@ -6,7 +6,7 @@ extern pcb_PTR sst_pcb[MAXSSTNUM];
 extern memaddr current_stack_top;
 
 // internal global variables
-support_t support_arr[8];
+support_t support_arr[MAXSSTNUM];
 pcb_PTR test_process;
 state_t swap_st;
 support_t swap_sup;
