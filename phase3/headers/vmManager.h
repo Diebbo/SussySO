@@ -32,7 +32,7 @@ unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid, uns
 
 unsigned readBackingStoreFromPage(memaddr missing_page_addr, unsigned asid, unsigned page_number);
 
-unsigned writeBackingStore(memaddr missing_page_addr, unsigned asid, unsigned page_no);
+unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid, unsigned page_no);
 
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);
