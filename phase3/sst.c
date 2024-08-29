@@ -8,7 +8,7 @@ state_t u_proc_state[MAXSSTNUM];
 
 void initSSTs() {
   // init of the 8 sst process
-  //for (int i = 0; i < MAXSSTNUM; i++) {
+  // for (int i = 0; i < MAXSSTNUM; i++) {
   for (int i = 0; i < 1; i++) {
     STST(&sst_st[i]);
     sst_st[i].entry_hi = (i + 1) << ASIDSHIFT;
@@ -25,7 +25,8 @@ void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
 
-  child_pcb[sst_support->sup_asid-1] = initUProc(&u_proc_state[sst_support->sup_asid-1], sst_support);
+  child_pcb[sst_support->sup_asid - 1] =
+      initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
   // get the message from someone - user process
   // handle
   // reply
@@ -82,9 +83,9 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
     terminateProcess(SELF); // terminate the SST and child
     break;
   }
-  
+
   // ack the sender
-  if (has_to_reply) { 
+  if (has_to_reply) {
     SYSCALL(SENDMESSAGE, (unsigned int)sender, (unsigned int)res_payload, 0);
   }
 }
@@ -100,33 +101,45 @@ void killSST(pcb_PTR sender) {
     terminateProcess(sender);
   }
   notify(test_process);
-  
+
   terminateProcess(SELF);
 }
 
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid));
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid),
+        PRINTER);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid));
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid),
+        TERMINAL);
 }
 
-void write(char *msg, int lenght, devreg_t *devAddrBase) {
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
   int i = 0;
   unsigned status;
+  // check if it's a terminal or a printer
+  unsigned *command = write_to == TERMINAL ? &(devAddrBase->term.transm_command)
+                                           : &(devAddrBase->dtp.command);
 
   while (TRUE) {
     if ((*msg == EOS) || (i >= lenght)) {
       break;
     }
 
-    unsigned int value = PRINTCHR | (((unsigned int)*msg) << 8);
+    unsigned int value;
+
+    if (write_to == TERMINAL) {
+      value = PRINTCHR | (((unsigned int)*msg) << 8);
+    } else {
+      value = PRINTCHR;
+      devAddrBase->dtp.data0 = *msg;
+    }
 
     ssi_do_io_t do_io = {
-        .commandAddr = &devAddrBase->dtp.data0,
+        .commandAddr = command,
         .commandValue = value,
     };
     ssi_payload_t payload = {
@@ -146,4 +159,3 @@ void write(char *msg, int lenght, devreg_t *devAddrBase) {
     i++;
   }
 }
-
