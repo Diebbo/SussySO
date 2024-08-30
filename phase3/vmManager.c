@@ -94,7 +94,7 @@ void pager(void) {
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
 
-  if (status != DEVRDY)
+  if (status != DEVRDY) // operation failed
   {
     programTrapExceptionHandler(exception_state);
   }
@@ -134,7 +134,7 @@ void updateTLB(pteEntry_t *page) {
   // check if the page is already in the TLB
   unsigned is_present = getINDEX() & PRESENTFLAG;
   if (is_present == FALSE) {
-    // the page is not in the TLB
+    // the page is not in the TLB, so we need to insert it
     setENTRYHI(page->pte_entryHI);
     setENTRYLO(page->pte_entryLO);
     TLBWI();
@@ -172,13 +172,14 @@ unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid,
 }
 
 unsigned getFrameFromSwapPool() {
-  // implement the page replacement algorithm FIFO
   static unsigned frame = 0;
+  // find a free frame in the swap pool
   for (unsigned i = 0; i < POOLSIZE; i++) {
     if (isSwapPoolFrameFree(i)) {
       frame = i;
       break;
     }
   }
+  // otherwise implement the page replacement algorithm FIFO
   return frame++ % POOLSIZE;
 }
