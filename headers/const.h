@@ -113,6 +113,7 @@
 #define TLBINVLDL      2
 #define TLBINVLDS      3
 #define SYSEXCEPTION   8
+#define USERINSTR      8
 #define BREAKEXCEPTION 9
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
