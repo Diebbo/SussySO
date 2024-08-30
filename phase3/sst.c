@@ -108,16 +108,16 @@ void killSST(pcb_PTR sender) {
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid-1),
-        PRINTER);
+        PRINTER, asid);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
   write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid-1),
-        TERMINAL);
+        TERMINAL, asid);
 }
 
-void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, int asid) {
   int i = 0;
   unsigned status;
   // check if it's a terminal or a printer
@@ -152,9 +152,9 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
 
     // device not ready -> error!
     if (write_to == TERMINAL && status != OKCHARTRANS) {
-      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
     } else if (write_to == PRINTER && status != DEVRDY) {
-      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
     }
 
     msg++;
