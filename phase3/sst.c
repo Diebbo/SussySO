@@ -23,9 +23,10 @@ void initSSTs() {
 void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
+  state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
 
   child_pcb[sst_support->sup_asid - 1] =
-      initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
+      initUProc(u_proc_prole, sst_support);
   // get the message from someone - user process
   // handle
   // reply
