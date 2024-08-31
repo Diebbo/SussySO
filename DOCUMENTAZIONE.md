@@ -1,9 +1,14 @@
-# Documentation for Operating System Project - A.Y. 2023/2024
+# Documentation for Phase3 Operating System Project - A.Y. 2023/2024
 ## Introduction
+The following document serves as a simple explanation of the main features of the third phase of the OS project for the _uRISCV_ architecture.
 
 ## Index
 
 - [Virtual Memory Support](#virtual-memory-support)
+- [User Exception Handler](#user-exception-handler)
+- [System Service Thread](#system-service-thread)
+- [Stdlib](#stdlib)
+- [P3test](#p3test)
 
 
 ## Virtual Memory Support
@@ -201,4 +206,218 @@ void updateTLB(pteEntry_t *page) {
   }
 }
 ```
+
+## User Exception Handler
+The user exception handler is a module that is responsible for handling exceptions that occur in user mode. It is responsible for handling exceptions such as system calls, it is implemented as a switch statement that checks the cause of the exception and calls the appropriate handler function.
+
+```c
+...
+switch (exception_code)
+{
+case SYSEXCEPTION:
+  UsysCallHandler(exception_state, current_support->sup_asid);
+  break;
+default:
+  programTrapExceptionHandler(exception_state);
+  return; 
+  break;
+}
+...
+```
+
+### User System Call Handler
+The user system call handler act as a wrapper for comunication between user process and kernel, infact it 'wraps' both the `SENDMESSAGE`
+```c
+...
+case SENDMSG:
+  /* This services cause the transmission of a message to a specified process.
+    * The USYS1 service is essentially a user-mode “wrapper” for the
+    * kernel-mode restricted SYS1 service. The USYS1 service is requested by
+    * the calling process by placing the value 1 in a0, the destination process
+    * PCB address or SST in a1, the payload of the message in a2 and then
+    * executing the SYSCALL instruction. If a1 contains PARENT, then the
+    * requesting process send the message to its SST [Section 6], that is its
+    * parent.
+    */
+
+  dest_process =
+      a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
+  
+  SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
+
+    break;
+...
+```
+and the `RECEIVEMESSAGE` system calls.
+```c
+...
+case RECEIVEMSG:
+  /* This system call is used by a process to extract a message from its inbox
+    * or, if this one is empty, to wait for a message. The USYS2 service is
+    * essentially a user-mode “wrapper” for the kernel-mode restricted SYS2
+    * service. The USYS2 service is requested by the calling process by placing
+    * the value 2 in a0, the sender process PCB address or ANYMESSAGE in a1, a
+    * pointer to an area where the nucleus will store the payload of the
+    * message in a2 (NULL if the payload should be ignored) and then executing
+    * the SYSCALL instruction. If a1 contains a ANYMESSAGE pointer, then the
+    * requesting process is looking for the first message in its inbox, without
+    * any restriction about the sender. In this case it will be frozen only if
+    * the queue is empty, and the first message sent to it will wake up it and
+    * put it in the Ready Queue.
+    */
+  receive_process = a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
+  SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
+
+  break;
+...
+```
+## System Service Thread
+The System Service Thread (SST) is a per-process thread that provide is child process useful services. Each SST child process can send a message to its SST to request a service (that can then be asked to the SSI if needed). The SST also initialize its child and Each share the same ID (ASID) and support struct of its child U-proc.
+Like the SSI the structure of SST works as a server: get the request, satisfy request and send back resoult.
+```c
+void sstEntry() {
+  // init the child
+  support_t *sst_support = getSupportData();
+  state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
+
+  child_pcb[sst_support->sup_asid - 1] =
+      initUProc(u_proc_prole, sst_support);
+  // get the message from someone - user process
+  // handle
+  // reply
+  while (TRUE) {
+    ssi_payload_PTR process_request_payload;
+    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(
+        RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
+    sstRequestHandler(process_request_ptr,
+                      process_request_payload->service_code,
+                      process_request_payload->arg);
+  }
+}
+```
+The SST services are:
+- `GetTOD`: his service should allow the sender to get back the number of microseconds since the system was last
+booted/reset. 
+```c
+cpu_t getTOD() {
+  cpu_t tod_time;
+  STCK(tod_time);
+  return tod_time;
+}
+```
+- `Terminate`: his service causes the sender U-proc and its SST (its parent) to cease to exist. It is essentially a SST
+“wrapper” for the SSI service TerminateProcess.
+```c
+void killSST(pcb_PTR sender) {
+  if (sender != NULL) {
+    // terminate the sender
+    terminateProcess(sender);
+  }
+  notify(test_process);
+  terminateProcess(SELF);
+}
+```
+- `WritePrinter`: his service cause the print of a string of characters to the printer with the same number of the sender ASID.
+- `WriteTerminal`: his service cause the print of a string of characters to the terminal with the same number of the sender ASID.
+```c
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, int asid) {
+  int i = 0;
+  unsigned status;
+  // check if it's a terminal or a printer
+  unsigned *command = write_to == TERMINAL ? &(devAddrBase->term.transm_command)
+                                           : &(devAddrBase->dtp.command);
+
+  while (TRUE) {
+    if ((*msg == EOS) || (i >= lenght)) {
+      break;
+    }
+
+    unsigned int value;
+
+    if (write_to == TERMINAL) {
+      value = PRINTCHR | (((unsigned int)*msg) << 8);
+    } else {
+      value = PRINTCHR;
+      devAddrBase->dtp.data0 = *msg;
+    }
+
+    ssi_do_io_t do_io = {
+        .commandAddr = command,
+        .commandValue = value,
+    };
+    ssi_payload_t payload = {
+        .service_code = DOIO,
+        .arg = &do_io,
+    };
+
+    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
+
+    // device not ready -> error!
+    if (write_to == TERMINAL && status != OKCHARTRANS) {
+      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+    } else if (write_to == PRINTER && status != DEVRDY) {
+      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+    }
+
+    msg++;
+    i++;
+  }
+}
+```
+## Stdlib
+this file serves as the main container of useful functions that are used thru phase 3 of the project such as:
+- `Initializations functions`: _initUprocPageTable(), initFreeStackTop(), initUProc() and defaultSupportData()_;
+- `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess() and  isOneOfSSTPids()_;
+- `Notification service & Mutual esclusion handling`: 
+_notify(), gainSwapMutex() and releaseSwapMutex()_.
+
+## P3test
+This file serves as the main test for the phase 3, it follow a simple schema: initialization, execution of the process's request and termination (after beeing notified).  
+```c
+void test3() {
+  test_process = current_process;
+  initFreeStackTop();
+  /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
+   * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
+   * The InstantiatorProcess will perform the following tasks:
+   *  • Initialize the Level 4/Phase 3 data structures. These are:
+   *     – The Swap Pool table and a Swap Mutex process that must provide mutex access to the
+   *        swap table using message passing [Section 4.1].
+   *     – Each (potentially) sharable peripheral I/O device can have a process for it. These process
+   *        will be used to receive complex requests (i.e. to write of a string to a terminal) and request
+   *        the correct DoIO service to the SSI (this feature is optional and can be delegated directly
+   *        to the SST processes to simplify the project).
+   *  • Initialize and launch eight SST, one for each U-procs.
+   *  • Terminate after all of its U-proc “children” processes conclude. This will drive Process Count
+   *      to one, triggering the Nucleus to invoke HALT. Wait for 8 messages, that should be send when
+   *      each SST is terminated.
+   */
+
+  // Init array of support struct (so each will be used for every u-proc init. in initSSTs)
+  initSupportArray();
+
+  // alloc swap mutex process
+  swap_mutex = allocSwapMutex();
+
+  // Init. sharable peripheral (done in initSSTs)
+  /* Technical Point: A careful reading of the Level 4/Phase 3 specification reveals that there are
+   * actually no purposefully shared peripheral devices. Each of the [1..8] U-procs has its own flash device
+   * (backing store), printer, and terminal device(s). Hence, one does not actually need a process to
+   * protect access to device registers. However, for purposes of correctness (or more appropriate: to
+   * protect against erroneous behavior) and future phase compatibility, it is possible to have a process for
+   * each device that waits for messages and requests the single DoIO to the SSI.
+   */
+
+  //Init 8 SST
+  initSSTs();
+
+  //Terminate after the 8 sst die
+  waitTermination(sst_pcb);
+
+  // terminate the test process
+  terminateProcess(SELF);
+}
+```
+It also contains some utility functions such as: _initSupportArray(), allocSwapMutex() and  waitTermination()_.
 
