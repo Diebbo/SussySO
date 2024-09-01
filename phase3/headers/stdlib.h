@@ -75,6 +75,9 @@ void initFreeStackTop(void);
 // invalidate the page table of the current process, tbl and swap pool
 void invalidateUProcPageTable(support_t *support);
 
+// insert page into TLB, if not present
+void updateTLB(pteEntry_t *page);
+
 extern void pager();
 
 extern void supportExceptionHandler(void);

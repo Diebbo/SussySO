@@ -127,21 +127,6 @@ void pager(void) {
   LDST(exception_state);
 }
 
-void updateTLB(pteEntry_t *page) {
-  // place the new page in the Data0 register
-  setENTRYHI(page->pte_entryHI);
-  TLBP();
-  // check if the page is already in the TLB
-  unsigned not_present = getINDEX() & PRESENTFLAG;
-  // if the variable is 1, the page is not in the TLB
-  if (not_present == FALSE) {
-    // the page is in the TLB, so we update it
-    setENTRYHI(page->pte_entryHI);
-    setENTRYLO(page->pte_entryLO);
-    TLBWI();
-  }
-}
-
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
                         unsigned page_number) {
   dtpreg_t *flash_dev_addr = (dtpreg_t *)DEV_REG_ADDR(IL_FLASH, asid - 1);
