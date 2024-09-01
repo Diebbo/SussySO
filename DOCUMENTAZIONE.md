@@ -296,7 +296,7 @@ void sstEntry() {
 }
 ```
 The SST services are:
-- `GetTOD`: his service should allow the sender to get back the number of microseconds since the system was last
+- `GetTOD`: this service should allow the sender to get back the number of microseconds since the system was last
 booted/reset. 
 ```c
 cpu_t getTOD() {
