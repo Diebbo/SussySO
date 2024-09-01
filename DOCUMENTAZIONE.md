@@ -318,8 +318,8 @@ void killSST(pcb_PTR sender) {
   terminateProcess(SELF);
 }
 ```
-- `WritePrinter`: his service cause the print of a string of characters to the printer with the same number of the sender ASID.
-- `WriteTerminal`: his service cause the print of a string of characters to the terminal with the same number of the sender ASID.
+- `WritePrinter`: his service causes the print of a string of characters to the printer with the same number as the sender ASID.
+- `WriteTerminal`: his service causes the print of a string of characters to the terminal with the same number as the sender ASID.
 ```c
 void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, int asid) {
   int i = 0;
@@ -367,14 +367,14 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
 }
 ```
 ## Stdlib
-this file serves as the main container of useful functions that are used thru phase 3 of the project such as:
+this file serves as the main container of useful functions that are used through phase 3 of the project such as:
 - `Initializations functions`: _initUprocPageTable(), initFreeStackTop(), initUProc() and defaultSupportData()_;
 - `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess(), updateTLB(), invalidateUProcPageTable() and  isOneOfSSTPids()_;
 - `Notification service & Mutual esclusion handling`: 
 _notify(), gainSwapMutex() and releaseSwapMutex()_.
 
 ## P3test
-This file serves as the main test for the phase 3, it follow a simple schema: initialization, execution of the process's request and termination (after beeing notified).  
+This file serves as the main test for the phase 3, it follow a simple schema: initialization, execution of the process's request and termination (after being notified).  
 ```c
 void test3() {
   test_process = current_process;
@@ -386,12 +386,12 @@ void test3() {
    *     – The Swap Pool table and a Swap Mutex process that must provide mutex access to the
    *        swap table using message passing [Section 4.1].
    *     – Each (potentially) sharable peripheral I/O device can have a process for it. These process
-   *        will be used to receive complex requests (i.e. to write of a string to a terminal) and request
+   *        will be used to receive complex requests (i.e. to write a string to a terminal) and request
    *        the correct DoIO service to the SSI (this feature is optional and can be delegated directly
    *        to the SST processes to simplify the project).
    *  • Initialize and launch eight SST, one for each U-procs.
    *  • Terminate after all of its U-proc “children” processes conclude. This will drive Process Count
-   *      to one, triggering the Nucleus to invoke HALT. Wait for 8 messages, that should be send when
+   *      to one, triggering the Nucleus to invoke HALT. Wait for 8 messages, that should be sent when
    *      each SST is terminated.
    */
 
