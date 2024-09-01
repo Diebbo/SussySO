@@ -226,7 +226,7 @@ default:
 ```
 
 ### User System Call Handler
-The user system call handler act as a wrapper for communication between user process and kernel, infact it 'wraps' both the `SENDMESSAGE`
+The user system call handler act as a wrapper for communication between user process and kernel, in fact it 'wraps' both the `SENDMESSAGE`
 ```c
 ...
 case SENDMSG:
