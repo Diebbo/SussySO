@@ -21,7 +21,7 @@ void initSSTs(void);
 /*return TimeOfDay in microseconds*/
 cpu_t getTOD(void);
 /*kill SST and its child*/
-void killSST(pcb_PTR sender);
+void killSST(int asid);
 // print a string to the printer with the same number of the sender ASID
 void writeOnPrinter(sst_print_PTR arg, unsigned asid);
 // print a string to the terminal with the same number of the sender ASID

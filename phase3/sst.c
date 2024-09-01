@@ -25,8 +25,7 @@ void sstEntry() {
   support_t *sst_support = getSupportData();
   state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
 
-  child_pcb[sst_support->sup_asid - 1] =
-      initUProc(u_proc_prole, sst_support);
+  child_pcb[sst_support->sup_asid - 1] = initUProc(u_proc_prole, sst_support);
   // get the message from someone - user process
   // handle
   // reply
@@ -59,7 +58,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * Remember to send a message to the test process to
      * communicate the termination of the SST.
      */
-    killSST(sender);
+    killSST(sender->p_supportStruct->sup_asid);
     break;
   case WRITEPRINTER:
     /* This service cause the print of a string of characters
@@ -95,29 +94,30 @@ cpu_t getTOD() {
   return tod_time;
 }
 
-void killSST(pcb_PTR sender) {
-  if (sender != NULL) {
-    // terminate the sender
-    terminateProcess(sender);
-  }
+void killSST(int asid) {
   notify(test_process);
 
+  // invalidate the page table
+  invalidateUProcPageTable(sst_pcb[asid]->p_supportStruct);
+
+  // kill the sst and its child
   terminateProcess(SELF);
 }
 
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
   // write the string on the printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid-1),
-        PRINTER, asid);
+  write(arg->string, arg->length,
+        (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER, asid);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
   // write the string on t RECEIVEMSG, he printer
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid-1),
-        TERMINAL, asid);
+  write(arg->string, arg->length,
+        (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid - 1), TERMINAL, asid);
 }
 
-void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, int asid) {
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to,
+           int asid) {
   int i = 0;
   unsigned status;
   // check if it's a terminal or a printer
@@ -152,9 +152,11 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
 
     // device not ready -> error!
     if (write_to == TERMINAL && status != OKCHARTRANS) {
-      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      programTrapExceptionHandler(
+          &(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
     } else if (write_to == PRINTER && status != DEVRDY) {
-      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      programTrapExceptionHandler(
+          &(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
     }
 
     msg++;

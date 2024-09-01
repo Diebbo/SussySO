@@ -133,3 +133,34 @@ void terminateProcess(pcb_PTR arg){
 void notify(pcb_PTR process){
   SYSCALL(SENDMESSAGE, (unsigned int)process, 0, 0);
 }
+
+void invalidateUProcPageTable(support_t *support) {
+  // invalidate the page table
+  for (int i = 0; i < MAXPAGES; i++) {
+    pteEntry_t *entry = &support->sup_privatePgTbl[i];
+    // check if the page isn't valid, so we can skip it
+    if (!(entry->pte_entryLO & VALIDON)){
+      continue;
+    }
+
+    // invalidate the TLB
+    setENTRYHI(entry->pte_entryHI);
+    TLBP();
+    // check if the page is already in the TLB
+    unsigned not_present = getINDEX() & PRESENTFLAG;
+    if (!not_present) {
+      // the page is in the TLB, so we need to invalidate it
+      setENTRYHI(entry->pte_entryHI);
+      setENTRYLO(entry->pte_entryLO);
+      TLBWI();
+    }
+  }
+
+  // invalidate the swap pool
+  for (int i = 0; i < MAXPAGES; i++) {
+    if (swap_pool[i].sw_asid == support->sup_asid) {
+      swap_pool[i].sw_asid = NOPROC;
+    }
+  }
+}
+
