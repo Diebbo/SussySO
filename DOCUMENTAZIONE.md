@@ -305,15 +305,16 @@ cpu_t getTOD() {
   return tod_time;
 }
 ```
-- `Terminate`: his service causes the sender U-proc and its SST (its parent) to cease to exist. It is essentially a SST
-“wrapper” for the SSI service TerminateProcess.
+- `Terminate`: this service causes the sender U-proc and its SST (its parent) to cease to exist. It is essentially a SST
+“wrapper” for the SSI service TerminateProcess. It also marks all of the frames in the swap poll from _occupied_ to **unoccupied**: this is accomplished by atomically setting the swap pool entry asid to `NOPROC`(-1).
 ```c
 void killSST(pcb_PTR sender) {
-  if (sender != NULL) {
-    // terminate the sender
-    terminateProcess(sender);
-  }
   notify(test_process);
+
+  // invalidate the page table
+  invalidateUProcPageTable(sst_pcb[asid]->p_supportStruct);
+
+  // kill the sst and its child
   terminateProcess(SELF);
 }
 ```
@@ -368,7 +369,7 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
 ## Stdlib
 this file serves as the main container of useful functions that are used thru phase 3 of the project such as:
 - `Initializations functions`: _initUprocPageTable(), initFreeStackTop(), initUProc() and defaultSupportData()_;
-- `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess() and  isOneOfSSTPids()_;
+- `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess(), updateTLB(), invalidateUProcPageTable() and  isOneOfSSTPids()_;
 - `Notification service & Mutual esclusion handling`: 
 _notify(), gainSwapMutex() and releaseSwapMutex()_.
 
