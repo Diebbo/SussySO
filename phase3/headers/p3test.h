@@ -14,6 +14,7 @@ extern pcb_t *current_process;
 
 // test phase 3 ('Istantiator process')
 void test3(void);
+
 // func. tu init. 8 support struct
 void initSupportArray(void);
 
