@@ -133,3 +133,33 @@ void terminateProcess(pcb_PTR arg){
 void notify(pcb_PTR process){
   SYSCALL(SENDMESSAGE, (unsigned int)process, 0, 0);
 }
+
+void invalidateUProcPageTable(support_t *support) {
+  OFFINTERRUPTS();
+  gainSwapMutex();
+
+  // invalidate the swap pool
+  for (int i = 0; i < POOLSIZE; i++) {
+    if (swap_pool[i].sw_asid == support->sup_asid) {
+      swap_pool[i].sw_asid = NOPROC;
+    }
+  }
+
+  releaseSwapMutex();
+  ONINTERRUPTS();
+}
+
+void updateTLB(pteEntry_t *page) {
+  // place the new page in the Data0 register
+  setENTRYHI(page->pte_entryHI);
+  TLBP();
+  // check if the page is already in the TLB
+  unsigned not_present = getINDEX() & PRESENTFLAG;
+  // if the variable is 1, the page is not in the TLB
+  if (not_present == FALSE) {
+    // the page is in the TLB, so we update it
+    setENTRYHI(page->pte_entryHI);
+    setENTRYLO(page->pte_entryLO);
+    TLBWI();
+  }
+}
