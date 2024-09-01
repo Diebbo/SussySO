@@ -114,7 +114,7 @@ It's important to ensure that the operations performed by the pager are atomic, 
 #define OFFINTERRUPTS() setSTATUS(getSTATUS() & (~MSTATUS_MIE_MASK))
 #define ONINTERRUPTS() setSTATUS(getSTATUS() | MSTATUS_MIE_MASK)
 ```
-We also need to ensure that the operations performed by the pager are thread-safe, so we use a mutex to ensure that only one pager can run at a time: that's accomplished by calling the `gainSwapMutex` and `releaseSwapMutex` functions, which acquire and release the mutex usign message passing.
+We also need to ensure that the operations performed by the pager are thread-safe, so we use a mutex to ensure that only one pager can run at a time: that's accomplished by calling the `gainSwapMutex` and `releaseSwapMutex` functions, which acquire and release the mutex using message passing.
 
 ### Swap Pool
 The swap pool is a data structure that is used to store the pages that are swapped out of the memory. It is used by the pager to store the pages that are evicted from the memory when a page fault occurs. The swap pool is implemented as an array of swap pool entries, where each entry contains the address of the page in the backing store, the ASID of the process that owns the page, and the page number of the page in the backing store.
@@ -226,7 +226,7 @@ default:
 ```
 
 ### User System Call Handler
-The user system call handler act as a wrapper for comunication between user process and kernel, infact it 'wraps' both the `SENDMESSAGE`
+The user system call handler act as a wrapper for communication between user process and kernel, in fact it 'wraps' both the `SENDMESSAGE`
 ```c
 ...
 case SENDMSG:
