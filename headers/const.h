@@ -268,7 +268,7 @@
 #define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
 #define PARENT 0
 
-// kill myself
+// kill myself, completing the project
 #define SELF NULL
 
 #endif
