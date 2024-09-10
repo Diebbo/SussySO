@@ -32,6 +32,7 @@ void supportExceptionHandler() {
 
   switch (exception_code)
   {
+  case 11:
   case SYSEXCEPTION:
     UsysCallHandler(exception_state, current_support->sup_asid);
     break;

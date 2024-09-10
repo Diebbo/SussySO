@@ -113,7 +113,6 @@
 #define TLBINVLDL      2
 #define TLBINVLDS      3
 #define SYSEXCEPTION   8
-#define USERINSTR      8
 #define BREAKEXCEPTION 9
 #define PRIVINSTR      10
 #define CAUSESHIFT     2
@@ -268,7 +267,7 @@
 #define DEVINDEX(ip_line, dev_no) (IPLINE(ip_line) * 8 + dev_no)
 #define PARENT 0
 
-// kill myself, completing the project
+// kill myself
 #define SELF NULL
 
 #endif

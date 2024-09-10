@@ -34,4 +34,6 @@ unsigned readBackingStoreFromPage(memaddr missing_page_addr, unsigned asid, unsi
 
 unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid, unsigned page_no);
 
+// insert page into TLB, if not present
+void updateTLB(pteEntry_t *page);
 #endif

@@ -83,6 +83,13 @@ void waitTermination(pcb_PTR *ssts){
   }
 }
 
+void terminateAll(){
+  for(int i=0; i<8; i++){
+    SYSCALL(RECEIVEMSG,ANYMESSAGE,0,0);
+  }
+  PANIC();
+}
+
 pcb_PTR allocSwapMutex(void){
   STST(&swap_st);
   swap_st.reg_sp = getCurrentFreeStackTop();

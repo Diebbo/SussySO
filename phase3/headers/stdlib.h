@@ -69,14 +69,7 @@ void defaultSupportData(support_t *, int);
 // assign the current stack top and decrement it
 memaddr getCurrentFreeStackTop(void);
 
-// set the current stack top to the first free stack page
 void initFreeStackTop(void);
-
-// invalidate the page table of the current process, tbl and swap pool
-void invalidateUProcPageTable(support_t *support);
-
-// insert page into TLB, if not present
-void updateTLB(pteEntry_t *page);
 
 extern void pager();
 
