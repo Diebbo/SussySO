@@ -69,7 +69,20 @@ void defaultSupportData(support_t *, int);
 // assign the current stack top and decrement it
 memaddr getCurrentFreeStackTop(void);
 
-// set the current stack top to the first free stack page
+// init the pcb of the print process
+pcb_PTR initPrintProcess(support_t *);
+
+// entry function of each print process
+void printEntry();
+
+// print a string to the printer with the same number of the sender ASID
+void writeOnPrinter(sst_print_PTR arg, unsigned asid);
+// print a string to the terminal with the same number of the sender ASID
+void writeOnTerminal(sst_print_PTR arg, unsigned asid);
+// write a string to a device
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to);
+
+// init the free stack top
 void initFreeStackTop(void);
 
 // invalidate the page table of the current process, tbl and swap pool
@@ -81,4 +94,7 @@ void updateTLB(pteEntry_t *page);
 extern void pager();
 
 extern void supportExceptionHandler(void);
+
+extern void programTrapExceptionHandler(state_t *exception_state);
+
 #endif // !STD_LIB_H

@@ -11,6 +11,7 @@ pcb_PTR test_process;
 state_t swap_st;
 support_t swap_sup;
 
+pcb_PTR print_pcb[MAXSSTNUM];
 
 void test3() {
   test_process = current_process;

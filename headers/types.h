@@ -109,4 +109,9 @@ typedef struct sst_print_t
     char *string;
 } sst_print_t, *sst_print_PTR;
 
+enum writet {
+  TERMINAL,
+  PRINTER
+};
+
 #endif

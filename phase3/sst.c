@@ -25,7 +25,12 @@ void sstEntry() {
   support_t *sst_support = getSupportData();
   state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
 
-  child_pcb[sst_support->sup_asid - 1] = initUProc(u_proc_prole, sst_support);
+  child_pcb[sst_support->sup_asid - 1] =
+      initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
+
+  // init the print process
+  print_pcb[sst_support->sup_asid - 1] = initPrintProcess(sst_support);
+
   // get the message from someone - user process
   // handle
   // reply
@@ -65,15 +70,16 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * to the printer with the same number of the sender
      * ASID.
      */
-    writeOnPrinter((sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
-    has_to_reply = TRUE;
-    break;
   case WRITETERMINAL:
     /* This service cause the print of a string of characters
      * to the terminal with the same number of the sender
      * ASID.
      */
-    writeOnTerminal((sst_print_PTR)arg, sender->p_supportStruct->sup_asid);
+    SYSCALL(SENDMESSAGE,
+            (unsigned int)print_pcb[sender->p_supportStruct->sup_asid - 1],
+            (unsigned int)arg, 0);
+    SYSCALL(RECEIVEMESSAGE, print_pcb[sender->p_supportStruct->sup_asid - 1],
+            0, 0);
     has_to_reply = TRUE;
     break;
   default:
@@ -102,64 +108,4 @@ void killSST(int asid) {
 
   // kill the sst and its child
   terminateProcess(SELF);
-}
-
-void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
-  // write the string on the printer
-  write(arg->string, arg->length,
-        (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER, asid);
-}
-
-void writeOnTerminal(sst_print_PTR arg, unsigned int asid) {
-  // write the string on t RECEIVEMSG, he printer
-  write(arg->string, arg->length,
-        (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid - 1), TERMINAL, asid);
-}
-
-void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to,
-           int asid) {
-  int i = 0;
-  unsigned status;
-  // check if it's a terminal or a printer
-  unsigned *command = write_to == TERMINAL ? &(devAddrBase->term.transm_command)
-                                           : &(devAddrBase->dtp.command);
-
-  while (TRUE) {
-    if ((*msg == EOS) || (i >= lenght)) {
-      break;
-    }
-
-    unsigned int value;
-
-    if (write_to == TERMINAL) {
-      value = PRINTCHR | (((unsigned int)*msg) << 8);
-    } else {
-      value = PRINTCHR;
-      devAddrBase->dtp.data0 = *msg;
-    }
-
-    ssi_do_io_t do_io = {
-        .commandAddr = command,
-        .commandValue = value,
-    };
-    ssi_payload_t payload = {
-        .service_code = DOIO,
-        .arg = &do_io,
-    };
-
-    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
-
-    // device not ready -> error!
-    if (write_to == TERMINAL && status != OKCHARTRANS) {
-      programTrapExceptionHandler(
-          &(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
-    } else if (write_to == PRINTER && status != DEVRDY) {
-      programTrapExceptionHandler(
-          &(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
-    }
-
-    msg++;
-    i++;
-  }
 }
