@@ -5,10 +5,11 @@ pcb_PTR child_pcb[MAXSSTNUM]; // debug purpose
 memaddr current_stack_top;
 state_t sst_st[MAXSSTNUM];
 state_t u_proc_state[MAXSSTNUM];
+state_t print_state[MAXSSTNUM];
 
 void initSSTs() {
   // init of the 8 sst process
-  for (int i = 0; i < MAXSSTNUM; i++) {
+  for (int i = 0; i < 1; i++) {
     STST(&sst_st[i]);
     sst_st[i].entry_hi = (i + 1) << ASIDSHIFT;
     sst_st[i].reg_sp = getCurrentFreeStackTop();
@@ -23,13 +24,12 @@ void initSSTs() {
 void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
-  state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
 
   child_pcb[sst_support->sup_asid - 1] =
       initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
 
   // init the print process
-  print_pcb[sst_support->sup_asid - 1] = initPrintProcess(sst_support);
+  print_pcb[sst_support->sup_asid - 1] = initPrintProcess(&print_state[sst_support->sup_asid - 1], sst_support);
 
   // get the message from someone - user process
   // handle
@@ -75,10 +75,11 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg) {
      * to the terminal with the same number of the sender
      * ASID.
      */
+    ssi_payload_t print_payload = {service, arg};
     SYSCALL(SENDMESSAGE,
             (unsigned int)print_pcb[sender->p_supportStruct->sup_asid - 1],
-            (unsigned int)arg, 0);
-    SYSCALL(RECEIVEMESSAGE, print_pcb[sender->p_supportStruct->sup_asid - 1],
+            (unsigned int)&print_payload, 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned)print_pcb[sender->p_supportStruct->sup_asid - 1],
             0, 0);
     has_to_reply = TRUE;
     break;

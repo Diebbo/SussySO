@@ -17,6 +17,6 @@ void initSSTs(void);
 /*return TimeOfDay in microseconds*/
 cpu_t getTOD(void);
 /*kill SST and its child*/
-void killSST(pcb_PTR sender);
+void killSST(int asid);
 
 #endif

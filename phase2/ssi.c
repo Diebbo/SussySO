@@ -106,7 +106,6 @@ pcb_PTR Create_Process(pcb_t *sender, struct ssi_create_process_t *arg) {
   insertProcQ(&ready_queue_list, new_prole);
   insertChild(sender, new_prole);
   return new_prole;
-  
 }
 
 unsigned Terminate_Process(pcb_t *sender, pcb_t *target) {

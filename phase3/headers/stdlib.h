@@ -70,7 +70,7 @@ void defaultSupportData(support_t *, int);
 memaddr getCurrentFreeStackTop(void);
 
 // init the pcb of the print process
-pcb_PTR initPrintProcess(support_t *);
+pcb_PTR initPrintProcess(state_t *,support_t *);
 
 // entry function of each print process
 void printEntry();

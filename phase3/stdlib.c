@@ -1,6 +1,4 @@
 #include "headers/stdlib.h"
-#include <uriscv/arch.h>
-#include <uriscv/types.h>
 
 extern memaddr current_stack_top;
 
@@ -56,25 +54,24 @@ memaddr getCurrentFreeStackTop(void) {
   return tmp_stack_top;
 }
 
-pcb_PTR initPrintProcess(support_t *sst_support) {
-  state_t print_state;
-  STST(&print_state);
-  print_state.entry_hi = sst_support->sup_asid << ASIDSHIFT;
-  print_state.pc_epc = (memaddr)printEntry;
-  print_state.reg_sp = getCurrentFreeStackTop();
-  print_state.status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK;
-  print_state.mie = MIE_ALL;
+pcb_PTR initPrintProcess(state_t *print_state, support_t *sst_support) {
+  STST(print_state);
+  print_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
+  print_state->pc_epc = (memaddr)printEntry;
+  print_state->reg_sp = getCurrentFreeStackTop();
+  print_state->status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK;
+  print_state->status &= ~MSTATUS_MPP_MASK; // user mode
+  print_state->mie = MIE_ALL;
 
-  return createChild(&print_state, sst_support);
+  return createChild(print_state, sst_support);
 }
 
 void printEntry() {
-  support_t *sst_support = getSupportData();
-  unsigned int asid = sst_support->sup_asid;
+  int asid = 1;
 
   while (TRUE) {
     ssi_payload_t *print_payload;
-    SYSCALL(RECEIVEMSG, ANYMESSAGE, (unsigned int)(&print_payload), 0);
+    SYSCALL(RECEIVEMSG, PARENT, (unsigned int)(&print_payload), 0);
 
     // handle the print request
     switch (print_payload->service_code) {
