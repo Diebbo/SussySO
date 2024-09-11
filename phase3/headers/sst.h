@@ -6,7 +6,7 @@
 extern pcb_PTR sst_pcb[MAXSSTNUM];
 extern pcb_PTR test_process;
 extern pcb_PTR print_pcb[MAXSSTNUM];
-extern void programTrapExceptionHandler(state_t *exception_state);
+extern void programTrapExceptionHandler();
 
 /*SST utility*/
 void sstEntry(void);

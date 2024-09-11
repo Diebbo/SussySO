@@ -79,7 +79,7 @@ void initSupportArray(){
 }
 
 void waitTermination(pcb_PTR *ssts){
-  for(int i=0; i<MAXSSTNUM; i++){
+  for(int i=0; i < MAXSSTNUM; i++){
     SYSCALL(RECEIVEMESSAGE, (unsigned)ssts[i],0,0);
   }
 }

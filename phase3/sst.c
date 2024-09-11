@@ -9,7 +9,7 @@ state_t print_state[MAXSSTNUM];
 
 void initSSTs() {
   // init of the 8 sst process
-  for (int i = 0; i < 1; i++) {
+  for (int i = 0; i < MAXSSTNUM; i++) {
     STST(&sst_st[i]);
     sst_st[i].entry_hi = (i + 1) << ASIDSHIFT;
     sst_st[i].reg_sp = getCurrentFreeStackTop();

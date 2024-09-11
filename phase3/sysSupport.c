@@ -1,11 +1,11 @@
 #include "headers/sysSupport.h"
 
 extern pcb_PTR current_process;
-extern pcb_PTR gained_mutex_process;
+extern int gained_mutex_asid;
 
-void programTrapExceptionHandler(state_t *exception_state){
+void programTrapExceptionHandler(support_t *support_data) {
   // check if the program hold the mutex
-  if (gained_mutex_process == current_process) {
+  if (support_data != NULL && gained_mutex_asid == support_data->sup_asid) {
     // release the mutex
     releaseSwapMutex();
   }
@@ -36,7 +36,7 @@ void supportExceptionHandler() {
     UsysCallHandler(exception_state, current_support->sup_asid);
     break;
   default:
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(current_support);
     return; // to avoid skipping the LDST
     break;
   }
@@ -93,7 +93,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
 
     break;
   default:
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(NULL);
     break;
   }
 }

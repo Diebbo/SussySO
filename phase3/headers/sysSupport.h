@@ -4,7 +4,7 @@
 #include "sst.h"
 
 /*function to handle program trap exception*/
-void programTrapExceptionHandler(state_t *exception_state);
+void programTrapExceptionHandler(support_t* support_data);
 
 /*pussed up exception handling*/
 void supportExceptionHandler(void);

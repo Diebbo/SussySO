@@ -60,6 +60,9 @@ int isOneOfSSTPids(int pid);
 // terminate a process
 void terminateProcess(pcb_PTR);
 
+// send message to parent to terminate
+void terminateParent(void);
+
 // send void message to the process
 void notify(pcb_PTR);
 
@@ -95,6 +98,6 @@ extern void pager();
 
 extern void supportExceptionHandler(void);
 
-extern void programTrapExceptionHandler(state_t *exception_state);
+extern void programTrapExceptionHandler();
 
 #endif // !STD_LIB_H

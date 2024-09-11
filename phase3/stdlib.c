@@ -59,19 +59,22 @@ pcb_PTR initPrintProcess(state_t *print_state, support_t *sst_support) {
   print_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
   print_state->pc_epc = (memaddr)printEntry;
   print_state->reg_sp = getCurrentFreeStackTop();
-  print_state->status |= MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK;
-  print_state->status &= ~MSTATUS_MPP_MASK; // user mode
+  print_state->status =
+      MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_MASK;
+  // print_state->status &= ~MSTATUS_MPP_MASK; // user mode
   print_state->mie = MIE_ALL;
 
   return createChild(print_state, sst_support);
 }
 
 void printEntry() {
-  int asid = 1;
+  support_t *support = getSupportData();
+  int asid = support->sup_asid;
 
   while (TRUE) {
     ssi_payload_t *print_payload;
-    SYSCALL(RECEIVEMSG, PARENT, (unsigned int)(&print_payload), 0);
+    pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE,
+                                      (unsigned int)(&print_payload), 0);
 
     // handle the print request
     switch (print_payload->service_code) {
@@ -92,16 +95,18 @@ void printEntry() {
     }
 
     // notify the sender that the print is done
-    SYSCALL(SENDMSG, PARENT, 0, 0);
+    SYSCALL(SENDMESSAGE, (unsigned)sender, 0, 0);
   }
 }
 
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid), PRINTER);
+  write(arg->string, arg->length,
+        (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned asid) {
-  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid), TERMINAL);
+  write(arg->string, arg->length,
+        (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid - 1), TERMINAL);
 }
 
 void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
@@ -134,20 +139,30 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
         .arg = &do_io,
     };
 
-    SYSCALL(SENDMSG, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
-    SYSCALL(RECEIVEMSG, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
+    SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
+    SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&status), 0);
 
     // device not ready -> error!
     if (write_to == TERMINAL && status != OKCHARTRANS) {
-      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      terminateParent();
     } else if (write_to == PRINTER && status != DEVRDY) {
-      programTrapExceptionHandler(&(ssi_pcb->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      terminateParent();
     }
 
     msg++;
     i++;
   }
 }
+
+void terminateParent(void) {
+  ssi_payload_t term_payload = {
+      .service_code = TERMPROCESS,
+      .arg = (void *)NULL,
+  };
+  SYSCALL(SENDMSG, PARENT, (unsigned)&term_payload, 0);
+  SYSCALL(RECEIVEMSG, PARENT, 0, 0);
+}
+
 // initialization of a single user process
 pcb_PTR initUProc(state_t *u_proc_state, support_t *sst_support) {
   /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The

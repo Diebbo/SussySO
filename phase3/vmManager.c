@@ -1,7 +1,7 @@
 #include "./headers/vmManager.h"
 
 pcb_PTR swap_mutex;
-pcb_PTR gained_mutex_process; // debug purpose
+int gained_mutex_asid = -1; // debug purpose
 
 // swap pool
 swap_t swap_pool[POOLSIZE];
@@ -25,7 +25,9 @@ void entrySwapFunction() {
     // wait for a swap request
     unsigned int process_requesting_swap = SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, 0, 0);
 
-    gained_mutex_process = (pcb_PTR)process_requesting_swap;
+    pcb_PTR process = (pcb_PTR)process_requesting_swap;
+
+    gained_mutex_asid = process->p_supportStruct->sup_asid;
 
     // giving the process the swap mutex
     SYSCALL(SENDMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
@@ -33,7 +35,7 @@ void entrySwapFunction() {
     SYSCALL(RECEIVEMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
     
     // released the swap mutex
-    gained_mutex_process = NULL;
+    gained_mutex_asid = -1;
   }
 }
 
@@ -49,7 +51,7 @@ void pager(void) {
   // check if the exception is a TLB-Modification exception
   if (cause == TLBMOD) {
     // treat this exception as a program trap
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(NULL);
   }
 
   gainSwapMutex();
@@ -85,7 +87,7 @@ void pager(void) {
     status = writeBackingStore(victim_page_addr, swap_pool[victim_frame].sw_asid,
                                swap_pool[victim_frame].sw_pageNo);
     if (status != DEVRDY) {
-      programTrapExceptionHandler(exception_state);
+      programTrapExceptionHandler(NULL);
     }
 
   }
@@ -96,7 +98,7 @@ void pager(void) {
 
   if (status != DEVRDY) // operation failed
   {
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(NULL);
   }
 
   // update the swap pool table
