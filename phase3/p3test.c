@@ -70,6 +70,8 @@ void initSupportArray(){
    *      of 500 is a 2Kb area.
    *   • sup_stackGen[500]: The stack area for the process’s Support Level general exception handler.
    * 
+   * 
+   * NOTE: (ASID 0 is reserved for kernel daemons, so the (up to) eight U-proc’s should be assigned ASID values from [1..8].)
    */
   for(int asid=1; asid<=MAXSSTNUM; asid++){
     defaultSupportData(&support_arr[asid-1], asid);

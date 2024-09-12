@@ -4,6 +4,19 @@ extern memaddr current_stack_top;
 
 // init and fill the support page table with the correct values
 void initUprocPageTable(pteEntry_t *tbl, int asid) {
+  /**
+   * To initialize a Page Table one needs to set the VPN, ASID, V, and D bit fields for each Page Table
+   * entry [Section 6.3.2-pops].
+   * •The VPN field will be set to [0x80000..0x8001E] for the first 31 entries. The VPN for the stack
+   *  page (Page Table entry 31) should be set to 0xBFFFF - the starting address whose top end is
+   *  0xC000.0000 (the value that SP is initialized to).
+   * •The ASID field, for any given Page Table, will all be set to the U-proc’s unique ID, an integer
+   *  from [1..8].
+   * •The D bit field will be set to 1 (on) - each page is write-enabled.
+   * •The G bit field will be set to 1 (off) - these pages are private to the specific ASID.
+   * •The V bit field will be set to 0 (off) - the entry is NOT valid. For example, a copy of this page
+   *  is not also currently residing in RAM.
+   */
   for (int i = 0; i < MAXPAGES; i++) {
     tbl[i].pte_entryHI = KUSEG | (i << VPNSHIFT) | (asid << ASIDSHIFT);
     tbl[i].pte_entryLO = DIRTYON;
@@ -33,17 +46,12 @@ void defaultSupportData(support_t *support_data, int asid) {
   support_data->sup_asid = asid;
 
   support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr)pager;
-  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr =
-      getCurrentFreeStackTop();
-  support_data->sup_exceptContext[PGFAULTEXCEPT].status =
-      MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK;
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
+  support_data->sup_exceptContext[PGFAULTEXCEPT].status = MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK;
 
-  support_data->sup_exceptContext[GENERALEXCEPT].pc =
-      (memaddr)supportExceptionHandler;
-  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr =
-      getCurrentFreeStackTop();
-  support_data->sup_exceptContext[GENERALEXCEPT].status =
-      MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+  support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr)supportExceptionHandler;
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr =getCurrentFreeStackTop();
+  support_data->sup_exceptContext[GENERALEXCEPT].status = MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
 
   initUprocPageTable(support_data->sup_privatePgTbl, asid);
 }
@@ -79,9 +87,7 @@ void termEntry() {
 
   while (TRUE) {
     sst_print_PTR print_payload;
-    pcb_PTR sender =
-        (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1],
-                         (unsigned int)(&print_payload), 0);
+    pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1], (unsigned int)(&print_payload), 0);
 
     writeOnTerminal(print_payload, asid);
 
@@ -96,9 +102,7 @@ void printEntry() {
 
   while (TRUE) {
     sst_print_PTR print_payload;
-    pcb_PTR sender =
-        (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1],
-                         (unsigned int)(&print_payload), 0);
+    pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1], (unsigned int)(&print_payload), 0);
 
     writeOnPrinter(print_payload, asid);
 
@@ -108,13 +112,11 @@ void printEntry() {
 }
 
 void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
-  write(arg->string, arg->length,
-        (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER);
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER);
 }
 
 void writeOnTerminal(sst_print_PTR arg, unsigned asid) {
-  write(arg->string, arg->length,
-        (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid - 1), TERMINAL);
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_TERMINAL, asid - 1), TERMINAL);
 }
 
 void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
@@ -140,12 +142,12 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
     }
 
     ssi_do_io_t do_io = {
-        .commandAddr = command,
-        .commandValue = value,
+      .commandAddr = command,
+      .commandValue = value,
     };
     ssi_payload_t payload = {
-        .service_code = DOIO,
-        .arg = &do_io,
+      .service_code = DOIO,
+      .arg = &do_io,
     };
 
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
@@ -165,8 +167,8 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
 
 void terminateParent(void) {
   ssi_payload_t term_payload = {
-      .service_code = TERMPROCESS,
-      .arg = (void *)NULL,
+    .service_code = TERMPROCESS,
+    .arg = (void *)NULL,
   };
   SYSCALL(SENDMSG, PARENT, (unsigned)&term_payload, 0);
   SYSCALL(RECEIVEMSG, PARENT, 0, 0);
@@ -174,15 +176,15 @@ void terminateParent(void) {
 
 // initialization of a single user process
 pcb_PTR initUProc(state_t *u_proc_state, support_t *sst_support) {
-  /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The
-   * ssi_create_process_t that two parameters: • A pointer to the initial
-   * processor state for the U-proc. • A pointer to an initialized Support
-   * Structure for the U-proc. Initial Processor State for a U-proc; Each
-   * U-proc’s initial processor state should have its: • PC (and s_t9) set to
-   * 0x8000.00B0; the address of the start of the .text section
-   * [Section 10.3.1-pops]. • SP set to 0xC000.0000 [Section 2]. • Status set
-   * for user-mode with all interrupts and the processor Local Timer enabled. •
-   * EntryHi.ASID set to the process’s unique ID; an integer from [1..8]
+  /*To launch a U-proc, one simply requests a CreateProcess to the SSI. The ssi_create_process_t
+   * that two parameters:
+   *  • A pointer to the initial processor state for the U-proc.
+   *  • A pointer to an initialized Support Structure for the U-proc.
+   * Initial Processor State for a U-proc; Each U-proc’s initial processor state should have its:
+   *  • PC (and s_t9) set to 0x8000.00B0; the address of the start of the .text section [Section 10.3.1-pops].
+   *  • SP set to 0xC000.0000 [Section 2].
+   *  • Status set for user-mode with all interrupts and the processor Local Timer enabled.
+   *  • EntryHi.ASID set to the process’s unique ID; an integer from [1..8]
    * Important: Each U-proc MUST be assigned a unique, non-zero ASID.
    */
   STST(u_proc_state);
@@ -201,13 +203,11 @@ pcb_PTR initUProc(state_t *u_proc_state, support_t *sst_support) {
 support_t *getSupportData(void) {
   support_t *support_data;
   ssi_payload_t getsup_payload = {
-      .service_code = GETSUPPORTPTR,
-      .arg = NULL,
+    .service_code = GETSUPPORTPTR,
+    .arg = NULL,
   };
-  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload),
-          0);
-  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&support_data),
-          0);
+  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&getsup_payload), 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&support_data), 0);
   return support_data;
 }
 
@@ -215,12 +215,12 @@ support_t *getSupportData(void) {
 pcb_t *createChild(state_t *s, support_t *sup) {
   pcb_t *p;
   ssi_create_process_t ssi_create_process = {
-      .state = s,
-      .support = sup,
+    .state = s,
+    .support = sup,
   };
   ssi_payload_t payload = {
-      .service_code = CREATEPROCESS,
-      .arg = &ssi_create_process,
+    .service_code = CREATEPROCESS,
+    .arg = &ssi_create_process,
   };
   SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)&payload, 0);
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&p), 0);
@@ -245,11 +245,10 @@ int isOneOfSSTPids(int pid) {
 
 void terminateProcess(pcb_PTR arg) {
   ssi_payload_t term_process_payload = {
-      .service_code = TERMPROCESS,
-      .arg = (void *)arg,
+    .service_code = TERMPROCESS,
+    .arg = (void *)arg,
   };
-  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb,
-          (unsigned int)(&term_process_payload), 0);
+  SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&term_process_payload), 0);
   SYSCALL(RECEIVEMESSAGE, (unsigned int)ssi_pcb, 0, 0);
 }
 

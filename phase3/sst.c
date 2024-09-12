@@ -24,34 +24,28 @@ void initSSTs() {
 void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
-
-  child_pcb[sst_support->sup_asid - 1] =
-      initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
+  child_pcb[sst_support->sup_asid - 1] = initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
 
   // init the print process
-  print_pcb[sst_support->sup_asid - 1] =
-      initPrintProcess(&print_state[sst_support->sup_asid - 1], sst_support);
+  print_pcb[sst_support->sup_asid - 1] = initPrintProcess(&print_state[sst_support->sup_asid - 1], sst_support);
 
   // init the term process
-  term_pcb[sst_support->sup_asid - 1] =
-      initTermProcess(&term_state[sst_support->sup_asid - 1], sst_support);
+  term_pcb[sst_support->sup_asid - 1] = initTermProcess(&term_state[sst_support->sup_asid - 1], sst_support);
 
   // get the message from someone - user process
   // handle
   // reply
   while (TRUE) {
     ssi_payload_PTR process_request_payload;
-    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(
-        RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
-    sstRequestHandler(
-        process_request_ptr, process_request_payload->service_code,
-        process_request_payload->arg, print_pcb[sst_support->sup_asid - 1],
-        term_pcb[sst_support->sup_asid - 1]);
+    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
+    sstRequestHandler(process_request_ptr, process_request_payload->service_code, 
+                      process_request_payload->arg,
+                      print_pcb[sst_support->sup_asid - 1],
+                      term_pcb[sst_support->sup_asid - 1]);
   }
 }
 
-void sstRequestHandler(pcb_PTR sender, int service, void *arg,
-                       pcb_PTR print_process, pcb_PTR term_process) {
+void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_process, pcb_PTR term_process) {
   void *res_payload = NULL;
   unsigned has_to_reply = FALSE;
   switch (service) {
@@ -89,7 +83,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg,
     has_to_reply = TRUE;
     break;
   default:
-    // error
+    // error!
     terminateProcess(SELF); // terminate the SST and child
     break;
   }
@@ -108,8 +102,8 @@ void print(unsigned code, sst_print_PTR arg, pcb_PTR print_process) {
     string[i] = arg->string[i];
   }
   sst_print_t printing = {
-      .string = string,
-      .length = length,
+    .string = string,
+    .length = length,
   };
   SYSCALL(SENDMESSAGE, (unsigned int)print_process, (unsigned int)&printing, 0);
   SYSCALL(RECEIVEMESSAGE, (unsigned)print_process, 0, 0);

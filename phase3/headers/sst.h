@@ -11,7 +11,7 @@ extern void programTrapExceptionHandler();
 /*SST utility*/
 void sstEntry(void);
 /*SST server entry point*/
-void sstRequestHandler();
+void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_process, pcb_PTR term_process);
 /*initialize ith SST and its process*/
 void initSSTs(void);
 /*return TimeOfDay in microseconds*/

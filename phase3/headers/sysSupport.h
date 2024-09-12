@@ -5,7 +5,6 @@
 
 /*function to handle program trap exception*/
 void programTrapExceptionHandler(support_t* support_data);
-
 /*pussed up exception handling*/
 void supportExceptionHandler(void);
 /*function similar to the one in ssi but for sst msg handling*/

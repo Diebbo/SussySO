@@ -13,25 +13,19 @@ extern void TrapExceptionHandler(state_t *);
 void initSwapPool(void);
 
 // retrun true if the frame is free
-unsigned isSwapPoolFrameFree(unsigned);
-
-// support level TLB handler
-void sTLB_RefillHandler(void);
-
+unsigned isSwapPoolFrameFree(unsigned frame);
 // support level PGM handler
 void pager(void);
-
 // entry point function for mutex swap process
-void entrySwapFunction();
-
+void entrySwapFunction(void);
 // get frame from swap pool
-unsigned getFrameFromSwapPool();
+unsigned getFrameFromSwapPool(void);
 
-// flash operation
+// flash drive operations
 unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid, unsigned page_number);
-
+// read from backing store (flash device)
 unsigned readBackingStoreFromPage(memaddr missing_page_addr, unsigned asid, unsigned page_number);
-
+// write to backing store (flash device)
 unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid, unsigned page_no);
 
 #endif
