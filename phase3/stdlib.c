@@ -2,6 +2,32 @@
 
 extern memaddr current_stack_top;
 
+support_t support_arr[MAXSSTNUM];
+struct list_head free_supports;
+
+support_t *allocateSupport(void) {
+  static int asid = 1;
+  if (list_empty(&free_supports) || asid > MAXSSTNUM) {
+    return NULL;
+  }
+
+  struct list_head *head = free_supports.next;
+  list_del(head);
+  support_t *s = container_of(head, support_t, s_list);
+  s->sup_asid = asid++;
+
+  defaultSupportData(s, s->sup_asid);
+  return s;
+}
+
+void deallocateSupport(support_t *s) {
+  if (s->sup_asid != 0) {
+    invalidateUProcPageTable(s->sup_asid);
+  }
+
+  list_add(&s->s_list, &free_supports);
+}
+
 // init and fill the support page table with the correct values
 void initUprocPageTable(pteEntry_t *tbl, int asid) {
   /**
@@ -54,6 +80,8 @@ void defaultSupportData(support_t *support_data, int asid) {
   support_data->sup_exceptContext[GENERALEXCEPT].status = MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
 
   initUprocPageTable(support_data->sup_privatePgTbl, asid);
+
+  INIT_LIST_HEAD(&support_data->s_list);
 }
 
 memaddr getCurrentFreeStackTop(void) {

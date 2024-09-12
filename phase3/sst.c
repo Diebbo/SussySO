@@ -17,7 +17,7 @@ pcb_PTR term_pcb[MAXSSTNUM];
 void initSSTs() {
   // init of the 8 sst process
   for (int i = 0; i < MAXSSTNUM; i++) {
-    sst_pcb[i] = initHelper(&sst_st[i], &support_arr[i], sstEntry);
+    sst_pcb[i] = initHelper(&sst_st[i], allocateSupport(), sstEntry);
   }
 }
 
@@ -64,7 +64,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_pro
      * Remember to send a message to the test process to
      * communicate the termination of the SST.
      */
-    killSST(sender->p_supportStruct->sup_asid);
+    killSST(sender->p_supportStruct);
     break;
   case WRITEPRINTER:
     /* This service cause the print of a string of characters
@@ -115,11 +115,11 @@ cpu_t getTOD() {
   return tod_time;
 }
 
-void killSST(int asid) {
+void killSST(support_t *sst_support) {
   notify(test_process);
 
-  // invalidate the page table
-  invalidateUProcPageTable(asid);
+  // deallocate the support struct
+  deallocateSupport(sst_support);
 
   // kill the sst and its child
   terminateProcess(SELF);

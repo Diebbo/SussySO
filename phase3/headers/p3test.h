@@ -10,7 +10,7 @@
 #include "vmManager.h"
 
 // extern ds and func.
-extern pcb_t *current_process;
+extern unsigned current_stack_top;
 
 // test phase 3 ('Istantiator process')
 void test3(void);

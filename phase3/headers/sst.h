@@ -17,7 +17,7 @@ void initSSTs(void);
 /*return TimeOfDay in microseconds*/
 cpu_t getTOD(void);
 /*kill SST and its child*/
-void killSST(int asid);
+void killSST(support_t *sst_support);
 /*print a string to the printer or terminal*/
 void print(unsigned code, sst_print_PTR arg, pcb_PTR print_process);
 

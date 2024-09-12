@@ -1,7 +1,7 @@
 #include "./headers/vmManager.h"
 
 pcb_PTR swap_mutex;
-int gained_mutex_asid = -1; // debug purpose
+int gained_mutex_asid = NOPROC; // debug purpose
 
 /* Swap Pool (allows the system to extend its virtual memory beyond the physical RAM
 by using the disk as a temporary holding place for data.)*/
@@ -70,7 +70,7 @@ void entrySwapFunction() {
     SYSCALL(RECEIVEMESSAGE, (unsigned int)process_requesting_swap, 0, 0);
     
     // released the swap mutex
-    gained_mutex_asid = -1;
+    gained_mutex_asid = NOPROC;
   }
 }
 
@@ -84,7 +84,7 @@ void pager(void) {
   // check if the exception is a TLB-Modification exception
   if (cause == TLBMOD) {
     // treat this exception as a program trap
-    programTrapExceptionHandler(NULL);
+    programTrapExceptionHandler(support_data);
   }
 
   /**

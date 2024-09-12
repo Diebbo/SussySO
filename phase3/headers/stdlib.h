@@ -31,8 +31,8 @@ extern pcb_PTR term_pcb[MAXSSTNUM];
 extern pcb_PTR sst_pcb[MAXSSTNUM];
 // internal phase2 global variables & functions
 extern pcb_PTR ssi_pcb;
-// static support array (NOTE: the support[i] is shared by SST[i] & uProcess[i])
-extern support_t support_arr[MAXSSTNUM];
+// list of free support struct
+extern struct list_head free_supports;
 
 #define OFFINTERRUPTS() setSTATUS(getSTATUS() & (~MSTATUS_MIE_MASK))
 #define ONINTERRUPTS() setSTATUS(getSTATUS() | MSTATUS_MIE_MASK)
@@ -84,6 +84,11 @@ void initFreeStackTop(void);
 void invalidateUProcPageTable(int);
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);
+// return next free support struct
+support_t *allocateSupport(void);
+// insert a support struct into the free list
+void deallocateSupport(support_t *support);
+
 
 /* EXTERN FUNC.*/
 extern void pager();
