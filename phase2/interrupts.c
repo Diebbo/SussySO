@@ -4,6 +4,10 @@
 cpu_t time_interrupt_start;
 
 void interruptHandler(void) {
+  /**
+   * - mie: interrupt enabled bits;
+   * - mip: interrupt pending bits;
+   */
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
   // pending interrupt
@@ -36,8 +40,6 @@ void interruptHandlerNonTimer(unsigned ip_line) {
     */
 
   // 1. Calculate the address for this device’s device register
-  // Tip: to calculate the device snumber you can use a switch among constants
-  // DEVxON
   int dev_no = 0;
 
   unsigned *devices_bit_map = (unsigned *)CDEV_BITMAP_ADDR(ip_line);

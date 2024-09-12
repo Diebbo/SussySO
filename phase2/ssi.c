@@ -32,7 +32,7 @@ void SSI_function_entry_point() {
   while (TRUE) {
     ssi_payload_PTR process_request_payload;
     pcb_PTR process_request_ptr = (pcb_PTR) SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
-    // satysfy request and send back resoults(with a SYSYCALL in SSIRequest)
+    // satysfy request and send back resoults(with a SYSYCALL (in SSIRequest)
     SSI_Request(process_request_ptr, process_request_payload->service_code,process_request_payload->arg);
   }
 }
@@ -128,28 +128,28 @@ unsigned Terminate_Process(pcb_t *sender, pcb_t *target) {
 
 void getDevLineAndNumber(unsigned command_address, unsigned *dev_line, unsigned *dev_no){
   for (int j = 0; j < N_DEV_PER_IL; j++) {
-        termreg_t *base_address = (termreg_t *)DEV_REG_ADDR(IL_TERMINAL, j);
-        if (command_address == (memaddr)&(base_address->recv_command)) {
-            *dev_line = IL_TERMINAL;
-            *dev_no = j;
-            return;
-        } else if (command_address == (memaddr)&(base_address->transm_command)) {
-            *dev_line = IL_TERMINAL;
-            *dev_no = j;
-            return;
-        }
+    termreg_t *base_address = (termreg_t *)DEV_REG_ADDR(IL_TERMINAL, j);
+    if (command_address == (memaddr)&(base_address->recv_command)) {
+      *dev_line = IL_TERMINAL;
+      *dev_no = j;
+      return;
+    } else if (command_address == (memaddr)&(base_address->transm_command)) {
+      *dev_line = IL_TERMINAL;
+      *dev_no = j;
+      return;
     }
+  }
 
   for (int i = DEV_IL_START; i < DEV_IL_START + 7; i++) {
-        for (int j = 0; j < N_DEV_PER_IL; j++) {
-            dtpreg_t *base_address = (dtpreg_t *)DEV_REG_ADDR(i, j);
-            if (command_address == (memaddr)&(base_address->command)) {
-                *dev_line = i;
-                *dev_no = j;
-                return;
-            }
-        }
+    for (int j = 0; j < N_DEV_PER_IL; j++) {
+      dtpreg_t *base_address = (dtpreg_t *)DEV_REG_ADDR(i, j);
+      if (command_address == (memaddr)&(base_address->command)) {
+        *dev_line = i;
+        *dev_no = j;
+        return;
+      }
     }
+  }
 }
 
 unsigned DoIO(pcb_t *sender, ssi_do_io_PTR arg) {
