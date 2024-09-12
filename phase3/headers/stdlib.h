@@ -26,6 +26,9 @@
 // internal global variables
 extern pcb_PTR swap_mutex;
 extern swap_t swap_pool[POOLSIZE];
+extern pcb_PTR print_pcb[MAXSSTNUM];
+extern pcb_PTR term_pcb[MAXSSTNUM];
+extern pcb_PTR sst_pcb[MAXSSTNUM];
 
 // internal phase2 global variables & functions
 extern pcb_PTR ssi_pcb;
@@ -74,9 +77,13 @@ memaddr getCurrentFreeStackTop(void);
 
 // init the pcb of the print process
 pcb_PTR initPrintProcess(state_t *,support_t *);
+pcb_PTR initTermProcess(state_t *,support_t *);
+// generic function for a kernel mode process
+pcb_PTR initHelper(state_t *,support_t *, void *);
 
 // entry function of each print process
 void printEntry();
+void termEntry();
 
 // print a string to the printer with the same number of the sender ASID
 void writeOnPrinter(sst_print_PTR arg, unsigned asid);
@@ -89,7 +96,7 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to);
 void initFreeStackTop(void);
 
 // invalidate the page table of the current process, tbl and swap pool
-void invalidateUProcPageTable(support_t *support);
+void invalidateUProcPageTable(int);
 
 // insert page into TLB, if not present
 void updateTLB(pteEntry_t *page);

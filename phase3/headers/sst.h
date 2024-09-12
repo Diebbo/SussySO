@@ -18,5 +18,7 @@ void initSSTs(void);
 cpu_t getTOD(void);
 /*kill SST and its child*/
 void killSST(int asid);
+/*print a string to the printer or terminal*/
+void print(unsigned code, sst_print_PTR arg, pcb_PTR print_process);
 
 #endif

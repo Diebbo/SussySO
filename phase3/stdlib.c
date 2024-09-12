@@ -55,44 +55,52 @@ memaddr getCurrentFreeStackTop(void) {
 }
 
 pcb_PTR initPrintProcess(state_t *print_state, support_t *sst_support) {
-  STST(print_state);
-  print_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
-  print_state->pc_epc = (memaddr)printEntry;
-  print_state->reg_sp = getCurrentFreeStackTop();
-  print_state->status =
-      MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_MASK;
-  // print_state->status &= ~MSTATUS_MPP_MASK; // user mode
-  print_state->mie = MIE_ALL;
+  return initHelper(print_state, sst_support, printEntry);
+}
 
-  return createChild(print_state, sst_support);
+pcb_PTR initTermProcess(state_t *term_state, support_t *sst_support) {
+  return initHelper(term_state, sst_support, termEntry);
+}
+
+pcb_PTR initHelper(state_t *helper_state, support_t *sst_support, void *entry) {
+  STST(helper_state);
+  helper_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
+  helper_state->pc_epc = (memaddr)entry;
+  helper_state->reg_sp = getCurrentFreeStackTop();
+  helper_state->status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
+  helper_state->mie = MIE_ALL;
+
+  return createChild(helper_state, sst_support);
+}
+
+void termEntry() {
+  support_t *support = getSupportData();
+  unsigned asid = support->sup_asid;
+
+  while (TRUE) {
+    sst_print_PTR print_payload;
+    pcb_PTR sender =
+        (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1],
+                         (unsigned int)(&print_payload), 0);
+
+    writeOnTerminal(print_payload, asid);
+
+    // notify the sender that the print is done
+    SYSCALL(SENDMESSAGE, (unsigned)sender, 0, 0);
+  }
 }
 
 void printEntry() {
   support_t *support = getSupportData();
-  int asid = support->sup_asid;
+  unsigned asid = support->sup_asid;
 
   while (TRUE) {
-    ssi_payload_t *print_payload;
-    pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE,
-                                      (unsigned int)(&print_payload), 0);
+    sst_print_PTR print_payload;
+    pcb_PTR sender =
+        (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1],
+                         (unsigned int)(&print_payload), 0);
 
-    // handle the print request
-    switch (print_payload->service_code) {
-    case WRITEPRINTER:
-      /* This service cause the print of a string of characters
-       * to the printer with the same number of the sender
-       * ASID.
-       */
-      writeOnPrinter((sst_print_PTR)print_payload->arg, asid);
-      break;
-    case WRITETERMINAL:
-      /* This service cause the print of a string of characters
-       * to the terminal with the same number of the sender
-       * ASID.
-       */
-      writeOnTerminal((sst_print_PTR)print_payload->arg, asid);
-      break;
-    }
+    writeOnPrinter(print_payload, asid);
 
     // notify the sender that the print is done
     SYSCALL(SENDMESSAGE, (unsigned)sender, 0, 0);
@@ -122,6 +130,7 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
     }
 
     unsigned int value;
+    status = 0;
 
     if (write_to == TERMINAL) {
       value = PRINTCHR | (((unsigned int)*msg) << 8);
@@ -248,19 +257,19 @@ void notify(pcb_PTR process) {
   SYSCALL(SENDMESSAGE, (unsigned int)process, 0, 0);
 }
 
-void invalidateUProcPageTable(support_t *support) {
-  OFFINTERRUPTS();
+void invalidateUProcPageTable(int asid) {
   gainSwapMutex();
+  OFFINTERRUPTS();
 
   // invalidate the swap pool
   for (int i = 0; i < POOLSIZE; i++) {
-    if (swap_pool[i].sw_asid == support->sup_asid) {
+    if (swap_pool[i].sw_asid == asid) {
       swap_pool[i].sw_asid = NOPROC;
     }
   }
 
-  releaseSwapMutex();
   ONINTERRUPTS();
+  releaseSwapMutex();
 }
 
 void updateTLB(pteEntry_t *page) {
