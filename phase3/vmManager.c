@@ -87,7 +87,7 @@ void pager(void) {
     status = writeBackingStore(victim_page_addr, swap_pool[victim_frame].sw_asid,
                                swap_pool[victim_frame].sw_pageNo);
     if (status != DEVRDY) {
-      programTrapExceptionHandler(NULL);
+      programTrapExceptionHandler(support_data);
     }
 
   }
@@ -98,7 +98,7 @@ void pager(void) {
 
   if (status != DEVRDY) // operation failed
   {
-    programTrapExceptionHandler(NULL);
+    programTrapExceptionHandler(support_data);
   }
 
   // update the swap pool table
