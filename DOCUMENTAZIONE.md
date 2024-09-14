@@ -151,7 +151,7 @@ unsigned getFrameFromSwapPool() {
       break;
     }
   }
-  // otherwise implement the page replacement algorithm FIFO
+  // otherwise implement the page replacement algorithm RR
   return frame++ % POOLSIZE;
 }
 ```
@@ -183,7 +183,7 @@ unsigned flashOperation(unsigned command, unsigned page_addr, unsigned asid,
   return status;
 }
 ```
-The function two functions:
+The two functions:
 - `readBackingStoreFromPage`
 - `writeBackingStore`
 
@@ -274,24 +274,29 @@ case RECEIVEMSG:
 ## System Service Thread
 The System Service Thread (SST) is a per-process thread that provide is child process useful services. Each SST child process can send a message to its SST to request a service (that can then be asked to the SSI if needed). The SST also initialize its child and Each share the same ID (ASID) and support struct of its child U-proc.
 Like the SSI the structure of SST works as a server: get the request, satisfy request and send back resoult.
+The SST is initialized by the `sstEntry` function, that initializes the child process, the print process and the term process. It then enters a loop where it waits for messages from the child process, handles the request and sends back the result.
 ```c
 void sstEntry() {
   // init the child
   support_t *sst_support = getSupportData();
-  state_t *u_proc_prole = &u_proc_state[sst_support->sup_asid - 1];
+  child_pcb[sst_support->sup_asid - 1] = initUProc(&u_proc_state[sst_support->sup_asid - 1], sst_support);
 
-  child_pcb[sst_support->sup_asid - 1] =
-      initUProc(u_proc_prole, sst_support);
+  // init the print process
+  print_pcb[sst_support->sup_asid - 1] = initPrintProcess(&print_state[sst_support->sup_asid - 1], sst_support);
+
+  // init the term process
+  term_pcb[sst_support->sup_asid - 1] = initTermProcess(&term_state[sst_support->sup_asid - 1], sst_support);
+
   // get the message from someone - user process
   // handle
   // reply
   while (TRUE) {
     ssi_payload_PTR process_request_payload;
-    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(
-        RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
-    sstRequestHandler(process_request_ptr,
-                      process_request_payload->service_code,
-                      process_request_payload->arg);
+    pcb_PTR process_request_ptr = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, ANYMESSAGE, (unsigned)(&process_request_payload), 0);
+    sstRequestHandler(process_request_ptr, process_request_payload->service_code, 
+                      process_request_payload->arg,
+                      print_pcb[sst_support->sup_asid - 1],
+                      term_pcb[sst_support->sup_asid - 1]);
   }
 }
 ```
@@ -318,10 +323,73 @@ void killSST(pcb_PTR sender) {
   terminateProcess(SELF);
 }
 ```
-- `WritePrinter`: his service causes the print of a string of characters to the printer with the same number as the sender ASID.
-- `WriteTerminal`: his service causes the print of a string of characters to the terminal with the same number as the sender ASID.
+- `WritePrinter`: this service should allow the sender to write a string to the printer. The string is passed as a parameter in the message. The SST should then send a message to the print process with the string to be printed. 
+- `WriteTerminal`: the same as the `WritePrinter` but for the terminal.
 ```c
-void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, int asid) {
+void print(unsigned code, sst_print_PTR arg, pcb_PTR print_process) {
+  // unwrap the arg and send it to the print process
+  int length = arg->length;
+  char string[length];
+  for (int i = 0; i < length; i++) {
+    string[i] = arg->string[i];
+  }
+  sst_print_t printing = {
+    .string = string,
+    .length = length,
+  };
+  SYSCALL(SENDMESSAGE, (unsigned int)print_process, (unsigned int)&printing, 0);
+  SYSCALL(RECEIVEMESSAGE, (unsigned)print_process, 0, 0);
+}
+```
+## Stdlib
+this file serves as the main container of useful functions that are used through phase 3 of the project such as:
+- `Initializations functions`: _initUprocPageTable(), initFreeStackTop(), initUProc() and defaultSupportData(), initHelper()_;
+- `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess(), updateTLB(), invalidateUProcPageTable()_;
+- `Notification service & Mutual esclusion handling`: 
+_notify(), gainSwapMutex() and releaseSwapMutex()_.
+- `I/O processes`: _initPrintProcess(), initTermProcess(), termEntry(), printEntry(), writeOnPrinter(), write(), writeOnTerminal()_.
+- `support handling`: _deallocateSupport(), allocateSupport()_.
+
+### I/O processes
+The I/O processes are used to handle I/O operations such as writing to the printer and terminal. The I/O processes are implemented as separate processes that are responsible for handling I/O requests from the SST. The I/O processes are initialized by the `initPrintProcess` and `initTermProcess` functions, which create the I/O processes and initialize their state. The I/O processes enter a loop where they wait for messages from the SST, handle the request and send back the result.
+The `initHelper` function is a generic way for initializa a machine-mode processes.
+
+```c
+pcb_PTR initPrintProcess(state_t *print_state, support_t *sst_support) {
+  return initHelper(print_state, sst_support, printEntry);
+}
+
+pcb_PTR initHelper(state_t *helper_state, support_t *sst_support, void *entry) {
+  STST(helper_state);
+  helper_state->entry_hi = sst_support->sup_asid << ASIDSHIFT;
+  helper_state->pc_epc = (memaddr)entry;
+  helper_state->reg_sp = getCurrentFreeStackTop();
+  helper_state->status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
+  helper_state->mie = MIE_ALL;
+
+  return createChild(helper_state, sst_support);
+}
+
+void printEntry() {
+  support_t *support = getSupportData();
+  unsigned asid = support->sup_asid;
+
+  while (TRUE) {
+    sst_print_PTR print_payload;
+    pcb_PTR sender = (pcb_PTR)SYSCALL(RECEIVEMESSAGE, (unsigned)sst_pcb[asid - 1], (unsigned int)(&print_payload), 0);
+
+    writeOnPrinter(print_payload, asid);
+
+    // notify the sender that the print is done
+    SYSCALL(SENDMESSAGE, (unsigned)sender, 0, 0);
+  }
+}
+
+void writeOnPrinter(sst_print_PTR arg, unsigned asid) {
+  write(arg->string, arg->length, (devreg_t *)DEV_REG_ADDR(IL_PRINTER, asid - 1), PRINTER);
+}
+
+void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to) {
   int i = 0;
   unsigned status;
   // check if it's a terminal or a printer
@@ -334,6 +402,7 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
     }
 
     unsigned int value;
+    status = 0;
 
     if (write_to == TERMINAL) {
       value = PRINTCHR | (((unsigned int)*msg) << 8);
@@ -343,12 +412,12 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
     }
 
     ssi_do_io_t do_io = {
-        .commandAddr = command,
-        .commandValue = value,
+      .commandAddr = command,
+      .commandValue = value,
     };
     ssi_payload_t payload = {
-        .service_code = DOIO,
-        .arg = &do_io,
+      .service_code = DOIO,
+      .arg = &do_io,
     };
 
     SYSCALL(SENDMESSAGE, (unsigned int)ssi_pcb, (unsigned int)(&payload), 0);
@@ -356,9 +425,9 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
 
     // device not ready -> error!
     if (write_to == TERMINAL && status != OKCHARTRANS) {
-      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      terminateParent();
     } else if (write_to == PRINTER && status != DEVRDY) {
-      programTrapExceptionHandler(&(sst_pcb[asid]->p_supportStruct->sup_exceptState[GENERALEXCEPT]));
+      terminateParent();
     }
 
     msg++;
@@ -366,12 +435,52 @@ void write(char *msg, int lenght, devreg_t *devAddrBase, enum writet write_to, i
   }
 }
 ```
-## Stdlib
-this file serves as the main container of useful functions that are used through phase 3 of the project such as:
-- `Initializations functions`: _initUprocPageTable(), initFreeStackTop(), initUProc() and defaultSupportData()_;
-- `Utility functions`: _getSupportData(), getCurrentFreeStackTop(), createChild(), terminateProcess(), updateTLB(), invalidateUProcPageTable() and  isOneOfSSTPids()_;
-- `Notification service & Mutual esclusion handling`: 
-_notify(), gainSwapMutex() and releaseSwapMutex()_.
+> Note that the same logic is applied to the terminal process.
+
+### Support handling
+The support handling is a set of functions that are used to manage the support struct of the processes. The support struct is a data structure that is used to store the state of the process, such as the page table, the ASID, and the TLB entries. The support handling functions are used to allocate and deallocate the support struct, and to get the support struct of the current process.
+The way it's accomplished is by using a global array of support structs then a free support struct list. The `allocateSupport` function is used to allocate a support struct from the free list, and the `deallocateSupport` function is used to deallocate a support struct and add it back to the free list.
+
+```c
+support_t *allocateSupport(void) {
+  static int asid = 1;
+  if (list_empty(&free_supports) || asid > MAXSSTNUM) {
+    return NULL;
+  }
+
+  struct list_head *head = free_supports.next;
+  list_del(head);
+  support_t *s = container_of(head, support_t, s_list);
+  s->sup_asid = asid++;
+
+  defaultSupportData(s, s->sup_asid);
+  return s;
+}
+
+void deallocateSupport(support_t *s) {
+  if (s->sup_asid != 0) {
+    invalidateUProcPageTable(s->sup_asid);
+  }
+
+  list_add(&s->s_list, &free_supports);
+}
+
+void defaultSupportData(support_t *support_data, int asid) {
+  support_data->sup_asid = asid;
+
+  support_data->sup_exceptContext[PGFAULTEXCEPT].pc = (memaddr)pager;
+  support_data->sup_exceptContext[PGFAULTEXCEPT].stackPtr = getCurrentFreeStackTop();
+  support_data->sup_exceptContext[PGFAULTEXCEPT].status = MSTATUS_MIE_MASK | MSTATUS_MPP_M | MSTATUS_MPIE_MASK;
+
+  support_data->sup_exceptContext[GENERALEXCEPT].pc = (memaddr)supportExceptionHandler;
+  support_data->sup_exceptContext[GENERALEXCEPT].stackPtr =getCurrentFreeStackTop();
+  support_data->sup_exceptContext[GENERALEXCEPT].status = MSTATUS_MIE_MASK | MSTATUS_MPIE_MASK | MSTATUS_MPP_M;
+
+  initUprocPageTable(support_data->sup_privatePgTbl, asid);
+
+  INIT_LIST_HEAD(&support_data->s_list);
+}
+```
 
 ## P3test
 This file serves as the main test for the phase 3, it follow a simple schema: initialization, execution of the process's request and termination (after being notified).  
@@ -379,36 +488,12 @@ This file serves as the main test for the phase 3, it follow a simple schema: in
 void test3() {
   test_process = current_process;
   initFreeStackTop();
-  /*While test was the name/external reference to a function that exercised the Level 3/Phase 2 code,
-   * in Level 4/Phase 3 it will be used as the instantiator process (InstantiatorProcess).3
-   * The InstantiatorProcess will perform the following tasks:
-   *  • Initialize the Level 4/Phase 3 data structures. These are:
-   *     – The Swap Pool table and a Swap Mutex process that must provide mutex access to the
-   *        swap table using message passing [Section 4.1].
-   *     – Each (potentially) sharable peripheral I/O device can have a process for it. These process
-   *        will be used to receive complex requests (i.e. to write a string to a terminal) and request
-   *        the correct DoIO service to the SSI (this feature is optional and can be delegated directly
-   *        to the SST processes to simplify the project).
-   *  • Initialize and launch eight SST, one for each U-procs.
-   *  • Terminate after all of its U-proc “children” processes conclude. This will drive Process Count
-   *      to one, triggering the Nucleus to invoke HALT. Wait for 8 messages, that should be sent when
-   *      each SST is terminated.
-   */
 
   // Init array of support struct (so each will be used for every u-proc init. in initSSTs)
   initSupportArray();
 
   // alloc swap mutex process
   swap_mutex = allocSwapMutex();
-
-  // Init. sharable peripheral (done in initSSTs)
-  /* Technical Point: A careful reading of the Level 4/Phase 3 specification reveals that there are
-   * actually no purposefully shared peripheral devices. Each of the [1..8] U-procs has its own flash device
-   * (backing store), printer, and terminal device(s). Hence, one does not actually need a process to
-   * protect access to device registers. However, for purposes of correctness (or more appropriate: to
-   * protect against erroneous behavior) and future phase compatibility, it is possible to have a process for
-   * each device that waits for messages and requests the single DoIO to the SSI.
-   */
 
   //Init 8 SST
   initSSTs();
