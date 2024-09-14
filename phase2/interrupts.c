@@ -1,8 +1,13 @@
 #include "./headers/interrupts.h"
+#include <uriscv/arch.h>
 
 cpu_t time_interrupt_start;
 
 void interruptHandler(void) {
+  /**
+   * - mie: interrupt enabled bits;
+   * - mip: interrupt pending bits;
+   */
   unsigned exce_mie = getMIE();
   unsigned exce_mip = getMIP();
   // pending interrupt
@@ -35,38 +40,36 @@ void interruptHandlerNonTimer(unsigned ip_line) {
     */
 
   // 1. Calculate the address for this device’s device register
-  // Tip: to calculate the device snumber you can use a switch among constants
-  // DEVxON
   int dev_no = 0;
 
   unsigned *devices_bit_map = (unsigned *)CDEV_BITMAP_ADDR(ip_line);
   switch (*devices_bit_map) {
-  case DEV0ON:
-    dev_no = 0;
-    break;
-  case DEV1ON:
-    dev_no = 1;
-    break;
-  case DEV2ON:
-    dev_no = 2;
-    break;
-  case DEV3ON:
-    dev_no = 3;
-    break;
-  case DEV4ON:
-    dev_no = 4;
-    break;
-  case DEV5ON:
-    dev_no = 5;
+  case DEV7ON:
+    dev_no = 7;
     break;
   case DEV6ON:
     dev_no = 6;
     break;
-  case DEV7ON:
-    dev_no = 7;
+  case DEV5ON:
+    dev_no = 5;
+    break;
+  case DEV4ON:
+    dev_no = 4;
+    break;
+  case DEV3ON:
+    dev_no = 3;
+    break;
+  case DEV2ON:
+    dev_no = 2;
+    break;
+  case DEV1ON:
+    dev_no = 1;
+    break;
+  case DEV0ON:
+    dev_no = 0;
     break;
   default:
-    break;
+    PANIC();
   }
 
   // Interrupt line number

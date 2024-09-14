@@ -1,11 +1,11 @@
 #include "headers/sysSupport.h"
 
 extern pcb_PTR current_process;
-extern pcb_PTR gained_mutex_process;
+extern int gained_mutex_asid;
 
-void programTrapExceptionHandler(state_t *exception_state){
+void programTrapExceptionHandler(support_t *support_data) {
   // check if the program hold the mutex
-  if (gained_mutex_process == current_process) {
+  if (support_data != NULL && gained_mutex_asid == support_data->sup_asid) {
     // release the mutex
     releaseSwapMutex();
   }
@@ -32,12 +32,11 @@ void supportExceptionHandler() {
 
   switch (exception_code)
   {
-  case 11:
   case SYSEXCEPTION:
     UsysCallHandler(exception_state, current_support->sup_asid);
     break;
   default:
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(current_support);
     return; // to avoid skipping the LDST
     break;
   }
@@ -69,9 +68,7 @@ void UsysCallHandler(state_t *exception_state, int asid) {
      * parent.
      */
 
-    dest_process =
-        a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
-    
+    dest_process = (a1_reg == PARENT) ? sst_pcb[asid-1] : (pcb_t *)a1_reg; 
     SYSCALL(SENDMESSAGE, (unsigned)dest_process, a2_reg, 0);           
 
     break;
@@ -89,12 +86,12 @@ void UsysCallHandler(state_t *exception_state, int asid) {
      * the queue is empty, and the first message sent to it will wake up it and
      * put it in the Ready Queue.
      */
-    receive_process = a1_reg == PARENT ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
+    receive_process = (a1_reg == PARENT) ? sst_pcb[asid-1] : (pcb_t *)a1_reg;
     SYSCALL(RECEIVEMESSAGE, (unsigned)receive_process, a2_reg, 0);
 
     break;
   default:
-    programTrapExceptionHandler(exception_state);
+    programTrapExceptionHandler(NULL);
     break;
   }
 }

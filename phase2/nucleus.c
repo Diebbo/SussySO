@@ -20,6 +20,17 @@ cpu_t acc_cpu_time;
 // ssi
 pcb_PTR ssi_pcb;
 
+/**
+ * The relevant CSRs used in 𝜇RISCV are:
+ * - time: real-time counter;
+ * - mtvec: trap handler address;
+ * - mepc: address to return after an exception is handled;
+ * - mcause: code indicating the event that caused the trap;
+ * - mstatus: keeps track of current processor state;
+ * - mie: interrupt enabled bits;
+ * - mip: interrupt pending bits;
+ */
+
 int main(void) {
   // 1. Initialize the nucleus
   initKernel();
@@ -64,9 +75,15 @@ void initKernel() {
 
   pcb_t *second_process = allocPcb();
 
-  RAMTOP(second_process->p_s.reg_sp); // Set SP to RAMTOP - 2 * FRAME_SIZE
+  RAMTOP(second_process->p_s.reg_sp); 
   second_process->p_s.reg_sp -= 2 * PAGESIZE;
   second_process->p_s.pc_epc = (memaddr)test3;
+  /**
+   * 31                   12    10     8      6   4     2     0
+   * +--------------------+-----+------+------+---+-----+-----+
+   * |       ///          | MPP |  //  | MPIE | / | MIE |  /  |
+   * +--------------------+-----+------+------+---+-----+-----+
+   */
   second_process->p_s.status = MSTATUS_MPIE_MASK | MSTATUS_MPP_M | MSTATUS_MIE_MASK;
   second_process->p_s.mie = MIE_ALL;
 

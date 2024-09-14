@@ -14,9 +14,8 @@ void uTLB_RefillHandler() {
   if (current_process->p_supportStruct == NULL)
     PANIC();
     
-  // i'm missing page p of the current-process support struct tlb
-  pteEntry_t *missing_page =
-      &current_process->p_supportStruct->sup_privatePgTbl[p];
+  // missing page (p) of the current-process support struct tlb
+  pteEntry_t *missing_page = &current_process->p_supportStruct->sup_privatePgTbl[p];
   setENTRYHI(missing_page->pte_entryHI);
   setENTRYLO(missing_page->pte_entryLO);
   TLBWR();
@@ -33,6 +32,12 @@ void exceptionHandler() {
   unsigned exception_code = cause & 0x7FFFFFFF; // 0311 1111 x 32
 
   unsigned is_interrupt_enabled = BIT_CHECKER(status, 7);
+  /**
+   * 31          30                                        0
+   * +-----------+-----------------------------------------+
+   * | interrupt |            exception code               |
+   * +-----------+-----------------------------------------+
+   */  
   unsigned is_interrupt = BIT_CHECKER(cause, 31);
 
   state_t *exception_state = (state_t *)BIOSDATAPAGE;
@@ -48,7 +53,7 @@ void exceptionHandler() {
   } else if (exception_code >= 8 && exception_code <= 11) {
     // check if user mode
     if ((exception_state->status & MSTATUS_MPP_MASK) == MSTATUS_MPP_U) {
-      exception_state->cause = PRIVINSTR;
+      exception_state->cause = SYSEXCEPTION;
       TrapExceptionHandler(exception_state);
     } else {
       SYSCALLExceptionHandler();
@@ -116,7 +121,7 @@ void SYSCALLExceptionHandler() {
       msg->m_sender = current_process;
 
       if (outProcQ(&msg_queue_list, dest_process) != NULL) {
-        // process is blocked waiting for a message  so I unblock it
+        // process is blocked waiting for a message  so need to unblock it
         insertProcQ(&ready_queue_list, dest_process);
         soft_block_count--;
       }
@@ -217,14 +222,13 @@ void passUpOrDie(unsigned type, state_t *exec_state) {
     return;
   }
   // 1st Save the processor state
-  copyState(exec_state,
-            &current_process->p_supportStruct->sup_exceptState[type]);
+  copyState(exec_state, &current_process->p_supportStruct->sup_exceptState[type]);
+
   // 2nd Update the accumulated CPU time for the Current Process
   current_process->p_time -= deltaInterruptTime();
   current_process->p_time += deltaTime();
 
   // 3rd Pass up the exception
-  context_t context_pass_to =
-      current_process->p_supportStruct->sup_exceptContext[type];
+  context_t context_pass_to = current_process->p_supportStruct->sup_exceptContext[type];
   LDCXT(context_pass_to.stackPtr, context_pass_to.status, context_pass_to.pc);
 }

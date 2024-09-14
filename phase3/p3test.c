@@ -4,13 +4,12 @@
 extern pcb_PTR swap_mutex;
 extern pcb_PTR sst_pcb[MAXSSTNUM];
 extern memaddr current_stack_top;
+extern support_t support_arr[MAXSSTNUM];
 
 // internal global variables
-support_t support_arr[MAXSSTNUM];
 pcb_PTR test_process;
 state_t swap_st;
 support_t swap_sup;
-
 
 void test3() {
   test_process = current_process;
@@ -71,23 +70,21 @@ void initSupportArray(){
    *      of 500 is a 2Kb area.
    *   • sup_stackGen[500]: The stack area for the process’s Support Level general exception handler.
    * 
+   * 
+   * NOTE: (ASID 0 is reserved for kernel daemons, so the (up to) eight U-proc’s should be assigned ASID values from [1..8].)
    */
-  for(int asid=1; asid<=MAXSSTNUM; asid++){
-    defaultSupportData(&support_arr[asid-1], asid);
+  INIT_LIST_HEAD(&free_supports);
+
+  for(int i=0; i < MAXSSTNUM; i++){
+    INIT_LIST_HEAD(&support_arr[i].s_list);
+    deallocateSupport(&support_arr[i]);
   }
 }
 
 void waitTermination(pcb_PTR *ssts){
-  for(int i=0; i<MAXSSTNUM; i++){
+  for(int i=0; i < MAXSSTNUM; i++){
     SYSCALL(RECEIVEMESSAGE, (unsigned)ssts[i],0,0);
   }
-}
-
-void terminateAll(){
-  for(int i=0; i<8; i++){
-    SYSCALL(RECEIVEMSG,ANYMESSAGE,0,0);
-  }
-  PANIC();
 }
 
 pcb_PTR allocSwapMutex(void){
