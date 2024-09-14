@@ -52,11 +52,11 @@ void exceptionHandler() {
     TLBExceptionHandler(exception_state);
   } else if (exception_code >= 8 && exception_code <= 11) {
     // check if user mode
-    if ((exception_state->status & MSTATUS_MPP_MASK) == MSTATUS_MPP_M) {
-      SYSCALLExceptionHandler();
-    } else {
-      exception_state->cause = USERINSTR;
+    if ((exception_state->status & MSTATUS_MPP_MASK) == MSTATUS_MPP_U) {
+      exception_state->cause = SYSEXCEPTION;
       TrapExceptionHandler(exception_state);
+    } else {
+      SYSCALLExceptionHandler();
     }
   } else if ((exception_code >= 0 && exception_code <= 7) ||
              (exception_code >= 12 && exception_code <= 23)) {

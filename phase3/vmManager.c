@@ -118,7 +118,7 @@ void pager(void) {
     OFFINTERRUPTS();
 
     // mark the page pointed by the swap pool as not valid
-    swap_pool[victim_frame].sw_pte->pte_entryLO &= ~VALIDON;
+    swap_pool[victim_frame].sw_pte->pte_entryLO &= !VALIDON;
 
     // update the TLB if needed
     updateTLB(swap_pool[victim_frame].sw_pte);
@@ -142,7 +142,7 @@ void pager(void) {
   status =
       readBackingStoreFromPage(victim_page_addr, support_data->sup_asid, vpn);
 
-  if (status != DEVRDY) // operation failed
+  if (status != DEVRDY)
   {
     programTrapExceptionHandler(support_data);
   }
@@ -216,14 +216,13 @@ unsigned writeBackingStore(memaddr updating_page_addr, unsigned asid, unsigned p
 }
 
 unsigned getFrameFromSwapPool() {
+  // implement the page replacement algorithm FIFO
   static unsigned frame = 0;
-  // find a free frame in the swap pool
   for (unsigned i = 0; i < POOLSIZE; i++) {
     if (isSwapPoolFrameFree(i)) {
       frame = i;
       break;
     }
   }
-  // otherwise implement the page replacement algorithm RR
   return frame++ % POOLSIZE;
 }
