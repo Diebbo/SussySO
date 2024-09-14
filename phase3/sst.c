@@ -71,7 +71,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_pro
      * to the printer with the same number of the sender
      * ASID.
      */
-    print(service, (sst_print_PTR)arg, print_process);
+    print((sst_print_PTR)arg, print_process);
     has_to_reply = TRUE;
     break;
   case WRITETERMINAL:
@@ -79,7 +79,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_pro
      * to the terminal with the same number of the sender
      * ASID.
      */
-    print(service, (sst_print_PTR)arg, term_process);
+    print((sst_print_PTR)arg, term_process);
     has_to_reply = TRUE;
     break;
   default:
@@ -94,7 +94,7 @@ void sstRequestHandler(pcb_PTR sender, int service, void *arg, pcb_PTR print_pro
   }
 }
 
-void print(unsigned code, sst_print_PTR arg, pcb_PTR print_process) {
+void print(sst_print_PTR arg, pcb_PTR print_process) {
   // unwrap the arg and send it to the print process
   int length = arg->length;
   char string[length];

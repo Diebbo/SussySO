@@ -67,11 +67,10 @@ pcb_PTR initPrintProcess(state_t *state, support_t *support);
 pcb_PTR initTermProcess(state_t *state, support_t *support);
 // generic function for a kernel mode process
 pcb_PTR initHelper(state_t *state, support_t * support, void * arg);
-
 // entry function of each print process
 void printEntry();
+// entry function of each term process
 void termEntry();
-
 // print a string to the printer with the same number of the sender ASID
 void writeOnPrinter(sst_print_PTR arg, unsigned asid);
 // print a string to the terminal with the same number of the sender ASID
